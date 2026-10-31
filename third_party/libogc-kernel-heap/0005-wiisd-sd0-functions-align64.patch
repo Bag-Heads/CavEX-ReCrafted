@@ -1,0 +1,18 @@
+diff --git a/libogc/wiisd.c b/libogc/wiisd.c
+index 4feebdd..b94d55a 100644
+--- a/libogc/wiisd.c
++++ b/libogc/wiisd.c
+@@ -147,7 +147,12 @@ static u16 __sd0_rca = 0;
+ static s32 __sd0_sdhc = 0;
+ static u8 __sd0_csd[16];
+ static u8 __sd0_cid[16];
+-static u8 __sd0_functions[64] ATTRIBUTE_ALIGN(32);
++/* CaveWii: this 64-byte array is handed RAW to the SD host controller as
++ * the CMD6 SWITCH_FUNC DMA buffer (__sdio_sendcommand, isdma=1). Aligned
++ * to 32 it can sit across a 4 KB line (start = line-0x20); aligned to its
++ * own size it can never cross any power-of-two line >= 64. EXPERIMENTAL,
++ * HARDWARE-UNCONFIRMED -- see tmp/jobs/bootdeath-0917/EXPERIMENT-3.md. */
++static u8 __sd0_functions[64] ATTRIBUTE_ALIGN(64);
+ static bool __sdio_initialized = false;
+ static char _sd0_fs[] ATTRIBUTE_ALIGN(32) = "/dev/sdio/slot0";
+ 

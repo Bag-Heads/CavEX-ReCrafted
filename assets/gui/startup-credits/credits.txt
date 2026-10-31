@@ -1,0 +1,25 @@
+startup-credits 2
+texture frames credits-frames.bin 576 384
+texture font credits-font.bin 128 128
+timing 200 3000 200 10000
+sprite frame0 frames 0 0 192 192
+sprite frame1 frames 192 0 192 192
+sprite frame2 frames 384 0 192 192
+sprite frame3 frames 0 192 192 192
+sprite frame4 frames 192 192 192 192
+sprite frame5 frames 384 192 192 192
+card
+text 238 95 16 F5EEE3 Brought to you by
+seq 224 123 frame0:500 frame1:300 frame2:300 frame3:400 frame2:300 frame1:300 frame0:600 frame5:400 frame0:400 frame1:250 frame2:250 frame3:300 frame4:500 frame3:300 frame2:300 frame1:300
+text 210 339 40 FF982D BagHeads
+card
+text 285 114 16 F5EEE3 Built on
+text 290 170 16 F5EEE3 CavEX
+text 236 196 24 F5EEE3 xtreme8000
+text 285 250 16 F5EEE3 fCavEX
+text 159 276 24 F5EEE3 yyy257
+text 282 276 24 F5EEE3 ByteBit
+text 402 276 24 F5EEE3 jilleb
+text 141 348 16 F5EEE3 Not affiliated with Mojang or Nintendo.
+footer 404 16 B8B8B8
+end

@@ -17,6 +17,8 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../graphics/render_block.h" // direct include (was transitive via blocks.h pre-split)
+#include "../graphics/render_item.h" // direct include (was transitive via blocks.h pre-split)
 #include "blocks.h"
 
 static enum block_material getMaterial(struct block_info* this) {
@@ -40,11 +42,11 @@ static uint8_t getTextureIndex(struct block_info* this, enum side side) {
 }
 
 static size_t getDroppedItem(struct block_info* this, struct item_data* it,
-							 struct random_gen* g, struct server_local* s) {
+							 struct java_random* g, struct server_local* s) {
 	if(it) {
 		it->id = ITEM_GLOWSTONE_DUST;
 		it->durability = 0;
-		it->count = rand_gen_range(g, 2, 4);
+		it->count = 1; // idDropped only; quantity is evaluated before chance
 	}
 
 	return 1;
@@ -68,9 +70,18 @@ struct block block_glowstone = {
 	.ignore_lighting = false,
 	.flammable = false,
 	.place_ignore = false,
+	// Beta glowStone = new BlockGlowStone(89, 105, Material.rock): Material.rock REQUIRES a tool, and
+	// ItemPickaxe.canHarvestBlock returns true for Material.rock (hand / shovel / axe / sword do not),
+	// so glowstone drops its dust ONLY when mined with a pickaxe. Our drop gate keys on .digging.tool/
+	// .min (server_local break path), matching every other rock block (stone/cobblestone/netherrack).
+	// Was TOOL_TYPE_ANY -> dropped by bare hand (a divergence). [decompile 740c583 Block + ItemPickaxe]
+	// `.best = TOOL_TIER_ANY` (not MAX): ItemPickaxe.blocksEffectiveAgainst
+	// (Block.java:681 glowStone) omits it entirely, so getStrVsBlock is flat
+	// 1.0F for any pickaxe tier -- no per-tier bonus (same mechanism as
+	// block_ore.c's redstone-ore comment).
 	.digging.hardness = 450,
-	.digging.tool = TOOL_TYPE_ANY,
-	.digging.min = TOOL_TIER_ANY,
+	.digging.tool = TOOL_TYPE_PICKAXE,
+	.digging.min = TOOL_TIER_WOOD,
 	.digging.best = TOOL_TIER_ANY,
 	.block_item = {
 		.has_damage = false,

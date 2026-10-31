@@ -1,0 +1,257 @@
+{
+  "schema_version": 1,
+  "release_version": "0.1.0",
+  "map_revision": "1.4.0",
+  "limits": {
+    "max_encoded_bytes": 33554432,
+    "max_dimension": 4096,
+    "max_pixels": 16777216
+  },
+  "assets": {
+    "terrain.png": {
+      "source_names": ["terrain.png"],
+      "required": false,
+      "fallback": "bundled",
+      "strategy": "cell_grid",
+      "canonical_size": [256, 256],
+      "supported_scales": [1, 2, 4, 8],
+      "grid": [16, 16],
+      "alpha_rules": {
+        "default": "cutout_coverage",
+        "effective_visible_alpha": 19,
+        "continuous_cells": [[1, 3], [3, 4], [13, 12], [14, 12], [15, 12], [14, 13], [15, 13], [13, 14], [14, 14], [15, 14], [14, 15], [15, 15]]
+      }
+    },
+    "particles.png": {
+      "source_names": ["particles.png"],
+      "required": false,
+      "fallback": "bundled",
+      "strategy": "cell_grid",
+      "canonical_size": [128, 128],
+      "supported_scales": [1, 2, 4, 8],
+      "grid": [16, 16],
+      "alpha_rules": {"default": "continuous"}
+    },
+    "gui/items.png": {
+      "source_names": ["gui/items.png"],
+      "required": false,
+      "fallback": "bundled",
+      "strategy": "cell_grid",
+      "canonical_size": [256, 256],
+      "supported_scales": [1, 2, 4, 8],
+      "grid": [16, 16],
+      "alpha_rules": {"default": "continuous"}
+    },
+    "font/default.png": {
+      "source_names": ["font/default.png"],
+      "required": false,
+      "fallback": "bundled",
+      "strategy": "cell_grid",
+      "canonical_size": [128, 128],
+      "supported_scales": [1, 2, 4, 8],
+      "grid": [16, 16],
+      "look": "crisp",
+      "alpha_rules": {"default": "continuous"}
+    },
+    "gui/gui.png": {
+      "source_names": ["gui/gui.png"],
+      "required": false,
+      "fallback": "bundled",
+      "strategy": "sheet",
+      "canonical_size": [256, 256],
+      "supported_scales": [1, 2, 4, 8],
+      "look": "crisp"
+    },
+    "gui/icons.png": {
+      "source_names": ["gui/icons.png"],
+      "required": false,
+      "fallback": "bundled",
+      "strategy": "sheet",
+      "canonical_size": [256, 256],
+      "supported_scales": [1, 2, 4, 8],
+      "look": "crisp"
+    },
+    "gui/inventory.png": {
+      "source_names": ["gui/inventory.png"],
+      "required": false,
+      "fallback": "bundled",
+      "strategy": "sheet",
+      "canonical_size": [256, 256],
+      "supported_scales": [1, 2, 4, 8],
+      "look": "crisp"
+    },
+    "gui/crafting.png": {
+      "source_names": ["gui/crafting.png"],
+      "required": false,
+      "fallback": "bundled",
+      "strategy": "sheet",
+      "canonical_size": [256, 256],
+      "supported_scales": [1, 2, 4, 8],
+      "look": "crisp"
+    },
+    "gui/furnace.png": {
+      "source_names": ["gui/furnace.png"],
+      "required": false,
+      "fallback": "bundled",
+      "strategy": "sheet",
+      "canonical_size": [256, 256],
+      "supported_scales": [1, 2, 4, 8],
+      "look": "crisp"
+    },
+    "gui/chest.png": {
+      "source_names": ["gui/container.png", "gui/chest.png"],
+      "required": false,
+      "fallback": "bundled",
+      "strategy": "sheet",
+      "canonical_size": [256, 256],
+      "supported_scales": [1, 2, 4, 8],
+      "look": "crisp"
+    },
+    "gui/trap.png": {
+      "source_names": ["gui/trap.png"],
+      "required": false,
+      "fallback": "bundled",
+      "strategy": "sheet",
+      "canonical_size": [256, 256],
+      "supported_scales": [1, 2, 4, 8],
+      "look": "crisp"
+    },
+    "gui_2.png": {
+      "source_names": ["gui_2.png"],
+      "required": false,
+      "fallback": "bundled_composite_base",
+      "strategy": "composite_only",
+      "canonical_size": [256, 256],
+      "supported_scales": [1],
+      "preserved_regions": "all pixels outside the documented HUD overlays"
+    },
+    "anim.png": {
+      "source_names": ["anim.png"],
+      "required": false,
+      "fallback": "bundled_composite_base",
+      "strategy": "animation_sheet",
+      "canonical_size": [256, 256],
+      "supported_scales": [1, 2, 4, 8],
+      "animation_layout": {
+        "cell_pitch": 18,
+        "content_size": 16,
+        "content_origin": 3,
+        "border": 1,
+        "columns": 14,
+        "ice_columns": [4, 11],
+        "rows": 14
+      }
+    },
+    "misc/grasscolor.png": {
+      "source_names": ["misc/grasscolor.png"],
+      "required": false,
+      "fallback": "bundled",
+      "strategy": "lookup_exact",
+      "canonical_size": [256, 256],
+      "supported_scales": [1, 2, 4, 8]
+    },
+    "misc/foliagecolor.png": {
+      "source_names": ["misc/foliagecolor.png"],
+      "required": false,
+      "fallback": "bundled",
+      "strategy": "lookup_exact",
+      "canonical_size": [256, 256],
+      "supported_scales": [1, 2, 4, 8]
+    },
+    "mob/char.png": {
+      "source_names": ["mob/char.png"],
+      "required": false,
+      "fallback": "bundled",
+      "strategy": "region_grid",
+      "canonical_size": [64, 32],
+      "supported_scales": [1, 2, 4, 8],
+      "grid": [8, 4]
+    },
+    "mob/creeper.png": {
+      "source_names": ["mob/creeper.png"],
+      "required": false,
+      "fallback": "bundled",
+      "strategy": "region_grid",
+      "canonical_size": [64, 32],
+      "supported_scales": [1, 2, 4, 8],
+      "grid": [8, 4]
+    },
+    "mob/zombie.png": {
+      "source_names": ["mob/zombie.png"],
+      "required": false,
+      "fallback": "bundled",
+      "strategy": "region_grid",
+      "canonical_size": [64, 32],
+      "supported_scales": [1, 2, 4, 8],
+      "grid": [8, 4]
+    },
+    "mob/skeleton.png": {
+      "source_names": ["mob/skeleton.png"],
+      "required": false,
+      "fallback": "bundled",
+      "strategy": "region_grid",
+      "canonical_size": [64, 32],
+      "supported_scales": [1, 2, 4, 8],
+      "grid": [8, 4]
+    },
+    "mob/pig.png": {
+      "source_names": ["mob/pig.png"],
+      "required": false,
+      "fallback": "bundled",
+      "strategy": "region_grid",
+      "canonical_size": [64, 32],
+      "supported_scales": [1, 2, 4, 8],
+      "grid": [8, 4]
+    },
+    "mob/cow.png": {
+      "source_names": ["mob/cow.png"],
+      "required": false,
+      "fallback": "bundled",
+      "strategy": "region_grid",
+      "canonical_size": [64, 32],
+      "supported_scales": [1, 2, 4, 8],
+      "grid": [8, 4]
+    },
+    "mob/chicken.png": {"source_names": ["mob/chicken.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "mob/sheep.png": {"source_names": ["mob/sheep.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "mob/sheep_fur.png": {"source_names": ["mob/sheep_fur.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "mob/slime.png": {"source_names": ["mob/slime.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "mob/spider.png": {"source_names": ["mob/spider.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "mob/spider_eyes.png": {"source_names": ["mob/spider_eyes.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "mob/squid.png": {"source_names": ["mob/squid.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "mob/wolf.png": {"source_names": ["mob/wolf.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "mob/wolf_tame.png": {"source_names": ["mob/wolf_tame.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "mob/wolf_angry.png": {"source_names": ["mob/wolf_angry.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "mob/pigzombie.png": {"source_names": ["mob/pigzombie.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "mob/ghast.png": {"source_names": ["mob/ghast.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "mob/ghast_fire.png": {"source_names": ["mob/ghast_fire.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "armor/chain_1.png": {"source_names": ["armor/chain_1.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "armor/chain_2.png": {"source_names": ["armor/chain_2.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "armor/cloth_1.png": {"source_names": ["armor/cloth_1.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "armor/cloth_2.png": {"source_names": ["armor/cloth_2.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "armor/gold_1.png": {"source_names": ["armor/gold_1.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "armor/gold_2.png": {"source_names": ["armor/gold_2.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "armor/iron_1.png": {"source_names": ["armor/iron_1.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "armor/iron_2.png": {"source_names": ["armor/iron_2.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "armor/diamond_1.png": {"source_names": ["armor/diamond_1.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "armor/diamond_2.png": {"source_names": ["armor/diamond_2.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "item/arrows.png": {"source_names": ["item/arrows.png"], "required": false, "fallback": "bundled", "strategy": "sheet", "canonical_size": [32, 32], "supported_scales": [1, 2, 4, 8]},
+    "item/cart.png": {"source_names": ["item/cart.png"], "required": false, "fallback": "bundled", "strategy": "region_grid", "canonical_size": [64, 32], "supported_scales": [1, 2, 4, 8], "grid": [8, 4]},
+    "art/kz.png": {"source_names": ["art/kz.png"], "required": false, "fallback": "bundled", "strategy": "cell_grid", "canonical_size": [256, 256], "supported_scales": [1, 2, 4, 8], "grid": [16, 16]},
+    "environment/clouds.png": {"source_names": ["environment/clouds.png"], "required": false, "fallback": "bundled", "strategy": "sheet", "canonical_size": [256, 256], "supported_scales": [1, 2, 4, 8]},
+    "environment/rain.png": {"source_names": ["environment/rain.png"], "required": false, "fallback": "bundled", "strategy": "sheet", "canonical_size": [64, 256], "supported_scales": [1, 2, 4, 8]},
+    "environment/snow.png": {"source_names": ["environment/snow.png"], "required": false, "fallback": "bundled", "strategy": "sheet", "canonical_size": [64, 256], "supported_scales": [1, 2, 4, 8]},
+    "misc/dial.png": {"source_names": ["misc/dial.png"], "required": false, "fallback": "bundled", "strategy": "sheet", "canonical_size": [16, 16], "supported_scales": [1, 2, 4, 8]},
+    "misc/shadow.png": {"source_names": ["misc/shadow.png"], "required": false, "fallback": "bundled", "strategy": "sheet", "canonical_size": [64, 64], "supported_scales": [1, 2, 4, 8]},
+    "misc/mapbg.png": {"source_names": ["misc/mapbg.png"], "required": false, "fallback": "bundled", "strategy": "sheet", "canonical_size": [64, 64], "supported_scales": [1, 2, 4, 8]},
+    "misc/mapicons.png": {"source_names": ["misc/mapicons.png"], "required": false, "fallback": "bundled", "strategy": "cell_grid", "canonical_size": [32, 32], "supported_scales": [1, 2, 4, 8], "grid": [4, 4], "look": "crisp"},
+    "misc/water.png": {"source_names": ["misc/water.png"], "required": false, "fallback": "bundled", "strategy": "sheet", "canonical_size": [16, 16], "supported_scales": [1, 2, 4, 8]},
+    "terrain/sun.png": {"source_names": ["terrain/sun.png"], "required": false, "fallback": "bundled", "strategy": "sheet", "canonical_size": [32, 32], "supported_scales": [1, 2, 4, 8]},
+    "terrain/moon.png": {"source_names": ["terrain/moon.png"], "required": false, "fallback": "bundled", "strategy": "sheet", "canonical_size": [32, 32], "supported_scales": [1, 2, 4, 8]},
+    "controls.png": {"source_names": ["controls.png"], "required": false, "fallback": "bundled", "strategy": "bundled_only", "canonical_size": [256, 256], "supported_scales": [1]},
+    "pointer.png": {"source_names": ["pointer.png"], "required": false, "fallback": "bundled", "strategy": "bundled_only", "canonical_size": [96, 96], "supported_scales": [1]},
+    "gui/approved-controls.png": {"source_names": ["gui/approved-controls.png"], "required": false, "fallback": "bundled", "strategy": "bundled_only", "canonical_size": [256, 256], "supported_scales": [1]},
+    "gui/controller-pictures.png": {"source_names": ["gui/controller-pictures.png"], "required": false, "fallback": "bundled", "strategy": "bundled_only", "canonical_size": [256, 256], "supported_scales": [1]},
+    "gui/iron_chest.png": {"source_names": ["gui/iron_chest.png"], "required": false, "fallback": "bundled", "strategy": "bundled_only", "canonical_size": [256, 256], "supported_scales": [1]}
+  }
+}

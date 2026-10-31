@@ -1,0 +1,12 @@
+{
+  "source": "docs/ui_design/front-end-refined/art/reception-earth.svg",
+  "source_sha256": "3a4ff50178f5788ee916d86a938a7e989631fc6259d2a96524bdbae13571b589",
+  "output_sha256": "2cc0fee176b697efc2f9d11bb74a981f0e246e58d9712d0174ada519d54e28b7",
+  "method": "Exact integer SVG rect rasterization, no resampling",
+  "dimensions": [
+    144,
+    16
+  ],
+  "frames": "idle, offline, five signal levels, two pending frames",
+  "art": "Original committed front-end Earth design; optional pack-first override, no theme inference"
+}

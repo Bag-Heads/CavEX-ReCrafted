@@ -1,0 +1,188 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CavEX: Re-Crafted Edition for Wii</title>
+<meta name="description" content="CavEX: Re-Crafted Edition by BagHeads. A free homebrew game for the Nintendo Wii that plays like Beta 1.7.3. Wii Remote + Nunchuk, Classic Controller or GameCube pad.">
+<meta name="color-scheme" content="light">
+<link rel="icon" type="image/png" href="assets/icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="bar">
+  <div class="wrap">
+    <a class="bar__mark" href="#top" aria-label="CavEX: Re-Crafted Edition, back to top"><img class="pixel" src="assets/logo.png" alt="" width="320" height="148"></a>
+    <nav aria-label="Sections">
+      <a href="#features">Features</a>
+      <a href="#install">Install</a>
+      <a href="#controls">Controls</a>
+      <a href="#credits">Credits</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+
+  <section class="hero on-dark" aria-labelledby="hero-title">
+    <div class="wrap">
+      <div class="hero__copy">
+        <h1 id="hero-title">Plays like Beta 1.7.3. On your Wii.</h1>
+        <p class="lede">Free homebrew. Pick up a Wii Remote + Nunchuk, a Classic Controller or a GameCube pad, and go dig.</p>
+        <div class="hero__cta">
+          <a class="btn btn--amber btn--xl" href="https://github.com/Bag-Heads/CavEX-ReCrafted/releases/latest">Download for Wii</a>
+          <a class="btn btn--ghost-light btn--xl" href="#install">How to install</a>
+        </div>
+        <p class="hero__needs">Needs a Wii with the Homebrew Channel.</p>
+      </div>
+      <figure class="hero__shot">
+        <img src="assets/shot-r2-snow-base.png" alt="In-game view on a real Wii: a snowy base with an obsidian portal, a small hut, a red bed and torches, with the hotbar and button prompts at the bottom." width="1280" height="720" fetchpriority="high">
+        <figcaption>Real Wii capture. Shown with your own Beta 1.7.3 textures - not included.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <div class="band">
+    <ul class="wrap">
+      <li>Wii Remote + Nunchuk</li>
+      <li>Classic &amp; GameCube pads</li>
+      <li>Split-screen</li>
+      <li>Free, GPL · by BagHeads</li>
+    </ul>
+  </div>
+
+  <section id="features" class="on-light" aria-labelledby="features-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">What's in the box</p>
+        <h2 id="features-title">Built for the couch</h2>
+      </div>
+      <ul class="tiles">
+        <li class="tile">
+          <img src="assets/shot-r2-camp.png" alt="A snowy camp on a real Wii: obsidian portal, red bed, chest, furnace and a cake, with a full hotbar." width="1280" height="720" loading="lazy" decoding="async">
+          <h3>Three controllers</h3>
+          <p>Wii Remote + Nunchuk, Classic Controller or GameCube pad, each with a full layout.</p>
+        </li>
+        <li class="tile">
+          <div class="tile__accent" aria-hidden="true"><span class="tile__big">Beta 1.7.3</span><span class="tile__small">Online</span></div>
+          <h3>Real Beta 1.7.3 servers</h3>
+          <p>Join a real Beta 1.7.3 server and chat with the on-screen keyboard.</p>
+        </li>
+        <li class="tile">
+          <img src="assets/shot-r2-split.png" alt="Two-player split-screen on a real Wii: one view above the other on a snowy hill, each with its own hotbar and hearts." width="1280" height="720" loading="lazy" decoding="async">
+          <h3>Split-screen</h3>
+          <p>Two players on one TV, each with their own controller.</p>
+        </li>
+        <li class="tile">
+          <img src="assets/shot-r2-lavafall.png" alt="The Nether on a real Wii: a wide lava lake with a lavafall in the distance under a dark red ceiling." width="1280" height="720" loading="lazy" decoding="async">
+          <h3>The Nether</h3>
+          <p>Light a portal and step through to lava lakes, fire and zombie pigmen.</p>
+        </li>
+        <li class="tile">
+          <img src="assets/shot-r2-portal.png" alt="A purple portal framed in obsidian on a snowy hill, with a chest and a torch beside it, on a real Wii." width="1280" height="720" loading="lazy" decoding="async">
+          <h3>Your Beta worlds</h3>
+          <p>Drop in your real Beta 1.7.3 worlds and keep playing them on the Wii.</p>
+        </li>
+        <li class="tile">
+          <img src="assets/shot-r2-beach.png" alt="A sandy beach spawn by the ocean with terraced grass hills and a bright sun, on a real Wii." width="1280" height="720" loading="lazy" decoding="async">
+          <h3>Tutorial Island</h3>
+          <p>A world that teaches the controls, crafting, mining, farming and redstone.</p>
+        </li>
+      </ul>
+      <p class="tiles__note">Shown with your own Beta 1.7.3 textures - not included.</p>
+      <p class="tiles__packs">Texture packs: Earth &amp; Ash (CC0) is the default and Isabella II by Bonemouse (CC BY 3.0) is included. Or bring your own Beta 1.7.3 pack; it is not included.</p>
+    </div>
+  </section>
+
+  <section id="install" class="install on-light" aria-labelledby="install-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Five steps</p>
+        <h2 id="install-title">Install</h2>
+      </div>
+      <ol class="steps">
+        <li><div><h3>Download and check</h3><p>Download the zip, then run <code>sha256sum -c SHA256SUMS</code>. Every line should say OK. A <code>-UNCERTIFIED</code> name means a test build.</p></div></li>
+        <li><div><h3>Copy to the SD card</h3><p>Copy everything to the SD card root. The game lands in <code>sd:/apps/CavEX/</code>.</p></div></li>
+        <li><div><h3>Start it</h3><p>Open the Homebrew Channel, pick CavEX: Re-Crafted Edition, then press Load.</p>
+          <img class="steps__img" src="assets/shot-r2-hbc.png" alt="The Homebrew Channel on a real Wii showing the CavEX: Re-Crafted Edition entry by BagHeads with Delete, Load and Back buttons." width="1280" height="720" loading="lazy" decoding="async"></div></li>
+        <li><div><h3>Try Tutorial Island</h3><p>Play game → Load → Tutorial Island → Play world.</p></div></li>
+        <li><div><h3>Optional: your own textures</h3><p>The Pack Helper builds a pack from your own Beta 1.7.3 files. Nothing is downloaded. Your own Beta 1.7.3 texture pack is not included.</p></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <section id="controls" class="controls on-light" aria-labelledby="controls-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Pick up any pad</p>
+        <h2 id="controls-title">Controls</h2>
+      </div>
+      <table class="ctable">
+        <thead>
+          <tr><th scope="col">Action</th><th scope="col">Remote + Nunchuk</th><th scope="col">Classic</th><th scope="col">GameCube</th></tr>
+        </thead>
+        <tbody>
+          <tr><th scope="row">Walk</th><td><span class="l">Remote + Nunchuk</span>D-pad</td><td><span class="l">Classic</span>Left stick</td><td><span class="l">GameCube</span>Control stick</td></tr>
+          <tr><th scope="row">Look</th><td><span class="l">Remote + Nunchuk</span>Nunchuk stick</td><td><span class="l">Classic</span>Right stick</td><td><span class="l">GameCube</span>C-stick</td></tr>
+          <tr><th scope="row">Jump</th><td><span class="l">Remote + Nunchuk</span>B</td><td><span class="l">Classic</span>A</td><td><span class="l">GameCube</span>A</td></tr>
+          <tr><th scope="row">Break</th><td><span class="l">Remote + Nunchuk</span>Nunchuk Z</td><td><span class="l">Classic</span>ZR</td><td><span class="l">GameCube</span>R</td></tr>
+          <tr><th scope="row">Place</th><td><span class="l">Remote + Nunchuk</span>Nunchuk C</td><td><span class="l">Classic</span>ZL</td><td><span class="l">GameCube</span>L</td></tr>
+          <tr><th scope="row">Inventory</th><td><span class="l">Remote + Nunchuk</span>A</td><td><span class="l">Classic</span>X</td><td><span class="l">GameCube</span>Y</td></tr>
+          <tr><th scope="row">Sneak toggle</th><td><span class="l">Remote + Nunchuk</span>1</td><td><span class="l">Classic</span>Y</td><td><span class="l">GameCube</span>Z</td></tr>
+          <tr><th scope="row">Hotbar</th><td><span class="l">Remote + Nunchuk</span>Minus / Plus</td><td><span class="l">Classic</span>Full L / full R</td><td><span class="l">GameCube</span>B / X</td></tr>
+          <tr><th scope="row">Chat</th><td><span class="l">Remote + Nunchuk</span>Tap 2</td><td><span class="l">Classic</span>D-pad Up</td><td><span class="l">GameCube</span>D-pad Up</td></tr>
+          <tr><th scope="row">Pause</th><td><span class="l">Remote + Nunchuk</span>Home</td><td><span class="l">Classic</span>Home</td><td><span class="l">GameCube</span>Start</td></tr>
+        </tbody>
+      </table>
+      <p class="note">Drop items from the inventory screen on every pad.</p>
+    </div>
+  </section>
+
+  <section class="download on-dark" aria-labelledby="download-title">
+    <div class="wrap">
+      <p class="eyebrow">Release 10/31</p>
+      <h2 id="download-title">Get it on your SD card.</h2>
+      <a class="btn btn--amber btn--xl" href="https://github.com/Bag-Heads/CavEX-ReCrafted/releases/latest">Download for Wii</a>
+      <p class="known">Known issues: see the <a href="https://github.com/Bag-Heads/CavEX-ReCrafted/releases/latest">release notes on GitHub</a>.</p>
+      <div class="legal">
+        <p>Plays like Beta 1.7.3.</p>
+        <p>Your own Beta 1.7.3 texture pack is not included.</p>
+        <p>Not affiliated with Mojang or Nintendo.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="credits" class="credits on-light" aria-labelledby="credits-title">
+    <div class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Who made it</p>
+        <h2 id="credits-title">Credits</h2>
+      </div>
+      <ul>
+        <li><strong>CavEX</strong> by xtreme8000 (ByteBit), with fCavEX fork work by yyy257, ByteBit and jilleb. GPLv3; CaveWii changes are GPL.</li>
+        <li><strong>Earth &amp; Ash</strong> texture pack, CC0 1.0.</li>
+        <li><strong>Isabella II</strong> by Bonemouse, CC BY 3.0.</li>
+        <li><strong>Wii hand pointer</strong> from the Homebrew Channel by Team Twiizers / fail0verflow, GPLv2.</li>
+        <li><strong>BagHeads boot art</strong> © 2026 BagHeads.</li>
+        <li><strong>Libraries:</strong> libogc, cNBT, cglm, lodepng, miniaudio, parson, m-lib, greatest.</li>
+      </ul>
+      <div class="links">
+        <a class="btn btn--ink" href="https://github.com/Bag-Heads/CavEX-ReCrafted/blob/main/NOTICE">NOTICE</a>
+        <a class="btn btn--ghost-dark" href="https://github.com/Bag-Heads/CavEX-ReCrafted/tree/main/LICENSES">LICENSES</a>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p><strong>CavEX: Re-Crafted Edition</strong> by BagHeads. Free homebrew for the Nintendo Wii.</p>
+    <p>Plays like Beta 1.7.3. Your own Beta 1.7.3 texture pack is not included. Not affiliated with Mojang or Nintendo.</p>
+    <p><a href="https://github.com/Bag-Heads/CavEX-ReCrafted/blob/main/NOTICE">NOTICE</a> · <a href="https://github.com/Bag-Heads/CavEX-ReCrafted/tree/main/LICENSES">LICENSES</a> · <a href="https://github.com/Bag-Heads/CavEX-ReCrafted/releases/latest">Latest release</a></p>
+  </div>
+</footer>
+
+</body>
+</html>

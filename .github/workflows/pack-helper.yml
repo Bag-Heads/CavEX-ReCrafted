@@ -1,0 +1,71 @@
+name: Pack Helper candidates
+
+# Build-only artifacts. The hardware-certified game release remains a separate gate.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  helper:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-22.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          # PINNED: package_app.py asserts this exact minor at build time, so a
+          # bundle can never be frozen by a different CPython than the release
+          # one (2026-09-17 review, finding H2). Keep the two in step.
+          python-version: '3.12'
+      - uses: msys2/setup-msys2@v2
+        id: msys2
+        if: runner.os == 'Windows'
+        with:
+          msystem: UCRT64
+          install: mingw-w64-ucrt-x86_64-gcc
+      - name: Windows compiler
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: '"${{ steps.msys2.outputs.msys2-location }}\ucrt64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append'
+      - name: Install build dependencies
+        run: python -m pip install -r tools/pack_helper/requirements-build.txt
+      - name: Record the resolved build inputs
+        # Always published, so requirements-build.lock can be produced from a
+        # REAL resolve rather than guessed. package_app.py refuses to build
+        # when the lock is absent or does not match this list.
+        run: python tools/pack_helper/package_app.py --emit-lock dist/resolved-build-inputs.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pack-helper-resolved-build-inputs-${{ runner.os }}-${{ runner.arch }}
+          path: dist/resolved-build-inputs.txt
+          if-no-files-found: error
+      - name: Linux desktop runtime for packaging checks
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libtk8.6 xvfb xauth
+      - name: Unit tests
+        run: python -m unittest discover -s tests -p "test_pack_helper*.py" -v
+      - name: Build native helper and frozen release resources
+        run: python tools/pack_helper/package_app.py --cc gcc --out dist/pack-helper
+      - name: Frozen smoke test (Windows and macOS)
+        if: runner.os != 'Linux'
+        run: python tools/pack_helper/smoke_packaged.py dist/pack-helper dist/frozen-smoke.json
+      - name: Frozen smoke test (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a python tools/pack_helper/smoke_packaged.py dist/pack-helper dist/frozen-smoke.json
+      - name: Preserve executable permissions and macOS bundle links
+        run: python -c "import tarfile; t=tarfile.open('dist/pack-helper.tar.gz','w:gz'); t.add('dist/pack-helper',arcname='Pack Helper'); t.close()"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: CaveWii-Pack-Helper-${{ runner.os }}-${{ runner.arch }}-candidate
+          path: |
+            dist/pack-helper.tar.gz
+            dist/frozen-smoke.json
+          if-no-files-found: error

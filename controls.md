@@ -60,3 +60,12 @@
 | minus | `306` |
 | strum up | `307` |
 | strum down | `308` |
+
+## Debug overlay (F3) on the Wii
+
+Hold **MINUS (−)** and press **PLUS (+)** on the Wiimote to show/hide the F3 overlay
+(Classic Controller: **Y**, unchanged; PC: **F3**). The chord deliberately uses the two
+hotbar-scroll buttons: the stray scroll-left from pressing − and scroll-right from
+pressing + cancel each other, so your selected slot ends where it started. Configured as
+key code `9008` (`hold*1000 + press`) in `input.debug_overlay` — any binding entry
+`>= 1000` is a two-button chord.

@@ -20,7 +20,7 @@
 #ifndef RENDER_MODEL_H
 #define RENDER_MODEL_H
 
-#include "../item/items.h"
+#include "../item/item_types.h"
 #include "../platform/gfx.h"
 
 void render_model_box(mat4 view, vec3 position, vec3 pivot, vec3 rotation,

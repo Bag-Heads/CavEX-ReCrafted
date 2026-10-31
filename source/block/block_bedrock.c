@@ -17,6 +17,8 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../graphics/render_block.h" // direct include (was transitive via blocks.h pre-split)
+#include "../graphics/render_item.h" // direct include (was transitive via blocks.h pre-split)
 #include "blocks.h"
 
 static enum block_material getMaterial(struct block_info* this) {
@@ -39,18 +41,13 @@ static uint8_t getTextureIndex(struct block_info* this, enum side side) {
 	return tex_atlas_lookup(TEXAT_BEDROCK);
 }
 
-static size_t getDroppedItem(struct block_info* this, struct item_data* it,
-							 struct random_gen* g, struct server_local* s) {
-	return 0;
-}
-
 struct block block_bedrock = {
 	.name = "Bedrock",
 	.getSideMask = getSideMask,
 	.getBoundingBox = getBoundingBox,
 	.getMaterial = getMaterial,
 	.getTextureIndex = getTextureIndex,
-	.getDroppedItem = getDroppedItem,
+	.getDroppedItem = block_drop_default,
 	.onRandomTick = NULL,
 	.onRightClick = NULL,
 	.transparent = false,

@@ -18,7 +18,12 @@ varying vec2 v_texcoord;
 
 void main() {
 	if(enable_lighting) {
-		v_color = vec4(vec3(lighting[int(a_light.x) + int(a_light.y) * 16]), 1.0);
+		// Grayscale light (day/night LUT) modulated by the per-vertex biome
+		// tint in a_color. Untinted geometry feeds a constant white a_color, so
+		// this stays identical to plain lighting there.
+		v_color = vec4(vec3(lighting[int(a_light.x) + int(a_light.y) * 16])
+						   * a_color.rgb,
+					   1.0);
 	} else {
 		v_color = a_color;
 	}

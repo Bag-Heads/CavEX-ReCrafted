@@ -17,7 +17,10 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../graphics/render_block.h" // direct include (was transitive via blocks.h pre-split)
+#include "../graphics/render_item.h" // direct include (was transitive via blocks.h pre-split)
 #include "../network/server_local.h"
+#include "../network/server_local_state.h" // full server state (split from server_local.h)
 #include "blocks.h"
 
 static enum block_material getMaterial(struct block_info* this) {
@@ -26,8 +29,9 @@ static enum block_material getMaterial(struct block_info* this) {
 
 static size_t getBoundingBox(struct block_info* this, bool entity,
 							 struct AABB* x) {
+	// Beta BlockMushroom.<init> (java:8-9): half-width .2F, height .4F.
 	if(x)
-		aabb_setsize(x, 0.375F, 0.375F, 0.375F);
+		aabb_setsize(x, 0.4F, 0.4F, 0.4F);
 	return entity ? 0 : 1;
 }
 
@@ -40,83 +44,108 @@ static uint8_t getTextureIndex(struct block_info* this, enum side side) {
 	return tex_atlas_lookup(TEXAT_MUSHROOM_BROWN);
 }
 
-static bool onItemPlace(struct server_local* s, struct item_data* it,
+// Beta BlockMushroom.canThisPlantGrowOnThisBlockID [740c583]: `Block.opaqueCubeLookup[id]`
+// -- ANY full opaque cube (stone, wood, wool, ... ), not just grass/dirt. This
+// project's existing 1:1 port of that exact table (see worldgen_hell.c's
+// hell_is_opaque_cube, cited there for this SAME mushroom canBlockStay ground
+// check) is `!blocks[id]->can_see_through`.
+static bool mushroom_opaque_cube(uint8_t id) {
+	return blocks[id] && !blocks[id]->can_see_through;
+}
+
+// Beta BlockMushroom.canBlockStay(world,x,y,z) [740c583]:
+//   getFullBlockLightValue(x,y,z) < 13 && opaqueCubeLookup[blockBelow]
+// getFullBlockLightValue is the RAW, un-subtracted max(sky,torch) (World.
+// getFullBlockLightValue passes skylightSubtracted=0 literally) -- the same
+// raw-light convention block_sapling.c/block_flower.c already use for their own
+// canBlockStay, and DIFFERENT from BlockGrass's day/night-adjusted
+// getBlockLightValue (see block_grass.c). Beta's extra `y>=0 && y<128` guard is
+// redundant here: server_world_get_block already returns false outside
+// [0,WORLD_HEIGHT), which is the only case that guard changes (y=0's "below" at
+// y=-1) -- the get_block(below) call folds it in for free.
+static bool mushroom_can_block_stay(struct server_local* s, w_coord_t x,
+									w_coord_t y, w_coord_t z) {
+	struct block_data here;
+	if(!server_world_get_block(block_world(s), x, y, z, &here))
+		return false;
+	int light = (int)here.sky_light > (int)here.torch_light ? (int)here.sky_light
+															 : (int)here.torch_light;
+	if(light >= 13)
+		return false;
+
+	struct block_data below;
+	return server_world_get_block(block_world(s), x, y - 1, z, &below)
+		&& mushroom_opaque_cube(below.type);
+}
+
+// Beta BlockFlower.canPlaceBlockAt (inherited, virtual-dispatches to
+// BlockMushroom's own canThisPlantGrowOnThisBlockID override above): any opaque
+// cube, matching canBlockStay's own ground rule -- NOT the grass/dirt-only
+// restriction the old code hardcoded here (that rule belongs to BlockFlower's
+// species -- dandelion/rose/tallgrass/sapling -- never to BlockMushroom, which
+// famously grows in dark rooms on stone/cobblestone/wood in vanilla).
+static bool onItemPlace(struct server_local* s, struct server_player* actor, struct item_data* it,
 						struct block_info* where, struct block_info* on,
 						enum side on_side) {
 	struct block_data blk;
-	if (!server_world_get_block(&s->world, where->x, where->y - 1, where->z, &blk))
+	if (!server_world_get_block(block_world(s), where->x, where->y - 1, where->z, &blk))
 		return false;
 
-	// Check if the block is suitable for planting mushrooms (grass or dirt)
-	if (blk.type != BLOCK_GRASS && blk.type != BLOCK_DIRT)
+	if (!mushroom_opaque_cube(blk.type))
 		return false;
 
-	// Allow placing the mushroom
-	return block_place_default(s, it, where, on, on_side);
+	return block_place_default(s, actor, it, where, on, on_side);
 }
 
-static void onRandomTick(struct server_local* s, struct block_info* blk) {
-	if (blk->block->sky_light >= 13 || blk->block->torch_light >= 13)
+// Beta BlockMushroom.onNeighborBlockChange [740c583]: NOT overridden -- inherited
+// from BlockFlower unchanged, i.e. `super.onNeighborBlockChange()` +
+// checkFlowerChange(): pop as a dropped item (dropBlockAsItem; base Block
+// quantityDropped=1, idDropped=own blockID -- BlockMushroom overrides neither)
+// when `!canBlockStay` (virtual-dispatches to the override above). Mirrors
+// block_sapling.c's/block_flower.c's identical checkFlowerChange pattern.
+static void onNeighbourBlockChange(struct server_local* s,
+								   struct block_info* info) {
+	if(mushroom_can_block_stay(s, info->x, info->y, info->z))
+		return;
+	server_local_spawn_block_drops(s, info);
+	server_world_set_block(block_world(s), info->x, info->y, info->z,
+						   (struct block_data) {.type = BLOCK_AIR, .metadata = 0});
+}
+
+// Beta BlockMushroom.updateTick [740c583] FULLY OVERRIDES BlockFlower.updateTick
+// (unlike BlockSapling's, which calls `super.updateTick()` = checkFlowerChange
+// first) -- a mushroom's random tick ONLY ever tries to spread, and never
+// self-checks its own canBlockStay. Support loss only ever pops a mushroom via
+// onNeighborBlockChange above, never via this random tick. Draw order sacred,
+// on the shared world stream (s->rand_src):
+//   if (rand.nextInt(100) == 0) {
+//       x' = x + rand.nextInt(3) - 1;             // draw 1
+//       y' = y + rand.nextInt(2) - rand.nextInt(2); // draws 2,3 (both consumed
+//                                                    // even if the first is 0)
+//       z' = z + rand.nextInt(3) - 1;             // draw 4
+//       if (isAirBlock(x',y',z') && canBlockStay(x',y',z'))
+//           setBlockWithNotify(x',y',z', this.blockID);
+//   }
+// Beta BlockMushroom.java:19-22 consumes two more nextInt(3) draws after
+// the first destination check, then rechecks that same destination.
+static void onRandomTick(struct server_local* s, struct block_info* this) {
+	if(rand_gen_int(&s->rand_src, 100) != 0)
 		return;
 
-	// Count surrounding mushrooms
-	int count = 0;
-	for (int dx = -4; dx <= 4; dx++) {
-		for (int dy = -1; dy <= 1; dy++) {
-			for (int dz = -4; dz <= 4; dz++) {
-				struct block_data nearby;
-				if (server_world_get_block(&s->world, blk->x + dx, blk->y + dy, blk->z + dz, &nearby)) {
-					if (nearby.type == blk->block->type)
-						count++;
-				}
-			}
-		}
-	}
-	if (count > 5) return;
+	w_coord_t x = this->x + rand_gen_int(&s->rand_src, 3) - 1;
+	w_coord_t y = this->y + rand_gen_int(&s->rand_src, 2) - rand_gen_int(&s->rand_src, 2);
+	w_coord_t z = this->z + rand_gen_int(&s->rand_src, 3) - 1;
 
-	// Random chance for red vs brown mushroom spawn (brown mushroom has 8x more chance)
-	int mushroomType = (rand() % 9); // 0-8, 0 means red mushroom, 1-8 means brown mushroom
-
-	// Choose random neighboring block to spread
-	int ox = blk->x + (rand() % 3) - 1;
-	int oy = blk->y + (rand() % 2) - rand() % 2;
-	int oz = blk->z + (rand() % 3) - 1;
-
-	// Check if the chosen block is air
 	struct block_data dest;
-	if (!server_world_get_block(&s->world, ox, oy, oz, &dest)) return;
-	if (dest.type != BLOCK_AIR) return;
-
-	// Check the block below to see if it is dirt, grass
-	struct block_data below;
-	if (server_world_get_block(&s->world, ox, oy - 1, oz, &below)) {
-		// Ensure the block below is suitable for mushrooms to grow on (dirt, grass)
-		if (below.type == BLOCK_DIRT || below.type == BLOCK_GRASS) {
-			// Ensure the block above is not transparent
-			if (!blocks[below.type] || blocks[below.type]->can_see_through) {
-				// Don't allow mushroom growth if the block is transparent (like glass or leaves)
-				return;
-			}
-
-			if (mushroomType == 0) {
-				// 1 in 9 kans voor rode mushroom
-				server_world_set_block(s, ox, oy, oz, (struct block_data){
-					.type = BLOCK_RED_MUSHROOM,
-					.metadata = 0
-				});
-			} else {
-				// 8 in 9 kans voor bruine mushroom
-				server_world_set_block(s, ox, oy, oz, (struct block_data){
-					.type = BLOCK_BROWM_MUSHROOM,
-					.metadata = 0
-				});
-			}
-
-		}
+	if(server_world_get_block(block_world(s), x, y, z, &dest) && dest.type == BLOCK_AIR
+	   && mushroom_can_block_stay(s, x, y, z)) {
+		(void)rand_gen_int(&s->rand_src, 3);
+		(void)rand_gen_int(&s->rand_src, 3);
+		server_world_set_block(block_world(s), x, y, z,
+							   (struct block_data) {.type = BLOCK_BROWM_MUSHROOM,
+													.metadata = 0});
 	}
 }
-
-
 
 struct block block_brown_mushroom = {
 	.name = "Brown mushroom",
@@ -126,6 +155,7 @@ struct block block_brown_mushroom = {
 	.getTextureIndex = getTextureIndex,
 	.getDroppedItem = block_drop_default,
 	.onRandomTick = onRandomTick,
+	.onNeighbourBlockChange = onNeighbourBlockChange, // Beta: pop when canBlockStay fails
 	.onRightClick = NULL,
 	.transparent = false,
 	.renderBlock = render_block_cross,

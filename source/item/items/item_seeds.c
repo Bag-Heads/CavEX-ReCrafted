@@ -18,11 +18,13 @@
 */
 
 #include "../../network/server_local.h"
+#include "../../network/server_local_state.h" // full server state (split from server_local.h)
 #include "../../network/client_interface.h"
 #include "../../network/server_interface.h"
 #include "../../block/blocks.h"
+#include "../../graphics/render_item.h" // direct include (was transitive via blocks.h pre-split)
 
-static bool onItemPlace(struct server_local* s, struct item_data* it,
+static bool onItemPlace(struct server_local* s, struct server_player* actor, struct item_data* it,
                         struct block_info* where, struct block_info* on,
                         enum side on_side) {
     if (!on || !on->block) return false;
@@ -37,14 +39,14 @@ static bool onItemPlace(struct server_local* s, struct item_data* it,
 
     // check if there's air above the crop
     struct block_data blk;
-    if (!server_world_get_block(&s->world, tx, ty, tz, &blk))
+    if (!server_world_get_block(block_world(s), tx, ty, tz, &blk))
         return false;
 
     if (blk.type != BLOCK_AIR)
         return false;
 
     // Plant the crop
-    server_world_set_block(s, tx, ty, tz, (struct block_data) {
+    server_world_set_block(block_world(s), tx, ty, tz, (struct block_data) {
         .type = BLOCK_CROPS,
         .metadata = 0,
         .sky_light = 0,

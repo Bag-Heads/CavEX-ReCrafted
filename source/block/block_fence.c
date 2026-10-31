@@ -17,6 +17,10 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../graphics/render_block.h" // direct include (was transitive via blocks.h pre-split)
+#include "../graphics/render_item.h" // direct include (was transitive via blocks.h pre-split)
+#include "../network/server_local_state.h"
+#include "../network/server_world.h"
 #include "blocks.h"
 
 static enum block_material getMaterial(struct block_info* this) {
@@ -48,6 +52,19 @@ static uint8_t getTextureIndex(struct block_info* this, enum side side) {
 	return tex_atlas_lookup(TEXAT_PLANKS);
 }
 
+static bool onItemPlace(struct server_local* s, struct server_player* actor,
+		struct item_data* it, struct block_info* where, struct block_info* on,
+		enum side on_side) {
+	// Beta BlockFence.canPlaceBlockAt: fence below, or solid material below.
+	struct block_data below;
+	// Local block placement writes worlds[0] through block_place_default.
+	if(!server_world_get_block(block_world(s), where->x, where->y - 1, where->z,
+			&below) || (below.type != BLOCK_FENCE
+			&& !block_beta_material_is_solid(below.type)))
+		return false;
+	return block_place_default(s, actor, it, where, on, on_side);
+}
+
 struct block block_fence = {
 	.name = "Fence",
 	.getSideMask = getSideMask,
@@ -75,7 +92,7 @@ struct block block_fence = {
 		.has_damage = false,
 		.max_stack = 64,
 		.renderItem = render_item_block,
-		.onItemPlace = block_place_default,
+		.onItemPlace = onItemPlace,
 		.fuel = 0,
 		.render_data.block.has_default = false,
 		.armor.is_armor = false,

@@ -21,9 +21,16 @@
 #define GFX_UTIL_H
 
 #include "../cglm/cglm.h"
+#include "../platform/time.h"
 
 #include "../world.h"
 
+struct entity; // pointer-only (was transitive via world.h->camera.h pre-split)
+
+struct camera;
+void gutil_clouds_owned(mat4 view_matrix, float brightness, const struct camera* camera, ptime_t now);
+void gutil_sky_box_owned(mat4 view_matrix, float celestial_angle, vec3 color_top,
+	vec3 color_bottom, const struct camera* camera);
 void gutil_clouds(mat4 view_matrix, float brightness);
 void gutil_sky_box(mat4 view_matrix, float celestial_angle, vec3 color_top,
 				   vec3 color_bottom);

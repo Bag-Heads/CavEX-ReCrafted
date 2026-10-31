@@ -17,6 +17,8 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../graphics/render_block.h" // direct include (was transitive via blocks.h pre-split)
+#include "../graphics/render_item.h" // direct include (was transitive via blocks.h pre-split)
 #include "blocks.h"
 
 static enum block_material getMaterial(struct block_info* this) {
@@ -57,10 +59,15 @@ struct block block_bricks = {
 	.ignore_lighting = false,
 	.flammable = false,
 	.place_ignore = false,
+	// Beta hardness x1500: Block.java:637 brick `.setHardness(2.0F)` -> 3000
+	// (already correct). `.best = TOOL_TIER_ANY` (not WOOD):
+	// ItemPickaxe.blocksEffectiveAgainst omits Block.brick entirely, so
+	// getStrVsBlock is flat 1.0F for any pickaxe tier -- no per-tier bonus
+	// (same mechanism as block_ore.c's redstone-ore comment).
 	.digging.hardness = 3000,
 	.digging.tool = TOOL_TYPE_PICKAXE,
 	.digging.min = TOOL_TIER_WOOD,
-	.digging.best = TOOL_TIER_WOOD,
+	.digging.best = TOOL_TIER_ANY,
 	.block_item = {
 		.has_damage = false,
 		.max_stack = 64,

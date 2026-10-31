@@ -18,61 +18,80 @@
 */
 
 #include "../../network/server_local.h"
+#include "../../network/server_local_state.h" // full server state (split from server_local.h)
 #include "../../network/client_interface.h"
 #include "../../network/server_interface.h"
 #include "../../block/blocks.h"
+#include "../../entity/entity_primed_tnt.h"
+#include "../../platform/audio.h" /* S2: fire.ignite */
+#include "../../util.h"			  /* rand_gen_flt for the ignite pitch roll */
+#include "../../graphics/render_item.h" // direct include (was transitive via blocks.h pre-split)
 
-static bool onItemPlace(struct server_local* s, struct item_data* it,
-						struct block_info* where, struct block_info* on,
-						enum side on_side) {
+// Beta 1.7.3 ItemFlintAndSteel.onItemUse: light fire in the cell adjacent to the clicked
+// face if that cell is air. Beta does NOT gate on the clicked block being flammable -- you
+// can light a (transient) fire on any face; the fire block's tick (block_fire.c) extinguishes
+// it if there's no fuel and no solid support. Every valid click damages the real
+// held stack once even when the adjacent cell is occupied; maxDamage=64 breaks
+// on use 65 because ItemStack.damageItem compares strictly greater-than.
+// [decompile 740c583 ItemFlintAndSteel.onItemUse]
+static bool onUseOnBlock(struct server_local* s, struct server_player* actor, struct item_data* it,
+						   struct block_info* on, enum side on_side) {
 	if (!on || !on->block) return false;
 
-	// Check if the clicked block is flammable
-	if (!blocks[on->block->type] || !blocks[on->block->type]->flammable)
-		return false;
-
-	int tx = on->x;
-	int ty = on->y;
-	int tz = on->z;
-
-	// Determine the target block based on click side
-	switch (on_side) {
-		case SIDE_TOP:    ty += 1; break;
-		case SIDE_BOTTOM: ty -= 1; break;
-		case SIDE_FRONT:  tz += 1; break;
-		case SIDE_BACK:   tz -= 1; break;
-		case SIDE_LEFT:   tx -= 1; break;
-		case SIDE_RIGHT:  tx += 1; break;
-		default: break;
+	/* Controller playability adaptation: Beta primes TNT when flint & steel is
+	 * held during the left-click break path (BlockTNT.onBlockClicked stamps
+	 * metadata 1 before onBlockDestroyedByPlayer). Wii use is right-click, so
+	 * preserve the established direct ignition here in the ITEM layer. TNT's
+	 * blockActivated itself remains false, allowing every non-flint item and
+	 * adjacent block placement to follow PlayerController.sendPlaceBlock. */
+	if(on->block->type == BLOCK_TNT) {
+		if(server_local_prime_tnt_block(
+			   s, on->x, on->y, on->z, TNT_FUSE_DEFAULT))
+			item_stack_damage(it, 1);
+		return true;
 	}
 
+	// Cell adjacent to the clicked face. Use the canonical blocks_side_offset (the SAME mapping
+	// the dispatch used to build `where` and that every block placer uses) -- the old hand-rolled
+	// switch had SIDE_FRONT/SIDE_BACK swapped vs it, so z-axis clicks lit fire on the wrong face.
+	int dx, dy, dz;
+	blocks_side_offset(on_side, &dx, &dy, &dz);
+	int tx = on->x + dx;
+	int ty = on->y + dy;
+	int tz = on->z + dz;
+
 	struct block_data blk;
-	if (!server_world_get_block(&s->world, tx, ty, tz, &blk))
-		return false;
+	if (server_world_get_block(block_world(s), tx, ty, tz, &blk)
+		&& blk.type == BLOCK_AIR) {
+		// S2: Beta plays "fire.ignite" 1.0F, rand*0.4F+0.8F at the target
+		// cell center, just BEFORE setBlockWithNotify(fire) -- and only on
+		// the air-target branch (a blocked click stays silent). This covers
+		// portal LIGHTING too: the portal fill itself (BlockFire.onBlockAdded
+		// -> tryToCreatePortal, dispatched from this very set_block) is
+		// silent in b1.7.3. [740c583: ItemFlintAndSteel.onItemUse:35-40]
+		server_local_emit_sound(
+			SOUND_FIRE_IGNITE, (vec3) {tx + 0.5F, ty + 0.5F, tz + 0.5F}, 1.0F,
+			rand_gen_flt(server_local_sound_rng()) * 0.4F + 0.8F);
+		server_world_set_block(block_world(s), tx, ty, tz, (struct block_data) {
+			.type = BLOCK_FIRE,
+			.metadata = 0,
+			.sky_light = 0,
+			.torch_light = 15,
+		});
+	}
 
-	// Only if the target block is air
-	if (blk.type != BLOCK_AIR)
-		return false;
-
-	// Place fire
-	server_world_set_block(s, tx, ty, tz, (struct block_data) {
-		.type = BLOCK_FIRE,
-		.metadata = 0,
-		.sky_light = 0,
-		.torch_light = 15,
-	});
-
-	return false;
+	item_stack_damage(it, 1);
+	return true;
 }
 
 struct item item_flint_steel = {
 	.name = "Flint and Steel",
-	.has_damage = false,  // Disable damage (it won't be used up anymore)
-	.max_damage = 0,      // Set max_damage to 0, so it doesn't get used up
+	.has_damage = true,
+	.max_damage = 64,
 	.max_stack = 1,
 	.fuel = 0,
 	.renderItem = render_item_flat,
-	.onItemPlace = onItemPlace,
+	.onUseOnBlock = onUseOnBlock,
 	.armor.is_armor = false,
 	.tool.type = TOOL_TYPE_ANY,
 	.render_data = {

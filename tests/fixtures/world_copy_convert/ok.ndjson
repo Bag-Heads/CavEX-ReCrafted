@@ -1,0 +1,10 @@
+{"event":"hello","profile":"world_copy_convert"}
+{"event":"wcc_begin","variant":"ok","fixture":"cw_wcc_fixture"}
+{"event":"wcc_list_pre","rows":3,"fixture_row":1,"needs_convert":true,"backup_row":-1,"partial_visible":false}
+{"event":"wcc_ask","safe_default":true}
+{"event":"wcc_volume","free_bytes":7948206080,"cluster_bytes":32768,"required_bytes":393216}
+{"event":"wcc_copy","saw_copying":true,"saw_cleaning":false,"pct_max":90,"monotonic":true,"interrupted":false}
+{"event":"wcc_result","state":6,"fail":0,"copy_error":0,"outcome":1,"backup_published":true}
+{"event":"wcc_list_post","rows":4,"fixture_row":1,"needs_convert":false,"backup_row":3,"partial_visible":false}
+{"event":"wcc_card","root_ok":true,"truncated":false,"names":["cw_wcc_fixture","cw_wcc_fixture (backup)"]}
+{"event":"wcc_end","variant":"ok","ok":true,"step":13,"failed_step":0}

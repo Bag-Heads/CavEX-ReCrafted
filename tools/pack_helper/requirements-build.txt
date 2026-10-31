@@ -1,0 +1,17 @@
+# Direct build inputs for the CaveWii Pack Helper frozen bundle.
+# The helper itself needs only the standard library + tkinter at runtime;
+# Pillow is the one third-party import, PyInstaller is the freezer.
+#
+# These two pins are NOT the whole story: PyInstaller resolves a transitive
+# set (altgraph, packaging, setuptools, pyinstaller-hooks-contrib, and the
+# per-OS pefile / pywin32-ctypes / macholib). The COMPLETE resolved closure is
+# pinned in requirements-build.lock, which tools/pack_helper/package_app.py
+# compares against the live environment and refuses to build without
+# (2026-09-17 review, finding H2).
+#
+# Regenerate the lock deliberately, on the pinned interpreter (Python 3.12,
+# .github/workflows/pack-helper.yml), with:
+#   python -m pip install -r tools/pack_helper/requirements-build.txt
+#   python tools/pack_helper/package_app.py --emit-lock tools/pack_helper/requirements-build.lock
+Pillow==12.3.0
+PyInstaller==6.22.3

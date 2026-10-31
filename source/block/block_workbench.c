@@ -17,9 +17,12 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../graphics/render_block.h" // direct include (was transitive via blocks.h pre-split)
+#include "../graphics/render_item.h" // direct include (was transitive via blocks.h pre-split)
 #include "../network/client_interface.h"
 #include "../network/inventory_logic.h"
 #include "../network/server_local.h"
+#include "../network/server_local_state.h" // full server state (split from server_local.h)
 #include "blocks.h"
 
 static enum block_material getMaterial(struct block_info* this) {
@@ -50,20 +53,13 @@ static uint8_t getTextureIndex(struct block_info* this, enum side side) {
 	}
 }
 
-static void onRightClick(struct server_local* s, struct item_data* it,
+static void onRightClick(struct server_local* s, struct server_player* actor, struct item_data* it,
 						 struct block_info* where, struct block_info* on,
 						 enum side on_side) {
-	if(s->player.active_inventory == &s->player.inventory) {
-		clin_rpc_send(&(struct client_rpc) {
-			.type = CRPC_OPEN_WINDOW,
-			.payload.window_open.window = WINDOWC_CRAFTING,
-			.payload.window_open.type = WINDOW_TYPE_WORKBENCH,
-			.payload.window_open.slot_count = CRAFTING_SIZE,
-		});
-
-		struct inventory* inv = malloc(sizeof(struct inventory));
-		inventory_create(inv, &inventory_logic_crafting, s, CRAFTING_SIZE, 0, 0, 0);
-		s->player.active_inventory = inv;
+	if(actor->active_inventory == &actor->inventory) {
+		server_local_open_inventory_for(
+			s, actor, &inventory_logic_crafting, CRAFTING_SIZE, 0, 0, 0,
+			WINDOWC_CRAFTING, WINDOW_TYPE_WORKBENCH);
 	}
 }
 
@@ -85,10 +81,18 @@ struct block block_workbench = {
 	.ignore_lighting = false,
 	.flammable = false,
 	.place_ignore = false,
+	// Beta hardness x1500: Block.java:650 workbench `.setHardness(2.5F)` ->
+	// 3750 (already correct). `.best = TOOL_TIER_ANY` (not MAX):
+	// ItemAxe.blocksEffectiveAgainst = {planks, bookShelf, wood, chest}
+	// omits Block.workbench entirely, so getStrVsBlock is flat 1.0F for any
+	// axe tier -- no per-tier bonus (same mechanism as block_ore.c's
+	// redstone-ore comment). Without this, TOOL_TIER_MAX let the equipped
+	// axe's own tier divide the delay, mining the workbench up to 8x
+	// (diamond axe, tool_tier_divider(DIAMOND)=8) too fast.
 	.digging.hardness = 3750,
 	.digging.tool = TOOL_TYPE_AXE,
 	.digging.min = TOOL_TIER_ANY,
-	.digging.best = TOOL_TIER_MAX,
+	.digging.best = TOOL_TIER_ANY,
 	.block_item = {
 		.has_damage = false,
 		.max_stack = 64,

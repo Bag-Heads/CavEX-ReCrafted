@@ -17,13 +17,32 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../graphics/render_block.h" // direct include (was transitive via blocks.h pre-split)
+#include "../graphics/render_item.h" // direct include (was transitive via blocks.h pre-split)
 #include "../network/client_interface.h"
 #include "../network/inventory_logic.h"
 #include "../network/server_local.h"
+#include "../network/server_local_state.h" // full server state (split from server_local.h)
 #include "blocks.h"
 
+static bool live_window_owns_chest(struct server_local* s, w_coord_t x,
+								   w_coord_t y, w_coord_t z) {
+	struct inventory* inv = s->player.active_inventory;
+	/* A1b: a window bound to another world views a different chest. */
+	return inv && inv != &s->player.inventory
+		&& server_local_window_bound_to(inv, block_world(s))
+		&& inv->logic == &inventory_logic_iron_chest && inv->x == x
+		&& inv->y == y && inv->z == z;
+}
+
 static enum block_material getMaterial(struct block_info* this) {
-	return MATERIAL_WOOD;
+	// Iron chest is a fork block (no Beta equivalent) crafted from 8 iron ingots and
+	// is its own item (id 95 < 256), so getMaterial == MATERIAL_WOOD would make the
+	// furnace fuel check (server_furnace.c, the ONLY getMaterial consumer) burn it for
+	// 300 ticks like a plank -- absurd for an all-iron block, and inconsistent with its
+	// iron siblings (block_iron id 42, iron_door id 71 = MATERIAL_STONE, both non-fuel).
+	// STONE keeps it correctly NON-fuel.
+	return MATERIAL_STONE;
 }
 
 static size_t getBoundingBox(struct block_info* this, bool entity,
@@ -58,24 +77,29 @@ static uint8_t getTextureIndex(struct block_info* this, enum side side) {
  	return tex[side];
 }
 
-static void onRightClick(struct server_local* s, struct item_data* it,
+static void onRightClick(struct server_local* s, struct server_player* actor, struct item_data* it,
 						 struct block_info* where, struct block_info* on,
 						 enum side on_side) {
-	if(s->player.active_inventory == &s->player.inventory) {
-		clin_rpc_send(&(struct client_rpc) {
-			.type = CRPC_OPEN_WINDOW,
-			.payload.window_open.window = WINDOWC_IRON_CHEST,
-			.payload.window_open.type = WINDOW_TYPE_IRON_CHEST,
-			.payload.window_open.slot_count = IRON_CHEST_SIZE,
-		});
-
-		struct inventory* inv = malloc(sizeof(struct inventory));
-		inventory_create(inv, &inventory_logic_iron_chest, s, IRON_CHEST_SIZE, on->x, on->y, on->z);
-		s->player.active_inventory = inv;
+	/* S1-a1b FAIL-CLOSED for a non-host actor: this container's live-window
+	 * ownership test (live_window_owns_chest below / block_iron_chest.c:28)
+	 * consults ONLY s->player.active_inventory -- there is no position-keyed
+	 * leg and no scan of any other actor, unlike the chest's
+	 * server_local_has_chest_view. Admitting a guest window here would let a
+	 * guest break a container it has open, take the "window does not own the
+	 * contents" branch, spawn the tile-entity snapshot as items AND keep the
+	 * same stacks in its live window -- a duplication on close (R-S1a1
+	 * finding 3, owner S1-a2). Opening stays host-only until that ownership
+	 * test takes the acting actor; PLACEMENT (facing) is per-actor already. */
+	if(actor != &s->player)
+		return;
+	if(actor->active_inventory == &actor->inventory) {
+		server_local_open_inventory_in(
+			s, block_world(s), actor, &inventory_logic_iron_chest, IRON_CHEST_SIZE, on->x,
+			on->y, on->z, WINDOWC_IRON_CHEST, WINDOW_TYPE_IRON_CHEST);
 	}
 }
 
-static bool onItemPlace(struct server_local* s, struct item_data* it,
+static bool onItemPlace(struct server_local* s, struct server_player* actor, struct item_data* it,
 						struct block_info* where, struct block_info* on,
 						enum side on_side) {
 	struct block_data blk = (struct block_data) {
@@ -88,17 +112,18 @@ static bool onItemPlace(struct server_local* s, struct item_data* it,
 	struct block_info blk_info = *where;
 	blk_info.block = &blk;
 
-	if(entity_local_player_block_collide(
-		   (vec3) {s->player.x, s->player.y, s->player.z}, &blk_info))
+	if(block_place_obstructed_for(s, actor, &blk_info)) // player + all entities (Beta gate)
 		return false;
+	/* A1b: rows of the placing world only (D4 bridge: slot 0). */
+	struct te_store st = server_world_tile_store(block_world(s));
+	if(te_store_find(&st, TE_KIND_CHEST, where->x, where->y, where->z) >= 0)
+		return false; // retained orphan row awaiting an OOM-safe spill
 
-	for (int i=0; i<MAX_CHESTS; i++) {
-		if (s->chest_pos[i].y < 0) {
-			s->chest_pos[i].x = where->x;
-			s->chest_pos[i].y = where->y;
-			s->chest_pos[i].z = where->z;
+	for (int i = te_store_claim_free(&st, TE_KIND_CHEST, where->x, where->y,
+									 where->z); i >= 0; i = -1) {
+		{
 			memset(&s->chest_items[i], 0, 54*sizeof(struct item_data));
-			server_world_set_block(s, where->x, where->y, where->z, blk);
+			server_world_set_block(block_world(s), where->x, where->y, where->z, blk);
 			return true;
 		}
 	}
@@ -108,29 +133,37 @@ static bool onItemPlace(struct server_local* s, struct item_data* it,
 }
 
 static size_t getDroppedItem(struct block_info* this, struct item_data* it,
-							 struct random_gen* g, struct server_local* s) {
+							 struct java_random* g, struct server_local* s) {
 	if(it) {
 		it->id = this->block->type;
 		it->durability = this->block->metadata;
 		it->count = 1;
-	} else { //only free chest on first run of getDroppedItem
-		for(int i=0; i<MAX_CHESTS; i++) {
-			if(s->chest_pos[i].x == this->x && s->chest_pos[i].y == this->y && s->chest_pos[i].z == this->z) {
-				for(int j=0; j<MAX_CHEST_SLOTS; j++) {
-					if(s->chest_items[i][j].id) {
-						server_local_spawn_item((vec3) {this->x + 0.5F,
-									this->y + 0.5F,
-									this->z + 0.5F},
-									&s->chest_items[i][j], false, s);
-					}
-				}
-				s->chest_pos[i].y = -1;
-				break;
-			}
-		}
 	}
 
 	return 1;
+}
+
+static void onBreak(struct server_local* s, struct block_info* this) {
+	bool window_owns_contents
+		= live_window_owns_chest(s, this->x, this->y, this->z);
+	struct te_store st = server_world_tile_store(block_world(s)); /* A1b */
+	for(int i = te_store_find(&st, TE_KIND_CHEST, this->x, this->y, this->z);
+		i >= 0; i = -1) {
+		if(window_owns_contents) {
+			(void)server_local_spill_active_container(
+				s, this->x, this->y, this->z);
+			te_store_free_row(&st, TE_KIND_CHEST, i);
+			memset(s->chest_items[i], 0, sizeof(s->chest_items[i]));
+		} else {
+			if(!server_local_spawn_destroyed_container_items(
+				   s, this->x, this->y, this->z, s->chest_items[i],
+				   MAX_CHEST_SLOTS))
+				return;
+			te_store_free_row(&st, TE_KIND_CHEST, i);
+			memset(s->chest_items[i], 0, sizeof(s->chest_items[i]));
+		}
+		break;
+	}
 }
 
 struct block block_iron_chest = {
@@ -140,6 +173,7 @@ struct block block_iron_chest = {
 	.getMaterial = getMaterial,
 	.getTextureIndex = getTextureIndex,
 	.getDroppedItem = getDroppedItem,
+	.onBreak = onBreak,
 	.onRandomTick = NULL,
 	.onRightClick = onRightClick,
 	.transparent = false,

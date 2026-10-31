@@ -1,0 +1,2 @@
+# Frozen Wii verdict evidence: byte-exact (manifest pins original_verdict_sha256).
+*.verdict.json -text

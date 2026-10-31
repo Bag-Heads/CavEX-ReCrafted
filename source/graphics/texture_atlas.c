@@ -17,13 +17,32 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <assert.h>
 #include <stddef.h>
+#include <stdio.h>
 
 #include "../platform/texture.h"
 #include "texture_atlas.h"
 
 static uint8_t global_block_atlas[TEXAT_MAX];
 static uint8_t global_particle_atlas[TEXAT_MAX];
+
+bool tex_atlas_tile_uv(size_t width, size_t height, uint8_t tile, float uv[4]) {
+	struct tex_atlas_grid grid;
+	if(!uv || tile >= 14 * 14 || !tex_atlas_grid_init(&grid, width, height))
+		return false;
+	size_t x = grid.origin_x + grid.border_pixels
+		+ TEXTURE_X(tile) * grid.cell_pitch;
+	size_t y = grid.origin_y + grid.border_pixels
+		+ TEXTURE_Y(tile) * grid.cell_pitch;
+	if(x + grid.content_pixels > width || y + grid.content_pixels > height)
+		return false;
+	uv[0] = (float)x / (float)width;
+	uv[1] = (float)y / (float)height;
+	uv[2] = uv[0] + (float)grid.content_pixels / (float)width;
+	uv[3] = uv[1] + (float)grid.content_pixels / (float)height;
+	return true;
+}
 
 static int clamp_n(int x, int n) {
 	if(x < 0)
@@ -79,6 +98,39 @@ void tex_atlas_reg_col(dict_atlas_src_t atlas, enum tex_atlas_entry name,
 							 });
 }
 
+static void tex_atlas_reg_opaque_col(dict_atlas_src_t atlas,
+									 enum tex_atlas_entry name, uint8_t x,
+									 uint8_t y, uint8_t from_x, uint8_t from_y,
+									 uint8_t r, uint8_t g, uint8_t b) {
+	dict_atlas_src_push_back(atlas,
+							 (struct texture_entry) {
+								 .name = name,
+								 .x = x,
+								 .y = y,
+								 .colorize.enable = true,
+								 .colorize.r = r,
+								 .colorize.g = g,
+								 .colorize.b = b,
+								 .opaque_from.enable = true,
+								 .opaque_from.x = from_x,
+								 .opaque_from.y = from_y,
+							 });
+}
+
+static void tex_atlas_reg_opaque(dict_atlas_src_t atlas,
+								 enum tex_atlas_entry name, uint8_t x, uint8_t y,
+								 uint8_t from_x, uint8_t from_y) {
+	dict_atlas_src_push_back(atlas,
+							 (struct texture_entry) {
+								 .name = name,
+								 .x = x,
+								 .y = y,
+								 .opaque_from.enable = true,
+								 .opaque_from.x = from_x,
+								 .opaque_from.y = from_y,
+							 });
+}
+
 void tex_atlas_reg_grass(dict_atlas_src_t atlas, enum tex_atlas_entry name,
 						 uint8_t x, uint8_t y, uint8_t r, uint8_t g, uint8_t b,
 						 uint8_t bg_x, uint8_t bg_y) {
@@ -97,12 +149,49 @@ void tex_atlas_reg_grass(dict_atlas_src_t atlas, enum tex_atlas_entry name,
 							 });
 }
 
+// Live-water slot, captured when the block atlas is built so the animated water FX
+// (water_fx, Beta TextureWaterFX) can blit its 16x16 tile into the EXACT terrain-atlas
+// pixel rect each tick without re-deriving the packing formula. -1 until captured.
+int g_water_atlas_x = -1, g_water_atlas_y = -1, g_water_atlas_tile = 0;
+
 void* tex_atlas_compute(dict_atlas_src_t atlas, uint8_t* atlas_dst,
 						uint8_t* image, size_t width, size_t height) {
-	assert(image && width >= 256 && width == height);
+	// This serves BOTH the 256x256 block atlas and the 128x128 particle atlas
+	// (and HD packs at higher 16-multiples). It only needs a non-null, square
+	// image whose side is a multiple of 16: one tile = width/16, and
+	// border_scale = width/256 is simply 0 below 256 (no borders), which the
+	// loops below handle correctly. The old `width >= 256` assert wrongly
+	// rejected the 128px particle atlas on asserts-enabled builds (the PC
+	// build) — the Wii build only "passed" because NDEBUG compiled it out.
+	//
+	// RUNTIME gate, not just an assert: this is USER texture-pack input and the
+	// shipping Wii build is NDEBUG (asserts stripped) — a missing/corrupt
+	// terrain.png arrives as image==NULL (with caller-uninitialized w/h), and a
+	// non-square or non-16-multiple one would walk the tile loops out of
+	// bounds: freeze-class on the Wii. Reject instead — the callers
+	// (tex_atlas_block/particles -> tex_init) already tolerate NULL, so the
+	// previous/unloaded texture is kept and the game stays alive.
+	if(!image) {
+		fprintf(stderr, "[texture] atlas source missing/unreadable -- rejected\n");
+		return NULL;
+	}
+	if(width != height || width < 16 || (width % 16) != 0) {
+		fprintf(stderr,
+				"[texture] atlas source rejected: %ux%u (need square, >=16, "
+				"multiple of 16)\n",
+				(unsigned)width, (unsigned)height);
+		return NULL;
+	}
+	if(height > SIZE_MAX / width || width * height > SIZE_MAX / 4) {
+		fprintf(stderr, "[texture] atlas source dimensions overflow allocation\n");
+		return NULL;
+	}
 
-	int tile_size = width / 16;
-	int border_scale = width / 256;
+	struct tex_atlas_grid grid;
+	if(!tex_atlas_grid_init(&grid, width, height))
+		return NULL;
+	int tile_size = (int)grid.content_pixels;
+	int border_scale = (int)grid.border_pixels;
 
 	uint8_t* output = malloc(width * height * 4);
 
@@ -124,15 +213,77 @@ void* tex_atlas_compute(dict_atlas_src_t atlas, uint8_t* atlas_dst,
 		size_t current_y = (current / 14) * (tile_size + 2 * border_scale)
 			+ 3 * border_scale;
 
+		// Record the live-water slot for water_fx (only the block atlas registers
+		// TEXAT_WATER_STATIC, so this fires once, for the correct atlas).
+		if(e->name == TEXAT_WATER_STATIC) {
+			g_water_atlas_x = (int)current_x;
+			g_water_atlas_y = (int)current_y;
+			g_water_atlas_tile = tile_size;
+		}
+
+		// Capacity guard: once tiles fill past the atlas bottom edge, the dst_col write
+		// below would run off the end of `output` (heap overflow). Stop blitting -- the
+		// remaining tiles keep the memset default rather than corrupting memory.
+		if(current_y + (size_t)(tile_size + border_scale) > (size_t)height) {
+			fprintf(stderr,
+					"[texture] atlas overflow: %d entries exceed %ux%u capacity; extras skipped\n",
+					current, (unsigned)width, (unsigned)height);
+			break;
+		}
+
+		/* opaque_from: a pack with no texel in the requested cell falls back
+		 * to the named cell, holes filled with its darkened opaque mean. */
+		uint8_t src_x = e->x, src_y = e->y;
+		bool fill_holes = false;
+		uint8_t fill[3] = {0, 0, 0};
+		if(e->opaque_from.enable) {
+			bool any_opaque = false;
+			for(int v = 0; v < tile_size && !any_opaque; v++)
+				for(int u = 0; u < tile_size; u++)
+					if(image[((e->x * tile_size + u)
+							  + (e->y * tile_size + v) * width) * 4 + 3]
+					   >= 128) {
+						any_opaque = true;
+						break;
+					}
+			if(!any_opaque) {
+				src_x = e->opaque_from.x;
+				src_y = e->opaque_from.y;
+				fill_holes = true;
+				uint32_t sum[3] = {0, 0, 0}, n = 0;
+				for(int v = 0; v < tile_size; v++)
+					for(int u = 0; u < tile_size; u++) {
+						const uint8_t* p = image
+							+ ((src_x * tile_size + u)
+							   + (src_y * tile_size + v) * width) * 4;
+						if(p[3] >= 128) {
+							for(int k = 0; k < 3; k++)
+								sum[k] += p[k];
+							n++;
+						}
+					}
+				for(int k = 0; k < 3; k++) /* half brightness: a shadowed gap */
+					fill[k] = n ? (uint8_t)(sum[k] / n / 2) : 0;
+			}
+		}
+
 		// int64_t to prevent unreasonable gcc warning
 		for(int64_t y = -border_scale; y < tile_size + border_scale; y++) {
 			for(int64_t x = -border_scale; x < tile_size + border_scale; x++) {
 				uint8_t* src_col = image
-					+ ((clamp_n(x, tile_size) + e->x * tile_size)
-					   + (clamp_n(y, tile_size) + e->y * tile_size) * width)
+					+ ((clamp_n(x, tile_size) + src_x * tile_size)
+					   + (clamp_n(y, tile_size) + src_y * tile_size) * width)
 						* 4;
 				uint8_t* dst_col
 					= output + ((current_x + x) + (current_y + y) * width) * 4;
+				uint8_t filled[4];
+				if(fill_holes) {
+					bool hole = src_col[3] < 128;
+					for(int k = 0; k < 3; k++)
+						filled[k] = hole ? fill[k] : src_col[k];
+					filled[3] = 255;
+					src_col = filled;
+				}
 
 				if(e->colorize.enable) {
 					dst_col[0] = src_col[0] * e->colorize.r / 255;
@@ -165,6 +316,16 @@ void* tex_atlas_compute(dict_atlas_src_t atlas, uint8_t* atlas_dst,
 	return output;
 }
 
+void tex_atlas_tables_export(uint8_t* block, uint8_t* particle) {
+	memcpy(block, global_block_atlas, sizeof(global_block_atlas));
+	memcpy(particle, global_particle_atlas, sizeof(global_particle_atlas));
+}
+
+void tex_atlas_tables_import(const uint8_t* block, const uint8_t* particle) {
+	memcpy(global_block_atlas, block, sizeof(global_block_atlas));
+	memcpy(global_particle_atlas, particle, sizeof(global_particle_atlas));
+}
+
 uint8_t tex_atlas_lookup(enum tex_atlas_entry name) {
 	return global_block_atlas[name];
 }
@@ -174,6 +335,11 @@ uint8_t tex_atlas_lookup_particle(enum tex_atlas_entry name) {
 }
 
 void* tex_atlas_block(const char* filename, size_t* width, size_t* height) {
+	assert(filename && width && height);
+	if(!filename || !width || !height)
+		return NULL;
+	*width = 0;
+	*height = 0;
 	dict_atlas_src_t atlas;
 	dict_atlas_src_init(atlas);
 
@@ -189,7 +355,11 @@ void* tex_atlas_block(const char* filename, size_t* width, size_t* height) {
 	tex_atlas_reg(atlas, TEXAT_COBWEB, 11, 0);
 	tex_atlas_reg(atlas, TEXAT_ROSE, 12, 0);
 	tex_atlas_reg(atlas, TEXAT_DANDELION, 13, 0);
-	tex_atlas_reg(atlas, TEXAT_WATER_STATIC, 14, 0);
+	// P5(c): Beta water-still is terrain index 205 = (13,12) -- BlockFluid.java:7
+	// `(material==lava?14:12)*16+13`. This was registered at (14,0), which is Beta's
+	// PORTAL placeholder tile (a flat single colour), so the water_fx live upload was
+	// overwriting the wrong cell. Verified against the decompile 2026-07-30.
+	tex_atlas_reg(atlas, TEXAT_WATER_STATIC, 13, 12);
 	tex_atlas_reg(atlas, TEXAT_SAPLING_OAK, 15, 0);
 
 	tex_atlas_reg(atlas, TEXAT_COBBLESTONE, 0, 1);
@@ -262,7 +432,7 @@ void* tex_atlas_block(const char* filename, size_t* width, size_t* height) {
 	tex_atlas_reg(atlas, TEXAT_CROPS_6, 14, 5);
 	tex_atlas_reg(atlas, TEXAT_CROPS_7, 15, 5);
 
-	// tex_atlas_reg(atlas, "lever", 0, 6);
+	tex_atlas_reg(atlas, TEXAT_LEVER, 0, 6); // Beta lever idx 96 = tile (0,6)
 	tex_atlas_reg(atlas, TEXAT_DOOR_WOOD_BOTTOM, 1, 6);
 	tex_atlas_reg(atlas, TEXAT_DOOR_IRON_BOTTOM, 2, 6);
 	tex_atlas_reg(atlas, TEXAT_REDSTONE_TORCH_LIT, 3, 6);
@@ -278,6 +448,15 @@ void* tex_atlas_block(const char* filename, size_t* width, size_t* height) {
 
 	tex_atlas_reg(atlas, TEXAT_RAIL_CURVED, 0, 7);
 	tex_atlas_reg(atlas, TEXAT_REDSTONE_TORCH, 3, 7);
+	// repeater top faces: idle (3,8)=idx131, active (3,9)=idx147 (Isabella II, CC BY 3.0)
+	tex_atlas_reg(atlas, TEXAT_REPEATER_TOP_OFF, 3, 8);
+	tex_atlas_reg(atlas, TEXAT_REPEATER_TOP_ON, 3, 9);
+	// piston faces: Beta terrain idx 106-110 == tiles (10,6)..(14,6)
+	tex_atlas_reg(atlas, TEXAT_PISTON_TOP_STICKY, 10, 6);
+	tex_atlas_reg(atlas, TEXAT_PISTON_TOP, 11, 6);
+	tex_atlas_reg(atlas, TEXAT_PISTON_SIDE, 12, 6);
+	tex_atlas_reg(atlas, TEXAT_PISTON_BACK, 13, 6);
+	tex_atlas_reg(atlas, TEXAT_PISTON_INNER, 14, 6);
 	tex_atlas_reg(atlas, TEXAT_LOG_SPRUCE_SIDE, 4, 7);
 	tex_atlas_reg(atlas, TEXAT_LOG_BIRCH_SIDE, 5, 7);
 	tex_atlas_reg(atlas, TEXAT_PUMPKIN_SIDE, 6, 7);
@@ -304,26 +483,28 @@ void* tex_atlas_block(const char* filename, size_t* width, size_t* height) {
 	tex_atlas_reg(atlas, TEXAT_ORE_LAPIS, 0, 10);
 	tex_atlas_reg(atlas, TEXAT_RAIL_POWERED_OFF, 3, 10);
 	
-	// redstone wire power levels, from 0 to 15
-	tex_atlas_reg_col(atlas, TEXAT_REDSTONE_WIRE_OFF, 5, 10, 111, 0, 0);
+	// Redstone wire, power levels 0..15, colour-baked per level (Beta tints the
+	// grayscale dust by power; we bake it because the display-list vertex carries
+	// no per-vertex RGB -- see render_block_redstone_wire). Two base tiles, both
+	// from real Beta terrain.png: the LINE / straight-run tile (5,10)=idx165 and
+	// the CROSS / junction+dot tile (4,10)=idx164. render_block_redstone_wire
+	// picks LINE vs CROSS per the wire's connections, exactly as Beta's
+	// RenderBlocks does. (The former TEXAT_REDSTONE_WIRE_INTERSECT_OFF/ON pointed
+	// at tile (5,11)=181 -- blank in BOTH the Isabella and real-Beta atlases -- and
+	// were never consumed; removed so atlas_oracle reports 0 blank registrations.)
 	for (int lvl = 0; lvl <= 15; ++lvl) {
 	    uint8_t r = redstone_colors[lvl][0];
 	    uint8_t g = redstone_colors[lvl][1];
 	    uint8_t b = redstone_colors[lvl][2];
 
-	    enum tex_atlas_entry entry;
-	    if (lvl == 0) {
-	        entry = TEXAT_REDSTONE_WIRE_OFF;
-	    } else {
-	        entry = TEXAT_REDSTONE_WIRE_L1 + (lvl - 1);
-	    }
+	    enum tex_atlas_entry line  = (lvl == 0) ? TEXAT_REDSTONE_WIRE_OFF
+	                                            : TEXAT_REDSTONE_WIRE_L1 + (lvl - 1);
+	    enum tex_atlas_entry cross = (lvl == 0) ? TEXAT_REDSTONE_WIRE_CROSS_OFF
+	                                            : TEXAT_REDSTONE_WIRE_CROSS_L1 + (lvl - 1);
 
-	    tex_atlas_reg_col(atlas, entry, 5, 10, r, g, b);
+	    tex_atlas_reg_col(atlas, line,  5, 10, r, g, b); // straight-run line
+	    tex_atlas_reg_col(atlas, cross, 4, 10, r, g, b); // junction / dot cross
 	}
-
-	//tex_atlas_reg_col(atlas, TEXAT_REDSTONE_WIRE_ON, 5, 10, 252, 49, 0);
-	tex_atlas_reg_col(atlas, TEXAT_REDSTONE_WIRE_INTERSECT_OFF, 5, 11, 111, 0, 0); //4, 10?
-	tex_atlas_reg_col(atlas, TEXAT_REDSTONE_WIRE_INTERSECT_ON, 5, 11, 252, 49, 0);
 
 
 	tex_atlas_reg(atlas, TEXAT_SANDSTONE_TOP, 0, 11);
@@ -351,20 +532,55 @@ void* tex_atlas_block(const char* filename, size_t* width, size_t* height) {
 	tex_atlas_reg(atlas, TEXAT_WOOL_14, 1, 8);  // Red
 	tex_atlas_reg(atlas, TEXAT_WOOL_15, 1, 7);  // Black
 
-	tex_atlas_reg(atlas, TEXAT_LAVA_STATIC, 15, 15);
+	// P5(c): Beta lava-still is terrain index 237 = (13,14) (BlockFluid.java:7, lava arm).
+	// (15,15) = index 255 is merely the bottom-right quadrant of Beta's 32x32 lava-FLOW
+	// tile (238 with tileSize 2 spans 238/239/254/255).
+	tex_atlas_reg(atlas, TEXAT_LAVA_STATIC, 13, 14);
 
-	tex_atlas_reg_col(atlas, TEXAT_GRASS_TOP, 0, 0, 110, 198, 63);
-	tex_atlas_reg_grass(atlas, TEXAT_GRASS_SIDE, 6, 2, 110, 198, 63, 3, 0);
+	// DC-GRASS G2: the grass cells are RAW, untinted tiles. The biome colour is
+	// applied exactly once, per vertex, by the chunk mesher (Beta BlockGrass
+	// .java:23-28 colorMultiplier; RenderBlocks.java:2236-2281): top = tile 0
+	// x biome; side = untinted tile 3 (BlockGrass.java:12-21), then the tile-38
+	// overlay (TEXAT_GRASS_SIDE_OVERLAY, registered last below) x biome. These
+	// used to bake a fixed (110,198,63) into the top -- which the mesher then
+	// multiplied by the biome colour again (double tint) -- and a fixed-colour
+	// tile-38-over-tile-3 composite into the side (fringe never biome-tinted).
+	// Same registration position as before, so both keep their atlas slot.
+	tex_atlas_reg(atlas, TEXAT_GRASS_TOP, 0, 0);
+	tex_atlas_reg(atlas, TEXAT_GRASS_SIDE, 3, 0);
 	tex_atlas_reg_col(atlas, TEXAT_TALLGRASS, 7, 2, 110, 198, 63);
-	tex_atlas_reg_col(atlas, TEXAT_LEAVES_OAK, 4, 3, 75, 182, 15);
+	tex_atlas_reg_col(atlas, TEXAT_LEAVES_OAK, 4, 3, 72, 181, 24); // 0x48B518 ColorizerFoliage.func_31073_c
 	tex_atlas_reg_col(atlas, TEXAT_FERN, 8, 3, 110, 198, 63);
 
 	for(int k = 0; k < 10; k++)
 		tex_atlas_reg(atlas, TEXAT_BREAK_0 + k, k, 15);
 
+	// DC-GRASS G2: new cells go LAST so every pre-existing cell keeps its slot
+	// (atlas capacity 14x14 = 196 cells; 188 registered after these three).
+	tex_atlas_reg(atlas, TEXAT_GRASS_SIDE_OVERLAY, 6, 2); // Beta tile 38
+	// Baked cells for the untinted consumers -- held/inventory/dropped grass
+	// item (render_item.c, 3D and flat) and far-ring LOD skirts
+	// (chunk_mesher.c lod_emit_skirts) -- colour baked ONCE with the CaveWii
+	// unavailable-data grass colour (biome_color.h BIOME_GRASS_FALLBACK);
+	// texel-identical to the pre-G2 TEXAT_GRASS_TOP / TEXAT_GRASS_SIDE cells.
+	tex_atlas_reg_col(atlas, TEXAT_GRASS_TOP_ITEM, 0, 0, 110, 198, 63);
+	tex_atlas_reg_grass(atlas, TEXAT_GRASS_SIDE_ITEM, 6, 2, 110, 198, 63, 3, 0);
+	// Beta fast leaves, appended LAST (capacity 196) so every
+	// earlier cell keeps its slot. Colours as the fancy cells above
+	// (ColorizerFoliage pine 0x619961 / birch 0x80A755 / oak item 0x48B518).
+	tex_atlas_reg_opaque_col(atlas, TEXAT_LEAVES_OAK_FAST, 5, 3, 4, 3, 72, 181,
+							 24);
+	tex_atlas_reg_opaque_col(atlas, TEXAT_LEAVES_SPRUCE_FAST, 5, 8, 4, 8, 97,
+							 153, 97);
+	tex_atlas_reg_opaque_col(atlas, TEXAT_LEAVES_BIRCH_FAST, 5, 3, 4, 3, 128,
+							 167, 85);
+	// Raw oak cells for biome-tinted oak faces (196/196: the atlas is full).
+	tex_atlas_reg(atlas, TEXAT_LEAVES_OAK_RAW, 4, 3);
+	tex_atlas_reg_opaque(atlas, TEXAT_LEAVES_OAK_FAST_RAW, 5, 3, 4, 3);
+
 	memset(global_block_atlas, 0, sizeof(global_block_atlas));
 
-	uint8_t* image = tex_read(filename, width, height);
+	uint8_t* image = tex_read_atlas(filename, width, height);
 	void* output = tex_atlas_compute(atlas, global_block_atlas, image,
 									 *width, *height);
 	dict_atlas_src_clear(atlas);
@@ -375,6 +591,11 @@ void* tex_atlas_block(const char* filename, size_t* width, size_t* height) {
 
 
 void* tex_atlas_particles(const char* filename, size_t* width, size_t* height) {
+	assert(filename && width && height);
+	if(!filename || !width || !height)
+		return NULL;
+	*width = 0;
+	*height = 0;
     dict_atlas_src_t atlas;
     dict_atlas_src_init(atlas);
 
@@ -411,7 +632,7 @@ void* tex_atlas_particles(const char* filename, size_t* width, size_t* height) {
 // you can register other rows here…
 
   memset(global_particle_atlas, 0, sizeof(global_particle_atlas));
-	uint8_t* image = tex_read(filename, width, height);
+	uint8_t* image = tex_read_atlas(filename, width, height);
 	void* output = tex_atlas_compute(atlas,
 									 global_particle_atlas,
 									 image,

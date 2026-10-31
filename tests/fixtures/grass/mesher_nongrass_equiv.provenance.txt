@@ -1,0 +1,78 @@
+mesher_nongrass_equiv.golden -- provenance (DC-GRASS G2, recorded 2026-10-11 00:14:16 -0400)
+
+BASE SOURCE IDENTITY
+  base_ref commit : faeed2b5834a3f2a2e79df755c4d7d071c8cb081
+  base_ref tree   : 6b40cd859957390fb815cb6f8cc1e3bf00f62f90
+  base source/ tree: c18b62c940e320da06e5baba08afd6d509baee91
+  export          : git archive faeed2b58 | tar -x -C tmp/jobs/design-crit-1010/g2/base/src   (clean tree, no working-copy edits)
+  added to export : tests/test_mesher_nongrass_equiv.c (byte-identical to the one in this tree,
+                    sha256 70088afe2e0cd67f442491dff6bfbcc4acd9f1ddb2fd3df6b703e1103f6fa42c) and the
+                    CMakeLists.txt test registration (tmp/jobs/design-crit-1010/g2/base/cmake-registration.patch, test-only lines)
+  source check    : GIT_INDEX_FILE=tmp/jobs/design-crit-1010/g2/base/base.index git read-tree faeed2b58
+                    GIT_INDEX_FILE=tmp/jobs/design-crit-1010/g2/base/base.index git --work-tree=tmp/jobs/design-crit-1010/g2/base/src diff --stat -- source
+                    -> output: '' (0 bytes = EMPTY: export source/ == faeed2b58 source/)
+  negative control: same command with --work-tree=<this G2 tree> -> 12 files changed, 281 insertions(+), 17 deletions(-)
+
+RECORDING (under tmp/jobs/design-crit-1010/with-heavy-lock.sh, -j2)
+  configure: cmake -S tmp/jobs/design-crit-1010/g2/base/src -B tmp/jobs/design-crit-1010/g2/base/build -G Ninja ; build target test_mesher_nongrass_equiv
+  script   : tmp/jobs/design-crit-1010/g2/base/record.sh ; full output: tmp/jobs/design-crit-1010/g2/base/record-output.txt
+  output   :
+    + ./test_mesher_nongrass_equiv.exe <USERPROFILE>/.codex/worktrees/design-crit-1010/tests/fixtures/grass/mesher_nongrass_equiv.golden --record 'base export of faeed2b58 (git archive), see provenance'
+    SETUP: 97 non-grass block ids
+    RECORDED 425 lines -> <codex-worktrees>/design-crit-1010/tests/fixtures/grass/mesher_nongrass_equiv.golden
+    + compare run 1 (base binary)
+    SETUP: 97 non-grass block ids
+    test_mesher_nongrass_equiv: OK (425 lines identical to the recorded golden; overlay-list invariant holds)
+    + compare run 2 (base binary)
+    SETUP: 97 non-grass block ids
+    test_mesher_nongrass_equiv: OK (425 lines identical to the recorded golden; overlay-list invariant holds)
+    exit=0
+
+GOLDEN
+  sha256 4f1d5097f3c4a5bf2195ff2647e1b1b3ebeca7ddde04ad5dfa699c0e29642ab2  (425 data lines)
+
+WHAT IT PINS / DOES NOT PIN: see the header comment of tests/test_mesher_nongrass_equiv.c
+(mesh bytes, atlas slots/cells, lod grass-skirt geometry + sampled texels, empty grass-overlay
+list for non-grass; NOT GPU draw state, NOT render_item / render_piston_moving output).
+
+POST-RECORDING TEST CHANGE (G2 attempt 3, 2026-10-11)
+  tests/test_mesher_nongrass_equiv.c was extended AFTER the recording above (it is no
+  longer the recorded sha256 70088afe...): a G2 attempt-3 regression section
+  (overlay culling/winding/count, alpha comparison, moving-grass colour availability)
+  that runs after the golden scenes, emits NO golden lines and fails the test on its
+  own; plus a runtime source-root derivation from the golden path. The golden file
+  itself is unchanged (sha256 still 4f1d5097f3c4a5bf...), and the golden
+  scenes' code path is untouched, so every golden line is still produced by the code
+  that recorded it.
+
+RE-PIN P3 DOOR-EDGE-UV (2026-10-30, fast re-pin ruling 10-11)
+  Cause: render_block_door now gives the door's 3/16 edge strips and top/bottom faces
+  Beta's bounds-clipped texel columns (RenderBlocks.renderBlockDoor + render*Face, see
+  the comment in source/graphics/render_block.c); tests/test_door_bounds_golden.c asserts
+  0 UV mismatches. Only the fnv field of 30 "mesh" lines changed: lists 0-5 (the six
+  solid per-side lists) of the five chunks holding doors (sparse 16/32, dense-tinted,
+  dense-untinted, dense-no-colormap). Every vertex count, every other line, the header
+  and texat_max 209 are unchanged (the 30 lines were substituted in place, NOT a fresh
+  --record, so later atlas entries stay out of the golden).
+  Only-doors proof: with BLOCK_DOOR_WOOD/BLOCK_DOOR_IRON removed from the scene id list
+  (temporary local edit, reverted), the old (HEAD 25b248d20) and new render_block.c
+  record byte-identical output (162 mesh lines, two separately rebuilt executables).
+  The old code reproduces the previous golden (425 lines OK) in the same tree.
+  New golden sha256 24eb2dbfa39537ba9b7853247f568c7665ab88bed093f4806e0fe6b677482199
+  (previous 4f1d5097f3c4a5bf...).
+
+RE-PIN WALL-SIGN BOARD (2026-10-31, fast re-pin ruling 10-11)
+  Cause: f32825e7e places the wall sign (BLOCK_SIGN/68) board + text per Beta
+  TileEntitySignRenderer (source/graphics/render_block.c sign_side_helper,
+  render_sign_text.c). The board vertices moved on purpose, so only the fnv field of
+  24 "mesh" lines changed: lists 0-5 of the four chunks holding wall signs (sparse,
+  dense-tinted, dense-untinted, dense-no-colormap). Every vertex count, every other
+  line, the header and texat_max are unchanged (24 lines substituted in place, NOT a
+  fresh --record, so later atlas entries stay out of the golden).
+  Only-wall-sign proof: with id 68 removed from the scene id list (temporary local
+  edit, reverted), f32825e7e^ render_block.c/render_sign_text.[ch] and HEAD record
+  byte-identical output (406 lines, two separately rebuilt executables). The old
+  render code with signs reproduces the previous golden (425 lines OK, G2 checks OK)
+  in the same tree; HEAD passes the new golden (425 lines OK, G2 checks OK).
+  New golden sha256 396d84610a735cf2d95535b0b43ba339e8f200e76e144d6b81279586b4504990
+  (previous c0456448fc10526aa6e8282ad9a2336e851cbc5748e6da4bbbab5d6abae827e0).

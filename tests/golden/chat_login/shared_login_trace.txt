@@ -1,0 +1,413 @@
+# chat_login shared-module trace -- tests/test_chat_login_script.c,
+# case_trace_equivalence. Astra ruling 1 answer B3. Regenerate with
+# CW_UPDATE_CHAT_LOGIN_TRACE=1. '*' = a live-timing value, deliberately
+# NOT claimed byte-identical (rec_norm_keys[] plus a trace row's t/rem).
+# M <marker line>   F <frame> <pad connected> <asserted code>...
+# F <frame> -       player 0 unowned: production never reaches the seam
+# F <frame> x       owned, but the seam refused (driver not bound)
+P mp_chat_login_3m frame_ms=16
+M {"event":"chat_login","seq":1,"phase":"p0","marker":"session","ms":*,"corr":0,"ok":true,"epoch":7,"x":8.500,"y":65.000,"z":-3.250,"username":"cwa1b2c3","platform":"pc","screen":1,"contract":2}
+F 0 -
+F 1 -
+F 2 1
+F 3 1
+M {"event":"chat_login","seq":2,"phase":"p1","marker":"pad_bound","ms":*,"corr":0,"ok":true,"bound":true,"kind":1,"channel":0,"category":4}
+F 4 1
+F 5 1 265
+F 6 1
+F 7 1
+M {"event":"chat_login","seq":3,"phase":"p1","marker":"hold_refused","ms":*,"corr":0,"ok":true,"refused":false,"chat_pressed":true,"screen_changed":true,"hold_ms":*}
+F 8 1
+F 9 1 69
+F 10 1
+F 11 1
+F 12 1
+F 13 1 265
+F 14 1
+M {"event":"chat_login","seq":4,"phase":"p1","marker":"chat_open","ms":*,"corr":0,"ok":true,"row":1,"col":0,"page":0,"draft_len":0,"recovery_modal":false}
+F 15 1
+F 16 1 262
+F 17 1 262
+F 18 1 262
+F 19 1 262
+F 20 1 262
+F 21 1 262
+F 22 1 262
+F 23 1 262
+F 24 1 262
+F 25 1 262
+F 26 1 262
+F 27 1 262
+F 28 1 262
+F 29 1 262
+F 30 1 262
+F 31 1 262
+M {"event":"chat_login","seq":5,"phase":"p2","marker":"trace","ms":*,"corr":0,"ok":true,"leg":"hold","frames":"*:2^:2:2:1:*:1:1;*:2:0:2:0:*:1:1;*:2:0:2:0:*:1:1;*:2:0:2:0:*:1:1;*:2:0:2:0:*:1:1;*:2:0:2:0:*:1:1;*:2:0:2:0:*:1:1;*:2:0:2:0:*:1:1;*:2:0:2:0:*:1:1;*:2:0:2:0:*:1:1;*:2:0:2:0:*:1:1;*:2:0:2:0:*:1:1;*:2:0:2:0:*:1:1;*:2:0:2:0:*:1:1;*:2:0:2:0:*:1:1;*:2:0:2:0:*:1:1","n":16,"first_t":*,"dropped":0}
+F 32 1 262
+F 33 1 262
+F 34 1 262
+F 35 1 262
+F 36 1 262
+F 37 1 262
+F 38 1 262
+F 39 1 262
+F 40 1 262
+F 41 1 262
+F 42 1 262
+F 43 1 262
+F 44 1 262
+F 45 1 262
+F 46 1 262
+F 47 1 262
+M {"event":"chat_login","seq":6,"phase":"p2","marker":"trace","ms":*,"corr":0,"ok":true,"leg":"hold","frames":"*:2:0:2:2:*:1:2;*:2:0:2:0:*:1:2;*:2:0:2:0:*:1:2;*:2:0:2:0:*:1:2;*:2:0:2:0:*:1:2;*:2:0:2:2:*:1:3;*:2:0:2:0:*:1:3;*:2:0:2:0:*:1:3;*:2:0:2:0:*:1:3;*:2:0:2:0:*:1:3;*:2:0:2:2:*:1:4;*:2:0:2:0:*:1:4;*:2:0:2:0:*:1:4;*:2:0:2:0:*:1:4;*:2:0:2:0:*:1:4;*:2:0:2:2:*:1:5","n":16,"first_t":*,"dropped":0}
+F 48 1 262
+F 49 1 262
+F 50 1 262
+F 51 1 262
+F 52 1 262
+F 53 1 262
+F 54 1 262
+F 55 1 262
+F 56 1 262
+F 57 1 262
+F 58 1
+F 59 1
+F 60 1
+F 61 1
+F 62 1
+F 63 1
+M {"event":"chat_login","seq":7,"phase":"p2","marker":"trace","ms":*,"corr":0,"ok":true,"leg":"hold","frames":"*:2:0:2:0:*:1:5;*:2:0:2:0:*:1:5;*:2:0:2:0:*:1:5;*:2:0:2:0:*:1:5;*:2:0:2:2:*:1:6;*:2:0:2:0:*:1:6;*:2:0:2:0:*:1:6;*:2:0:2:0:*:1:6;*:2:0:2:0:*:1:6;*:2:0:2:2:*:1:7;*:0v:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7","n":16,"first_t":*,"dropped":0}
+F 64 1
+F 65 1
+F 66 1
+F 67 1
+F 68 1
+F 69 1
+F 70 1
+F 71 1
+F 72 1
+F 73 1
+F 74 1
+F 75 1
+F 76 1
+F 77 1
+F 78 1
+F 79 1
+M {"event":"chat_login","seq":8,"phase":"p2","marker":"trace","ms":*,"corr":0,"ok":true,"leg":"hold","frames":"*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7","n":16,"first_t":*,"dropped":0}
+F 80 1
+F 81 1
+F 82 1
+F 83 1
+F 84 1
+F 85 1
+F 86 1
+F 87 1
+F 88 1
+F 89 1
+M {"event":"chat_login","seq":9,"phase":"p2","marker":"trace","ms":*,"corr":0,"ok":true,"leg":"hold","frames":"*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7;*:0:0:0:0:*:1:7","n":10,"first_t":*,"dropped":0}
+M {"event":"chat_login","seq":10,"phase":"p2","marker":"hold_result","ms":*,"corr":0,"ok":true,"steps":7,"first_repeat_ms":*,"mean_repeat_ms":*,"max_frame_ms":*,"release_lag_ms":*,"after_release_steps":0}
+F 90 1
+F 91 1 262
+F 92 1
+F 93 1
+F 94 1
+F 95 1
+F 96 1
+F 97 1
+F 98 1
+F 99 1
+F 100 1
+F 101 1
+F 102 1
+F 103 1
+F 104 1
+F 105 1
+F 106 1
+M {"event":"chat_login","seq":11,"phase":"p2","marker":"trace","ms":*,"corr":0,"ok":true,"leg":"tap","frames":"*:2^:2:2:1:*:1:8;*:0v:0:0:0:*:1:8;*:0:0:0:0:*:1:8;*:0:0:0:0:*:1:8;*:0:0:0:0:*:1:8;*:0:0:0:0:*:1:8;*:0:0:0:0:*:1:8;*:0:0:0:0:*:1:8;*:0:0:0:0:*:1:8;*:0:0:0:0:*:1:8;*:0:0:0:0:*:1:8;*:0:0:0:0:*:1:8;*:0:0:0:0:*:1:8;*:0:0:0:0:*:1:8;*:0:0:0:0:*:1:8;*:0:0:0:0:*:1:8","n":16,"first_t":*,"dropped":0}
+F 107 1
+F 108 1
+F 109 1
+F 110 1
+F 111 1
+F 112 1
+F 113 1
+F 114 1
+F 115 1
+F 116 1
+M {"event":"chat_login","seq":12,"phase":"p2","marker":"trace","ms":*,"corr":0,"ok":true,"leg":"tap","frames":"*:0:0:0:0:*:1:8;*:0:0:0:0:*:1:8;*:0:0:0:0:*:1:8;*:0:0:0:0:*:1:8;*:0:0:0:0:*:1:8;*:0:0:0:0:*:1:8;*:0:0:0:0:*:1:8;*:0:0:0:0:*:1:8;*:0:0:0:0:*:1:8;*:0:0:0:0:*:1:8","n":10,"first_t":*,"dropped":0}
+M {"event":"chat_login","seq":13,"phase":"p2","marker":"tap_result","ms":*,"corr":0,"ok":true,"steps":1,"max_frame_ms":*}
+F 117 1
+F 118 1 264
+F 119 1 264
+F 120 1 264
+F 121 1 264 70
+F 122 1 264
+F 123 1 264
+F 124 1 264
+F 125 1 264
+F 126 1 264
+F 127 1 264
+F 128 1 264
+F 129 1 264
+F 130 1 264
+F 131 1 264
+M {"event":"chat_login","seq":14,"phase":"p2","marker":"trace","ms":*,"corr":0,"ok":true,"leg":"page","frames":"*:8^:8:8:1:*:2:8;*:8:0:8:0:*:2:8;*:8:0:8:0:*:2:8;*:48^:40:48:0:*:2:8;*:8v:0:8:0:*:2:8;*:8:0:8:0:*:2:8;*:8:0:8:0:*:2:8;*:8:0:8:0:*:2:8;*:8:0:8:0:*:2:8;*:8:0:8:0:*:2:8;*:8:0:8:0:*:2:8;*:8:0:8:0:*:2:8;*:8:0:8:0:*:2:8;*:8:0:8:0:*:2:8","n":14,"first_t":*,"dropped":0}
+M {"event":"chat_login","seq":15,"phase":"p2","marker":"page_hold","ms":*,"corr":0,"ok":true,"page_before":0,"page_after":3,"extra_steps":0,"remaining_ms":*,"max_frame_ms":*}
+F 132 1
+F 133 1 262
+F 134 1 262
+F 135 1 262
+F 136 0 262
+F 137 0 262
+F 138 0 262
+F 139 0 262
+F 140 0 262
+F 141 1 262
+F 142 1 262
+F 143 1 262
+M {"event":"chat_login","seq":16,"phase":"p3","marker":"trace","ms":*,"corr":0,"ok":true,"leg":"reconnect","frames":"*:0v:0:0:0:*:2:8;*:2^:2:2:1:*:2:9;*:2:0:2:0:*:2:9;*:2:0:2:0:*:2:9;*:2:0:0:0:*:2:9;*:2:0:0:0:*:2:9;*:2:0:0:0:*:2:9;*:2:0:0:0:*:2:9;*:2:0:0:0:*:2:9;*:2:0:0:0:*:2:9;*:2:0:0:0:*:2:9;*:2:0:0:0:*:2:9","n":12,"first_t":*,"dropped":0}
+M {"event":"chat_login","seq":17,"phase":"p3","marker":"frozen","ms":*,"corr":0,"ok":true,"moves_while_down":0,"rearm_mask":0,"draft_len":0,"row":2,"col":9,"page":3}
+F 144 1
+F 145 1
+F 146 1
+F 147 1 88
+F 148 1
+F 149 1
+F 150 1
+F 151 1 262
+M {"event":"chat_login","seq":18,"phase":"p3","marker":"trace","ms":*,"corr":0,"ok":true,"leg":"reconnect","frames":"*:0v:0:0:0:*:2:9;*:0:0:0:0:*:2:9;*:0:0:0:0:*:2:9;*:10^:0:0:0:*:2:9;*:0v:0:0:0:*:2:9;*:0:0:0:0:*:2:9;*:0:0:0:0:*:2:9;*:2^:2:2:1:*:2:0","n":8,"first_t":*,"dropped":0}
+M {"event":"chat_login","seq":19,"phase":"p3","marker":"rearmed","ms":*,"corr":0,"ok":true,"frames_blocked":*,"neutral_before_step":true,"max_frame_ms":*}
+F 152 1
+F 153 1 71
+F 154 1
+F 155 1 265
+F 156 1
+M {"event":"chat_login","seq":20,"phase":"p4","marker":"origin","ms":*,"corr":0,"ok":true,"row":1,"col":0,"page":0}
+F 157 1
+F 158 1 264
+M {"event":"chat_login","seq":21,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":0,"want_row":2,"want_col":0,"want_page":0,"row":2,"col":0,"page":0,"draft_len":0,"ch":97}
+F 159 1
+F 160 1 264
+M {"event":"chat_login","seq":22,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":1,"want_row":3,"want_col":0,"want_page":0,"row":3,"col":0,"page":0,"draft_len":0,"ch":122}
+F 161 1
+F 162 1 263
+M {"event":"chat_login","seq":23,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":2,"want_row":3,"want_col":9,"want_page":0,"row":3,"col":9,"page":0,"draft_len":0,"ch":47}
+F 163 1
+F 164 1 88
+M {"event":"chat_login","seq":24,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":3,"want_row":3,"want_col":9,"want_page":0,"row":3,"col":9,"page":0,"draft_len":1,"ch":47}
+F 165 1
+F 166 1 265
+M {"event":"chat_login","seq":25,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":4,"want_row":2,"want_col":9,"want_page":0,"row":2,"col":9,"page":0,"draft_len":1,"ch":59}
+F 167 1
+F 168 1 263
+M {"event":"chat_login","seq":26,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":5,"want_row":2,"want_col":8,"want_page":0,"row":2,"col":8,"page":0,"draft_len":1,"ch":108}
+F 169 1
+F 170 1 88
+M {"event":"chat_login","seq":27,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":6,"want_row":2,"want_col":8,"want_page":0,"row":2,"col":8,"page":0,"draft_len":2,"ch":108}
+F 171 1
+F 172 1 265
+M {"event":"chat_login","seq":28,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":7,"want_row":1,"want_col":8,"want_page":0,"row":1,"col":8,"page":0,"draft_len":2,"ch":111}
+F 173 1
+F 174 1 88
+M {"event":"chat_login","seq":29,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":8,"want_row":1,"want_col":8,"want_page":0,"row":1,"col":8,"page":0,"draft_len":3,"ch":111}
+F 175 1
+F 176 1 264
+M {"event":"chat_login","seq":30,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":9,"want_row":2,"want_col":8,"want_page":0,"row":2,"col":8,"page":0,"draft_len":3,"ch":108}
+F 177 1
+F 178 1 263
+M {"event":"chat_login","seq":31,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":10,"want_row":2,"want_col":7,"want_page":0,"row":2,"col":7,"page":0,"draft_len":3,"ch":107}
+F 179 1
+F 180 1 263
+M {"event":"chat_login","seq":32,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":11,"want_row":2,"want_col":6,"want_page":0,"row":2,"col":6,"page":0,"draft_len":3,"ch":106}
+F 181 1
+F 182 1 263
+M {"event":"chat_login","seq":33,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":12,"want_row":2,"want_col":5,"want_page":0,"row":2,"col":5,"page":0,"draft_len":3,"ch":104}
+F 183 1
+F 184 1 263
+M {"event":"chat_login","seq":34,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":13,"want_row":2,"want_col":4,"want_page":0,"row":2,"col":4,"page":0,"draft_len":3,"ch":103}
+F 185 1
+F 186 1 88
+M {"event":"chat_login","seq":35,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":14,"want_row":2,"want_col":4,"want_page":0,"row":2,"col":4,"page":0,"draft_len":4,"ch":103}
+F 187 1
+F 188 1 265
+M {"event":"chat_login","seq":36,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":15,"want_row":1,"want_col":4,"want_page":0,"row":1,"col":4,"page":0,"draft_len":4,"ch":116}
+F 189 1
+F 190 1 262
+M {"event":"chat_login","seq":37,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":16,"want_row":1,"want_col":5,"want_page":0,"row":1,"col":5,"page":0,"draft_len":4,"ch":121}
+F 191 1
+F 192 1 262
+M {"event":"chat_login","seq":38,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":17,"want_row":1,"want_col":6,"want_page":0,"row":1,"col":6,"page":0,"draft_len":4,"ch":117}
+F 193 1
+F 194 1 262
+M {"event":"chat_login","seq":39,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":18,"want_row":1,"want_col":7,"want_page":0,"row":1,"col":7,"page":0,"draft_len":4,"ch":105}
+F 195 1
+F 196 1 88
+M {"event":"chat_login","seq":40,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":19,"want_row":1,"want_col":7,"want_page":0,"row":1,"col":7,"page":0,"draft_len":5,"ch":105}
+F 197 1
+F 198 1 264
+M {"event":"chat_login","seq":41,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":20,"want_row":2,"want_col":7,"want_page":0,"row":2,"col":7,"page":0,"draft_len":5,"ch":107}
+F 199 1
+F 200 1 264
+M {"event":"chat_login","seq":42,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":21,"want_row":3,"want_col":7,"want_page":0,"row":3,"col":7,"page":0,"draft_len":5,"ch":44}
+F 201 1
+F 202 1 263
+M {"event":"chat_login","seq":43,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":22,"want_row":3,"want_col":6,"want_page":0,"row":3,"col":6,"page":0,"draft_len":5,"ch":109}
+F 203 1
+F 204 1 263
+M {"event":"chat_login","seq":44,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":23,"want_row":3,"want_col":5,"want_page":0,"row":3,"col":5,"page":0,"draft_len":5,"ch":110}
+F 205 1
+F 206 1 88
+M {"event":"chat_login","seq":45,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":24,"want_row":3,"want_col":5,"want_page":0,"row":3,"col":5,"page":0,"draft_len":6,"ch":110}
+F 207 1
+F 208 1 264
+M {"event":"chat_login","seq":46,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":25,"want_row":4,"want_col":1,"want_page":0,"row":4,"col":1,"page":0,"draft_len":6,"ch":32}
+F 209 1
+F 210 1 88
+M {"event":"chat_login","seq":47,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":26,"want_row":4,"want_col":1,"want_page":0,"row":4,"col":1,"page":0,"draft_len":7,"ch":32}
+F 211 1
+F 212 1 265
+M {"event":"chat_login","seq":48,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":27,"want_row":3,"want_col":3,"want_page":0,"row":3,"col":3,"page":0,"draft_len":7,"ch":99}
+F 213 1
+F 214 1 265
+M {"event":"chat_login","seq":49,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":28,"want_row":2,"want_col":3,"want_page":0,"row":2,"col":3,"page":0,"draft_len":7,"ch":102}
+F 215 1
+F 216 1 262
+M {"event":"chat_login","seq":50,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":29,"want_row":2,"want_col":4,"want_page":0,"row":2,"col":4,"page":0,"draft_len":7,"ch":103}
+F 217 1
+F 218 1 262
+M {"event":"chat_login","seq":51,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":30,"want_row":2,"want_col":5,"want_page":0,"row":2,"col":5,"page":0,"draft_len":7,"ch":104}
+F 219 1
+F 220 1 88
+M {"event":"chat_login","seq":52,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":31,"want_row":2,"want_col":5,"want_page":0,"row":2,"col":5,"page":0,"draft_len":8,"ch":104}
+F 221 1
+F 222 1 265
+M {"event":"chat_login","seq":53,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":32,"want_row":1,"want_col":5,"want_page":0,"row":1,"col":5,"page":0,"draft_len":8,"ch":121}
+F 223 1
+F 224 1 262
+M {"event":"chat_login","seq":54,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":33,"want_row":1,"want_col":6,"want_page":0,"row":1,"col":6,"page":0,"draft_len":8,"ch":117}
+F 225 1
+F 226 1 88
+M {"event":"chat_login","seq":55,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":34,"want_row":1,"want_col":6,"want_page":0,"row":1,"col":6,"page":0,"draft_len":9,"ch":117}
+F 227 1
+F 228 1 264
+M {"event":"chat_login","seq":56,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":35,"want_row":2,"want_col":6,"want_page":0,"row":2,"col":6,"page":0,"draft_len":9,"ch":106}
+F 229 1
+F 230 1 264
+M {"event":"chat_login","seq":57,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":36,"want_row":3,"want_col":6,"want_page":0,"row":3,"col":6,"page":0,"draft_len":9,"ch":109}
+F 231 1
+F 232 1 263
+M {"event":"chat_login","seq":58,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":37,"want_row":3,"want_col":5,"want_page":0,"row":3,"col":5,"page":0,"draft_len":9,"ch":110}
+F 233 1
+F 234 1 88
+M {"event":"chat_login","seq":59,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":38,"want_row":3,"want_col":5,"want_page":0,"row":3,"col":5,"page":0,"draft_len":10,"ch":110}
+F 235 1
+F 236 1 265
+M {"event":"chat_login","seq":60,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":39,"want_row":2,"want_col":5,"want_page":0,"row":2,"col":5,"page":0,"draft_len":10,"ch":104}
+F 237 1
+F 238 1 265
+M {"event":"chat_login","seq":61,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":40,"want_row":1,"want_col":5,"want_page":0,"row":1,"col":5,"page":0,"draft_len":10,"ch":121}
+F 239 1
+F 240 1 263
+M {"event":"chat_login","seq":62,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":41,"want_row":1,"want_col":4,"want_page":0,"row":1,"col":4,"page":0,"draft_len":10,"ch":116}
+F 241 1
+F 242 1 88
+M {"event":"chat_login","seq":63,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":42,"want_row":1,"want_col":4,"want_page":0,"row":1,"col":4,"page":0,"draft_len":11,"ch":116}
+F 243 1
+F 244 1 263
+M {"event":"chat_login","seq":64,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":43,"want_row":1,"want_col":3,"want_page":0,"row":1,"col":3,"page":0,"draft_len":11,"ch":114}
+F 245 1
+F 246 1 263
+M {"event":"chat_login","seq":65,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":44,"want_row":1,"want_col":2,"want_page":0,"row":1,"col":2,"page":0,"draft_len":11,"ch":101}
+F 247 1
+F 248 1 88
+M {"event":"chat_login","seq":66,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":45,"want_row":1,"want_col":2,"want_page":0,"row":1,"col":2,"page":0,"draft_len":12,"ch":101}
+F 249 1
+F 250 1 262
+M {"event":"chat_login","seq":67,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":46,"want_row":1,"want_col":3,"want_page":0,"row":1,"col":3,"page":0,"draft_len":12,"ch":114}
+F 251 1
+F 252 1 88
+M {"event":"chat_login","seq":68,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":47,"want_row":1,"want_col":3,"want_page":0,"row":1,"col":3,"page":0,"draft_len":13,"ch":114}
+F 253 1
+F 254 1 70
+M {"event":"chat_login","seq":69,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":48,"want_row":1,"want_col":3,"want_page":3,"row":1,"col":3,"page":3,"draft_len":13,"ch":52}
+F 255 1
+F 256 1 263
+M {"event":"chat_login","seq":70,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":49,"want_row":1,"want_col":2,"want_page":3,"row":1,"col":2,"page":3,"draft_len":13,"ch":51}
+F 257 1
+F 258 1 263
+M {"event":"chat_login","seq":71,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":50,"want_row":1,"want_col":1,"want_page":3,"row":1,"col":1,"page":3,"draft_len":13,"ch":50}
+F 259 1
+F 260 1 88
+M {"event":"chat_login","seq":72,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":51,"want_row":1,"want_col":1,"want_page":3,"row":1,"col":1,"page":3,"draft_len":14,"ch":50}
+F 261 1
+F 262 1 88
+M {"event":"chat_login","seq":73,"phase":"p4","marker":"key","ms":*,"corr":0,"ok":true,"i":52,"want_row":1,"want_col":1,"want_page":3,"row":1,"col":1,"page":3,"draft_len":15,"ch":50}
+F 263 1
+M {"event":"chat_login","seq":74,"phase":"p4","marker":"draft","ms":*,"corr":0,"ok":true,"text":"/login hunter22","len":15}
+F 264 1
+M {"event":"chat_login","seq":75,"phase":"p5","marker":"sent_requested","ms":*,"corr":75,"ok":true,"lines_before":0,"ring_head":0,"ring_count":0}
+F 265 1 84
+F 266 1
+M {"event":"chat_login","seq":76,"phase":"p5","marker":"composer_cleared","ms":*,"corr":75,"ok":true,"open":false,"screen_ingame":true,"draft_len":0}
+F 267 1
+M {"event":"chat_login","seq":77,"phase":"p5","marker":"lines_sent","ms":*,"corr":75,"ok":true,"before":0,"after":1}
+F 268 1
+M {"event":"chat_login","seq":78,"phase":"p6","marker":"ack","ms":*,"corr":75,"ok":true,"ring_index":0,"wait_ms":*}
+M {"event":"chat_login","seq":79,"phase":"run","marker":"ok","ms":*,"corr":0,"ok":true,"seq_total":79,"max_frame_ms_run":*}
+F 269 -
+D mp_chat_login_3m ok
+P mp_chat_chord_1m frame_ms=16
+M {"event":"chat_chord","seq":1,"phase":"p0","marker":"session","ms":*,"corr":0,"ok":true,"platform":"pc","contract":104,"overlay":false,"screen":1}
+F 0 -
+F 1 -
+F 2 1
+M {"event":"chat_chord","seq":2,"phase":"p1","marker":"chord_bound","ms":*,"corr":0,"ok":true,"bound":false}
+F 3 1
+M {"event":"chat_chord","seq":3,"phase":"p1","marker":"pad_bound","ms":*,"corr":0,"ok":true,"bound":true,"kind":1,"channel":0,"category":4}
+F 4 1
+F 5 1
+F 6 1
+F 7 1 70
+F 8 1 70 71
+F 9 1 70 71
+F 10 1 70 71
+F 11 1
+F 12 1
+F 13 1
+M {"event":"chat_chord","seq":4,"phase":"p2","marker":"chord","ms":*,"corr":0,"ok":true,"order":0,"fired":false,"fires":0,"chat_opened":false,"slot_before":4,"slot_after":4,"overlay":false}
+F 14 1
+F 15 1
+F 16 1
+F 17 1 71
+F 18 1 70 71
+F 19 1 70 71
+F 20 1 70 71
+F 21 1
+F 22 1
+F 23 1
+M {"event":"chat_chord","seq":5,"phase":"p2","marker":"chord","ms":*,"corr":0,"ok":true,"order":1,"fired":false,"fires":0,"chat_opened":false,"slot_before":4,"slot_after":4,"overlay":false}
+F 24 1
+F 25 1
+F 26 1
+F 27 1 265
+F 28 1
+M {"event":"chat_chord","seq":6,"phase":"p3","marker":"opened","ms":*,"corr":0,"ok":true,"opened":true,"overlay":false}
+F 29 1
+F 30 1 69
+F 31 1
+M {"event":"chat_chord","seq":7,"phase":"p3","marker":"closed","ms":*,"corr":0,"ok":true,"closed":true,"overlay":false,"ruled_fired":false}
+F 32 1
+F 33 1
+F 34 1
+F 35 1 71
+F 36 1 70 71
+F 37 1 70 71
+F 38 1 70 71
+F 39 1
+F 40 1
+F 41 1
+M {"event":"chat_chord","seq":8,"phase":"p4","marker":"chord_restore","ms":*,"corr":0,"ok":true,"fired":false,"fires":0,"chat_opened":false,"slot_before":4,"slot_after":4,"overlay":false}
+F 42 1
+M {"event":"chat_chord","seq":9,"phase":"run","marker":"ok","ms":*,"corr":0,"ok":true,"seq_total":9,"max_frame_ms_run":*}
+F 43 -
+D mp_chat_chord_1m ok

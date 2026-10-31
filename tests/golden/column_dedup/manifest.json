@@ -1,0 +1,245 @@
+{
+  "baseline_head": "9b6afba8e WIP retained after L1 original-JAR no-downgrade gate; FAST column re-pin",
+  "platform": "PC / UCRT64 / verify preset / asserts enabled",
+  "walk_ticks_per_seed": 2000,
+  "server_ticks_per_seed_including_setup": 2004,
+  "capture_commands": [
+    "./build-verify/test_column_dedup_state_equiv.exe --capture tests/golden/column_dedup/ms2",
+    "./build-verify/test_column_dedup_render_equiv.exe --capture tests/golden/column_dedup/ms2"
+  ],
+  "capture_summary": {
+    "state": "column-observer ticks=2004 client_boundaries=65820 rows=858992 mesh_bytes=0 status=PASS;column-observer ticks=2004 client_boundaries=54262 rows=859171 mesh_bytes=0 status=PASS;",
+    "render": "column-observer ticks=2004 client_boundaries=0 rows=0 mesh_bytes=24859304 status=PASS;column-observer ticks=2004 client_boundaries=0 rows=0 mesh_bytes=30201652 status=PASS;"
+  },
+  "previous_baseline": {
+    "baseline_head": "bbdf6d66",
+    "files": [
+      {
+        "file": "bbdf6d6_12345_client.gz",
+        "compressed_bytes": 738551,
+        "sha256": "43a38d79c1ae327a167df77a78f1687ac6f535cb0098008a0670885d211dec2e",
+        "decoded_bytes": 2360340,
+        "decoded_sha256": "55c7ccae07b68460f6a0e1b7271f2820bda7c68c89dfa032f5ce22441072369d"
+      },
+      {
+        "file": "bbdf6d6_12345_render.gz",
+        "compressed_bytes": 4375227,
+        "sha256": "d6cdf71e678866a1da39d76e597972b2a8a0cded7c078299f9027cefe9a4cd10",
+        "decoded_bytes": 24233308,
+        "decoded_sha256": "800d36b1ecf719590e168635392d5ff3be68f0eca99a0b4ef05ad97f1312fb8e"
+      },
+      {
+        "file": "bbdf6d6_12345_server.gz",
+        "compressed_bytes": 28940,
+        "sha256": "d16495d4e4ef27d3e7f8190e77acf663c6563eba0f60dbafe72a84d72fc94f34",
+        "decoded_bytes": 56112,
+        "decoded_sha256": "b6eabd7eab79c0d1cb7ccd6a1810504ab63450f042c978717d4a8018360879bb"
+      },
+      {
+        "file": "bbdf6d6_42_client.gz",
+        "compressed_bytes": 388253,
+        "sha256": "cece107596dcd67f61c4d0a0f0cb54f9c5c2022f6bf1f7372d683d72d00014c7",
+        "decoded_bytes": 1736100,
+        "decoded_sha256": "9a8f0da29088747e0289543976efd3c4def8f4f228cdfdd594cca850b0e86988"
+      },
+      {
+        "file": "bbdf6d6_42_render.gz",
+        "compressed_bytes": 5373645,
+        "sha256": "d829bb7152bd8f020e0eaafd1f43c7a652a2fcbfd3bd3f75f68a5e5aeed11e2e",
+        "decoded_bytes": 27732960,
+        "decoded_sha256": "b911a3bca83ccaebdfa6ef9c77a1f73c1a057ca0c7a08308b21c0444b919e867"
+      },
+      {
+        "file": "bbdf6d6_42_server.gz",
+        "compressed_bytes": 24991,
+        "sha256": "7a91054784bf109d9f44ece451fc398d05a7db294b80ccef331a8b44fc227039",
+        "decoded_bytes": 56112,
+        "decoded_sha256": "c7f602048c789cd47cc0eda5443c2656833c2bb45b9a4564890a6cc9b3d0fd61"
+      }
+    ]
+  },
+  "files": [
+    {
+      "file": "ms2_12345_client.gz",
+      "compressed_bytes": 722750,
+      "sha256": "664c35f577003a81697080217391d7e9c30db5749f76eb722f277c440467ea6c",
+      "decoded_bytes": 2369520,
+      "decoded_sha256": "902de76b3fb16412dc31c53db132c7f3f95da42d0c582a015c16d1eb571e99b9"
+    },
+    {
+      "file": "ms2_12345_render.gz",
+      "compressed_bytes": 4587620,
+      "sha256": "90ed95c15ec4389741ae38d33f2bc1fbb14a5b606db6380d790731a6911f3752",
+      "decoded_bytes": 25187728,
+      "decoded_sha256": "43451fe6c3729a20d6a2d7cbcaea50247ddd20e9c5db750250807c9c60ce9bb8"
+    },
+    {
+      "file": "ms2_12345_server.gz",
+      "compressed_bytes": 28357,
+      "sha256": "aeefbfc6bf42bd3e750a558c2581940ce3bc81dba8d595a4a1ae9c023edd069c",
+      "decoded_bytes": 56112,
+      "decoded_sha256": "fc8c02e3d25720c610f88f38698c08979b9b6e9b1267162b6c768d98ca48de47"
+    },
+    {
+      "file": "ms2_42_client.gz",
+      "compressed_bytes": 423691,
+      "sha256": "9ab89273df80881bd85c52bc574c29817ab3b0308f33c543a26974e0c3c12194",
+      "decoded_bytes": 1953432,
+      "decoded_sha256": "0efd8eaec38fa2f926cb6447abac57e23e20ed083f840ef28994847282115461"
+    },
+    {
+      "file": "ms2_42_render.gz",
+      "compressed_bytes": 5983137,
+      "sha256": "0ed22a6c7c81a28d7c07ea764c0dd260bac56c9ff42a9303a9dee376cbb5603b",
+      "decoded_bytes": 30535896,
+      "decoded_sha256": "d63e420cbdcea76ebd7aa6a2c44125afc035479dcac149526c20297edfc3d38e"
+    },
+    {
+      "file": "ms2_42_server.gz",
+      "compressed_bytes": 26044,
+      "sha256": "6d6857046bfa3418358b4f381cc453b01d04fb47a61733aebb314dc16a38a956",
+      "decoded_bytes": 56112,
+      "decoded_sha256": "f375371abae96a00bc5b1c04177987c51a5e680dc9bd758172b58bab7e5b68f8"
+    }
+  ],
+  "fast_repin": {
+    "maintainer_ruling": "2026-10-11",
+    "head": "b11193e035396675ff0e1b3afebb598097891caf",
+    "pre_V6_pin_commit": "625ac64d4",
+    "pre_V6_files": [
+      {
+        "file": "ms2_12345_client.gz",
+        "compressed_bytes": 750289,
+        "sha256": "9e9e479f861cac12e0646a334891d41b909e8d980f25452913a4fddb566c36e5",
+        "decoded_bytes": 2409552,
+        "decoded_sha256": "3456d699cddaac682ae19a8201fe7c7a92fa692457dd09241104888fbc734990"
+      },
+      {
+        "file": "ms2_12345_render.gz",
+        "compressed_bytes": 4375235,
+        "sha256": "e481b603c996153094716fe7060165d80eb023658453ee917136a6278805369a",
+        "decoded_bytes": 24233308,
+        "decoded_sha256": "7a264568ce0572e65feb400ff6af4808c57dd2ac919fd3db7f85a34702e651bc"
+      },
+      {
+        "file": "ms2_12345_server.gz",
+        "compressed_bytes": 29235,
+        "sha256": "fbb140e71861e4bcac0a73442031b07d5b6dfdce3e2aceae10861370cb3a4446",
+        "decoded_bytes": 56112,
+        "decoded_sha256": "1991c2f1fd74718cd03a0304a8455905271d6e37e82b2b4787894b62912e3415"
+      },
+      {
+        "file": "ms2_42_client.gz",
+        "compressed_bytes": 395072,
+        "sha256": "d8833e7b1bb329ea3a301f7e6ff4fe5e81d45dd78d061da3ce7e440111356cbf",
+        "decoded_bytes": 1861380,
+        "decoded_sha256": "df1bc58829e856162067aebc1afe8060f62abe9452f2e97f85eba3a438d87aea"
+      },
+      {
+        "file": "ms2_42_render.gz",
+        "compressed_bytes": 5373667,
+        "sha256": "3bb85eefa8167be2754845d664eff355af2e1cb2401c7fddb8950cf4214d00ba",
+        "decoded_bytes": 27732960,
+        "decoded_sha256": "0bce34d2b32f285110a6b8cb60e16cf38a2c778a525bc5a1c903094507167aad"
+      },
+      {
+        "file": "ms2_42_server.gz",
+        "compressed_bytes": 24992,
+        "sha256": "3b149323b355956cd8ee1d2423418ebe8255eeb175c3990b797a29a86f926d3d",
+        "decoded_bytes": 56112,
+        "decoded_sha256": "7c1580135dca97b1ca4f48d42290cb8aad68a0a1e37f25d87b84836da6cdb086"
+      }
+    ],
+    "normal_complete_runs": 8,
+    "first_divergence_records": [
+      "PR-11 client371/record370 SET_BLOCK lava11, server_world.c:2699 (F2a/F4-RNG)",
+      "PR-10 completion16/list4/vertex98 torch11->14, displaylist.c:673 (F2a/F4-RNG upstream values)"
+    ],
+    "evidence": "tmp/jobs/integ-1011/evidence/fast-2e"
+  },
+  "g9b_r6_state_repin": {
+    "authority": "BRIEF-G9B-3 FINAL R6 / FAST",
+    "scope": "normal-load automatic population; column tapes only, not Beta oracle expectations",
+    "preimage_log": "tmp/jobs/g9b/g9b3-evidence/r6-preimage-state.log",
+    "repeat_manifest": "tmp/jobs/g9b/g9b3-evidence/r7-column-repeat/manifest.json",
+    "first_differences": "tmp/jobs/g9b/g9b3-evidence/r7-column-first-difference.json",
+    "previous_archive": "tmp/jobs/g9b/g9b3-evidence/r7-column-previous",
+    "files": [
+      "ms2_12345_client.gz",
+      "ms2_12345_server.gz",
+      "ms2_42_client.gz",
+      "ms2_42_server.gz"
+    ],
+    "previous_baseline_head": "b11193e03 FAST re-pin (maintainer 2026-10-11)"
+  },
+  "l1_fast_repin": {
+    "authority": "BRIEF-L1 / FAST unchanged",
+    "previous_archive": "D:\\cavewii-evidence\\g9b3-evidence\\l1-column-previous",
+    "repeat_manifest": "D:\\cavewii-evidence\\g9b3-evidence\\r10-column-final-repeat\\manifest.json",
+    "preimage_logs": [
+      "tmp/jobs/g9b/g9b3-evidence/r10-state-preimage.log",
+      "tmp/jobs/g9b/g9b3-evidence/r10-render-preimage.log"
+    ],
+    "first_divergence": "state tick1/offset8 Sky; render tick5/offset12. Inside generation immediate-setter/deferred-region change, original-JAR entire domain exact.",
+    "files": [
+      {
+        "file": "ms2_12345_client.gz",
+        "old_decoded_sha256": "7006f6163f334efee2e16e72dc0c9371c9e35b6b16ab895e7414eb2ac7197c87",
+        "new_decoded_sha256": "cc4a0762b79094959eb80134a4d66fb18f62145fd11c07288e38f9d2c8319e4e"
+      },
+      {
+        "file": "ms2_12345_server.gz",
+        "old_decoded_sha256": "232d0f7c60f6dd6f8ca2276a44d278ec9f01763efd010c45bad92cd72b72a365",
+        "new_decoded_sha256": "fc8c02e3d25720c610f88f38698c08979b9b6e9b1267162b6c768d98ca48de47"
+      },
+      {
+        "file": "ms2_42_client.gz",
+        "old_decoded_sha256": "31457c5310b98ec310ca34fd54439e7eb38b2f1ce73ff0bbd70a14d768671792",
+        "new_decoded_sha256": "f427c940e764ad20c06ac6b8ea9f59444a1192889fa17784ed68c8e9e07a59b1"
+      },
+      {
+        "file": "ms2_42_server.gz",
+        "old_decoded_sha256": "a4e11831ecb8d741541dfa0cc58618f75f5016d781c2325ae77c8b2e73e8ce8c",
+        "new_decoded_sha256": "f375371abae96a00bc5b1c04177987c51a5e680dc9bd758172b58bab7e5b68f8"
+      },
+      {
+        "file": "ms2_12345_render.gz",
+        "old_decoded_sha256": "6c9c08ddd806d3fb59f8d0b4ad67c4c49b57f578e04e416a3625c169a4b29922",
+        "new_decoded_sha256": "23ca78f40e646c070a9d94f0e7dca9f310caaa8fcb61cfdb1e52d69bb9430b05"
+      },
+      {
+        "file": "ms2_42_render.gz",
+        "old_decoded_sha256": "928ebb774648e727634776e9f8aa922a2834b81e9b3aa5aacb41e6db08514bef",
+        "new_decoded_sha256": "d63e420cbdcea76ebd7aa6a2c44125afc035479dcac149526c20297edfc3d38e"
+      }
+    ]
+  },
+  "g9x6_repin": {
+    "authority": "maintainer ruling 3 (G9X-6 attempt 3, 2026-10-14): re-record traces that captured stale light publication",
+    "evidence": "tmp/jobs/loop/G9X-6/RERECORD.md",
+    "first_divergence": "state seed12345 client record #103: inserted CRPC_CHUNK republish (Block plane hash only); seed42 client record #56 (Sky plane hash only); render seed12345 mesh record #88 chunk (0,0) y0, vertex Block-light byte 11->14. Server traces and seed42 render byte-identical.",
+    "files": [
+      {
+        "file": "ms2_12345_client.gz",
+        "old_compressed_bytes": 711368,
+        "old_sha256": "88bfe4d666987e06ee7bca4166e3cc9b296f9073d29b3d95833df755705f1fdb",
+        "old_decoded_bytes": 2339028,
+        "old_decoded_sha256": "cc4a0762b79094959eb80134a4d66fb18f62145fd11c07288e38f9d2c8319e4e"
+      },
+      {
+        "file": "ms2_12345_render.gz",
+        "old_compressed_bytes": 4587279,
+        "old_sha256": "7e127aa9a2e4a76415d811cdab85c71dd5c8258161c6fa115a562a0892e13d67",
+        "old_decoded_bytes": 25187728,
+        "old_decoded_sha256": "23ca78f40e646c070a9d94f0e7dca9f310caaa8fcb61cfdb1e52d69bb9430b05"
+      },
+      {
+        "file": "ms2_42_client.gz",
+        "old_compressed_bytes": 410202,
+        "old_sha256": "98a01a06f8e1497c2574221f3f9bb4eed6d9a4bb0355bf34d2734344f9aa10f8",
+        "old_decoded_bytes": 1922976,
+        "old_decoded_sha256": "f427c940e764ad20c06ac6b8ea9f59444a1192889fa17784ed68c8e9e07a59b1"
+      }
+    ]
+  }
+}

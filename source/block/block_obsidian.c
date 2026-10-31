@@ -17,6 +17,8 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../graphics/render_block.h" // direct include (was transitive via blocks.h pre-split)
+#include "../graphics/render_item.h" // direct include (was transitive via blocks.h pre-split)
 #include "blocks.h"
 
 static enum block_material getMaterial(struct block_info* this) {
@@ -57,10 +59,18 @@ struct block block_obsidian = {
 	.ignore_lighting = false,
 	.flammable = false,
 	.place_ignore = false,
-	.digging.hardness = 10000,
+	// Beta hardness x1500: Block.java:641 `.setHardness(10.0F)` -> 15000.
+	// `.best = TOOL_TIER_ANY` (not MAX): ItemPickaxe.blocksEffectiveAgainst
+	// omits Block.obsidian entirely (only canHarvestBlock references it, to
+	// gate the min tier below), so ItemTool.getStrVsBlock returns a flat
+	// 1.0F regardless of pickaxe tier -- a diamond pickaxe gets no per-tier
+	// speed bonus on obsidian, same as the redstone-ore pattern above
+	// (block_ore.c). Without this, TOOL_TIER_MAX let item_tier's own
+	// divisor (diamond=8) apply, mining obsidian ~8x too fast.
+	.digging.hardness = 15000,
 	.digging.tool = TOOL_TYPE_PICKAXE,
 	.digging.min = TOOL_TIER_DIAMOND,
-	.digging.best = TOOL_TIER_MAX,
+	.digging.best = TOOL_TIER_ANY,
 	.block_item = {
 		.has_damage = false,
 		.max_stack = 64,

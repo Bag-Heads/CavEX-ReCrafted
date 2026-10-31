@@ -19,6 +19,8 @@
 
 #include "blocks.h"
 #include "../network/server_local.h"
+#include "../graphics/render_block.h" // direct include (was transitive via blocks.h pre-split)
+#include "../graphics/render_item.h" // direct include (was transitive via blocks.h pre-split)
 
 static enum block_material getMaterial(struct block_info* this) {
 	return MATERIAL_ORGANIC;
@@ -40,27 +42,14 @@ static uint8_t getTextureIndex(struct block_info* this, enum side side) {
 	return tex_atlas_lookup(TEXAT_DIRT);
 }
 
-static void onRightClick(struct server_local* s, struct item_data* it,
-                         struct block_info* where, struct block_info* on,
-                         enum side on_side) {
-    if (it && items[it->id] && items[it->id]->tool.type == TOOL_TYPE_HOE) {
-        struct block_data above;
-        if (server_world_get_block(&s->world, on->x, on->y + 1, on->z, &above) &&
-            above.type == BLOCK_AIR) {
-            server_world_set_block(s, on->x, on->y, on->z, (struct block_data){
-                .type = BLOCK_FARMLAND,
-                .metadata = 0
-            });
-            return;
-        }
-    }
-
-    // Fallback: if it's not a hoe.. just place what you wanted to place
-    if (it && items[it->id] && items[it->id]->onItemPlace) {
-        items[it->id]->onItemPlace(s, it, where, on, on_side);
-    }
-}
-
+// NO onRightClick: dirt has no Beta blockActivated. Hoe->farmland is the ITEM verb
+// item_hoe_onUseOnBlock (Beta ItemHoe.onItemUse, decompile 740c583) -- and it tills
+// dirt UNCONDITIONALLY, the faithful behaviour. A block-level onRightClick here was
+// redundant AND harmful: the server dispatch (SRPC_BLOCK_PLACE) calls a block's
+// onRightClick INSTEAD of the held item's onUseOnBlock/onItemPlace+consume, so dirt's
+// fallback placed a held block but never consumed it = an item dupe (and it wrongly
+// required air-above to till). Leaving onRightClick NULL routes both the hoe and
+// normal placement through the single faithful, consuming dispatch path.
 
 struct block block_dirt = {
 	.name = "Dirt",
@@ -70,7 +59,7 @@ struct block block_dirt = {
 	.getTextureIndex = getTextureIndex,
 	.getDroppedItem = block_drop_default,
 	.onRandomTick = NULL,
-	.onRightClick = onRightClick,
+	.onRightClick = NULL, // hoe tilling is item_hoe_onUseOnBlock; see note above
 	.transparent = false,
 	.renderBlock = render_block_full,
 	.renderBlockAlways = NULL,

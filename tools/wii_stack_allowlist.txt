@@ -1,0 +1,11 @@
+# Allowlist for tools/check_wii_stack_usage.sh.
+#
+# One function name per line. Every entry MUST carry a "# ..." justification
+# comment on the same line (measured size + why it's safe, e.g. "only runs on
+# a thread with a big enough stack"). An unjustified entry fails the check by
+# design -- see the 2026-08-26 boot-death class this script exists to catch
+# (main() grew a 188KB frame vs libogc's 128KB main-thread stack; fixed by
+# making the offending local `static` in source/main.c).
+#
+# Do not add an entry here to make the check pass. Add one only after you've
+# confirmed the frame is genuinely safe where it runs; otherwise fix the frame.

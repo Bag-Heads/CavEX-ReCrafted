@@ -1,0 +1,2841 @@
+{
+ "assets": [
+  {
+   "attribution_required": "credit given (licence unstated)",
+   "attribution_where": "NOTICE; ASSET_ATTRIBUTION.md",
+   "author": "WiiBrew users Clorox, Flark, Hiker13526, Crayon (26 cells in 0-31 are pixel-identical to artwork/controller-glyphs/original-wii-atlas.png; cells 14, 15, 22, 23 are project-own blank Classic keycaps, 2026-10-31)",
+   "group": "approved-controls",
+   "licence": "not stated on wiibrew.org (credited; kept by maintainer ruling)",
+   "licence_url": "https://wiibrew.org/wiki/Category:Controller_Buttons",
+   "notes": "Controller button glyphs (26 cells of assets/gui/approved-controls.png) match WiiBrew's Category:Controller_Buttons images (uploaders Clorox, Hiker13526, 2008). No licence is stated on wiibrew.org; licence_url is that source page, where no licence is stated. Kept unchanged and credited: maintainer rulings 2026-10-22 and 2026-10-30 (R18 Q3). Cells 14, 15, 22 and 23 (Classic L, R, ZL, ZR) were replaced 2026-10-31 by four identical project-own blank keycaps (GPL-3.0-or-later); the game draws the letters with the active pack font.",
+   "paths": [
+    "assets/gui/approved-controls.png"
+   ],
+   "sha256": "8e99d75f4d2fc53a84b986d0c020d6702e6b1979fcc08f48242acea9b1e3fc7f",
+   "ships": "release-zip",
+   "source": "artwork/controller-glyphs/README.md",
+   "status": "credited-licence-unstated"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "ASSET_ATTRIBUTION.md; packs/beta-base/README.txt",
+   "author": "CaveWii project generator (tools/gen_anim_fx/bake_anim_fx.sh)",
+   "group": "beta-base-anim",
+   "licence": "GPL-3.0-or-later",
+   "licence_file": "LICENSE",
+   "notes": "Maintainer ruling 2026-10-30 (R18 Q3, hub): project-own output of our generator (CaveWii's ports of the Beta 1.7.3 procedural fire/lava/water/portal animations). Copied into packs built from the player's own game, and shipped in the release zip as assets/beta-base/anim.png (byte copy) so the loader composes anim.png for a raw b1.7.3.jar unzip (source/platform/tex_beta_compose.h).",
+   "paths": [
+    "assets/beta-base/anim.png",
+    "packs/beta-base/anim.png"
+   ],
+   "sha256": "51df2cde33ddd15b0e216697d55440719458df5a7eb961b447243f57329ab905",
+   "ships": "release-zip; source-export; copied into user-built Beta packs; runtime base for raw-jar packs",
+   "source": "tools/gen_anim_fx/bake_anim_fx.sh (CaveWii generator output)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "yes: licence text with redistribution",
+   "attribution_where": "NOTICE; packs/beta-base/README.txt; LICENSES/GPL-2.0.txt",
+   "author": "fail0verflow (Homebrew Channel)",
+   "group": "homebrew-channel-pointer",
+   "licence": "GPL-2.0-only",
+   "licence_file": "LICENSES/GPL-2.0.txt",
+   "notes": "Unchanged Homebrew Channel hand; bundled pointer for every texture pack per maintainer 2026-10-27. Credited in NOTICE; not Earth & Ash or CC0.",
+   "paths": [
+    "assets/pointer.png",
+    "packs/beta-base/pointer.png"
+   ],
+   "sha256": "f5b81b0348c57e3b8ab71d96c336b2af60161bb240557e9ea2cfed2eb49962d6",
+   "ships": "release-zip; source-export; copied into user-built Beta packs",
+   "source": "https://github.com/fail0verflow/hbc/tree/master/channel/channelapp/data",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "ASSET_ATTRIBUTION.md; assets/README.md",
+   "author": "CaveWii project team (controller drawings made 2026-10-29)",
+   "group": "controller-pictures",
+   "licence": "GPL-3.0-or-later",
+   "licence_file": "LICENSE",
+   "notes": "Maintainer ruling 2026-10-30 (R18 Q3, hub): project-own original controller drawings (FINAL sheet, large and mini tiers). Covered by the repository licence.",
+   "paths": [
+    "assets/gui/controller-pictures.png"
+   ],
+   "sha256": "85b6a6b05efa4336d084af89364f24d7c213bcc8f8f883ae3d5d060a87617c18",
+   "ships": "release-zip",
+   "source": "CaveWii project original (team design round, maintainer-approved); working files private",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project; GameCube cells 32-41 by Sol (CC0)",
+   "group": "controls-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Pixel check 2026-10-22: no cell identical to the WiiBrew atlas.",
+   "paths": [
+    "assets/controls.png"
+   ],
+   "sha256": "0a31e73a34d588c043a65677f1f5742fdf9fa4adf91f1040a7763e74627c19f8",
+   "ships": "release-zip",
+   "source": "tools/gen_cc0_controls.py + tools/apply_gc_glyph_style_c.py",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/anim.png"
+   ],
+   "sha256": "967db36afba79b57b455b6b0a4730ef75a5a840d81aa1639168ebce6eacb8d9e",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/armor/chain_1.png"
+   ],
+   "sha256": "cdda7eff87564ca517991fbddc3faab186900f0c147fd98de05007a5c9eeb017",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/armor/chain_2.png"
+   ],
+   "sha256": "68c1cc07d6a8d13506482d80c4c2353d7e4319b721dfd864fac9ec1efa3e0b7c",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/armor/cloth_1.png"
+   ],
+   "sha256": "d852dceac1636b6ffa4eb2f9d041b5daf22613baaec5dc8ef916d72a3c65fbe2",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/armor/cloth_2.png"
+   ],
+   "sha256": "8ac179ca019d45163edb8b4628e1051b1f75587c461068477816cfbac76e03c6",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/armor/diamond_1.png"
+   ],
+   "sha256": "649b9a0d5022f1a095733b9f18065dc1df9102d3111390cd593aec33a723e633",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/armor/diamond_2.png"
+   ],
+   "sha256": "44f9245a8156fe8c8fe0c7e510fd24448d363932399338e346ef58a2677c3885",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/armor/gold_1.png"
+   ],
+   "sha256": "7453bd9a928784af69227aa06a9d2da87bcac362c15ee63e53dba56de021ad8d",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/armor/gold_2.png"
+   ],
+   "sha256": "d17a62ba6cb364375250a0bf8e772b0310412e3650445f1c1bfbf3253e606d50",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/armor/iron_1.png"
+   ],
+   "sha256": "56f94f196ffe96328c043232fa6b5973adfc166e7647bf1aa433823d2be4ab45",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/armor/iron_2.png"
+   ],
+   "sha256": "538f0fd5a2492fcd7d379965ee750de677bcedb9f46ff28418297256ade96363",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/art/kz.png"
+   ],
+   "sha256": "ca944d8942ea01d195f314e31a42105ff0e25b83e037249aad0a869748dad416",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/environment/clouds.png"
+   ],
+   "sha256": "66f484b07b440391aa8db4d6e0500c72808347127da1ed8e531242f21dcefd64",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/environment/rain.png"
+   ],
+   "sha256": "25b64e362e0a80f599002c87b3ba31f572565a21d183226c48155f8d80f1b779",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/environment/snow.png"
+   ],
+   "sha256": "f66b08801aa8ef3e6f88481d624a48b2dcac289f36676b06fb23f53f84f307e4",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/font/default.png"
+   ],
+   "sha256": "dd8574fc88504aad9cc32895c4b2ddbc021ea31e644e72a527d2cd1185755cac",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/gui/chest.png"
+   ],
+   "sha256": "74c2b6415caf113f5743810c8fb6568a225a3c13517697b5d82f216b2bda0a10",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/gui/crafting.png"
+   ],
+   "sha256": "0521eb3f115bcd82043252b613ce4b23952de588a3f43e9a9227c255dc4ac3c4",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/gui/furnace.png"
+   ],
+   "sha256": "c7469cbf7dd34b91010cec923878e299c4a925370d708fc0dfadb16b4e41a279",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/gui/gui.png"
+   ],
+   "sha256": "95fcc1768afd466433baa2b7321201642e3ceecc32a1d32733333c5fb3c433bf",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/gui/icons.png"
+   ],
+   "sha256": "b90d56adf021fddbc3f18f74fe05f30b243692a2e57d80b4b1212e11d61dad5a",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/gui/inventory.png"
+   ],
+   "sha256": "fe1baf79ad28f2d42cc64f0d39a240e1b14770cd85aceaa731c00e6ce8a3ee52",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/gui/iron_chest.png"
+   ],
+   "sha256": "85408b95acd0b15d80faaebf8fe9ad6f68e4bd9fa4c61808b6ff44b1344c6123",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/gui/items.png"
+   ],
+   "sha256": "5601e8db0689e1cdb09b38e5657addfe1f6f48b13388fa75fee214bfa2781fe1",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/gui/trap.png"
+   ],
+   "sha256": "29d6f5befae405a7592be3a3720109c201117a6c0fa16c002aa299d5412273ad",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/gui_2.png"
+   ],
+   "sha256": "38bba459720809bb22319a9c74b168aeabd050ece44f0f1c45b766b65a18c9c6",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/item/arrows.png"
+   ],
+   "sha256": "b11189c2ee4735bb9d1b66f426decc74c45566363bbfd48b1928c3a5c77f0429",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/item/cart.png"
+   ],
+   "sha256": "e38c8f9e83d6a496188d47d0cc64d8914ec1d1be14ff11e981398dd43e4d7f46",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/misc/dial.png"
+   ],
+   "sha256": "1d45349a0cbfa954fa6c6eacc0d3f426a1f8fb43361d010da260d5bd3f5cbf7f",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/misc/mapbg.png"
+   ],
+   "sha256": "4b409b28adfa01e1f9cfe190bb0cd5b49d59b163fdec7be282fa148a504f6ac4",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/misc/mapicons.png"
+   ],
+   "sha256": "69405510d0da34e4ba5854d5c05d2909f5371327a5d5ba877af893525e81bf31",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/misc/shadow.png"
+   ],
+   "sha256": "c0ab5521f11d5d58c63fdddbad2a9f187cf636e3b2155f7965a1b180508ebb87",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/misc/water.png"
+   ],
+   "sha256": "7a1a30372469a5db1567f7451365dcbde1abb71b0d85aea7cec10043bd34677f",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/mob/char.png"
+   ],
+   "sha256": "c761ecd83e206fe51e26263f7a256f1de2e1d7e163e0ab063b10d9cdaa854f45",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/mob/chicken.png"
+   ],
+   "sha256": "592a38f5e53a848b0e7dae0e4d33c0888f0996429251761f045c8cf887fc0d01",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/mob/cow.png"
+   ],
+   "sha256": "3fb46f891db77be2345bd2c35e57cefe3efa17b6c24352b1e823ff4c82e17d2a",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/mob/creeper.png"
+   ],
+   "sha256": "f4788cf827f457586ff0b103d43a17e87e765a9ce3c1d0ad6abf6ffc85e21cf1",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/mob/ghast.png"
+   ],
+   "sha256": "af15bf82e850b66b374faf15c0cfe3f87e5cd5e0b61ba81cb8fb35c4f9370182",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/mob/ghast_fire.png"
+   ],
+   "sha256": "cde9c07446d452525fbc026d214530add4a9f3e72a1d7df6c98a68e10f483966",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/mob/pig.png"
+   ],
+   "sha256": "f660bb65e3dad1e3668549b2c83c01a3740fa91e52506158bccc8c3b39718686",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/mob/pigzombie.png"
+   ],
+   "sha256": "8ca7a52f566dd3abb241ebdc645fedf8c7168d29fdbce462de3e0b9a545d0998",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/mob/sheep.png"
+   ],
+   "sha256": "394bf8c170e92507dead795baa7d275950afe7cec4a05022b3b12ba0c49e2a49",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/mob/sheep_fur.png"
+   ],
+   "sha256": "d9708c09e2f4c48877ff7691cbf65407a429d2514c54534994a635aec79513c5",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/mob/skeleton.png"
+   ],
+   "sha256": "12bbaee4e596df92548902476a5db4dad9121672f0cee797fa697ba37cf1fb8d",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/mob/slime.png"
+   ],
+   "sha256": "b1da200fa4276074232ece82efbf7ae52bf41fb357f0f20ec250df78b37d9ab4",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/mob/spider.png"
+   ],
+   "sha256": "d0c888732041988e179d59a6cd4a15ca345141bd7d3d5ee04aa13bb3d9b9e6c4",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/mob/spider_eyes.png"
+   ],
+   "sha256": "f69263076cb196d26ee8e30f770dd40261fdd35b0614e650d8c3431b82dc1920",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/mob/squid.png"
+   ],
+   "sha256": "0a7e284efba6e5cdcd4512be845309c120e193fadc27596fcd99c5ac64cd1078",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/mob/wolf.png"
+   ],
+   "sha256": "0d2b48a7233bda84047ae8d479192980eac2515f33624e3fcdf86114b9d3d4d7",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/mob/wolf_angry.png"
+   ],
+   "sha256": "7ca7c775d70efe3bc97d9583703e98eee7fd5e46fe942434707babf0a3903504",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/mob/wolf_tame.png"
+   ],
+   "sha256": "338dfb9f29b425071744854779d3213804283d8fc4c3a00e20ae485baa2d4c75",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/mob/zombie.png"
+   ],
+   "sha256": "1370cc7415fba9a2d7d2279659cb2b10add1e91b7cf194059097eab9b7e7f9fc",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/particles.png"
+   ],
+   "sha256": "889cbc2b232b0ec752726e2ea198855dc9b5e7e6aa1cc1b4eeb2c26100adc062",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest. 2026-10-30: bed cells 134/135/149-152 redrawn as project-own CC0 art (artwork/cc0-pack/full_terrain.py bed()) to Beta's bed tile layout (which half, strip direction, 9/16-tall cutout faces); layout only, no Mojang pixels.",
+   "paths": [
+    "assets/terrain.png"
+   ],
+   "sha256": "585bfb50ecdb121cd3bc11a4eca55c5b1bb956c323acd913f1225d7f82474b71",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/terrain/moon.png"
+   ],
+   "sha256": "8caa0b94f8c44a6d3e1836c49ceb56720ad656a5bd7a137fcf6da10f7a5b2f74",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "paths": [
+    "assets/terrain/sun.png"
+   ],
+   "sha256": "1e430859d0c7ccafa2f328577109189ee4040635404cfa5959681ecf7dd49676",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "assets/gui/*.provenance.json",
+   "author": "CaveWii project",
+   "group": "gui-provenance-json",
+   "licence": "project-original (no separate dedication; repository GPL-3.0-or-later)",
+   "licence_file": "LICENSE",
+   "notes": "title-logo.png: json says original_art=true, no Mojang logo pixels, but its source is a tmp/jobs team render with an unrecorded generation method. reception.png: rasterised from the original Earth SVG. Maintainer to confirm CC0 vs GPL dedication.",
+   "paths": [
+    "assets/gui/reception.png"
+   ],
+   "sha256": "2cc0fee176b697efc2f9d11bb74a981f0e246e58d9712d0174ada519d54e28b7",
+   "ships": "release-zip",
+   "source": "assets/gui/*.provenance.json",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "assets/gui/*.provenance.json",
+   "author": "CaveWii project",
+   "group": "gui-provenance-json",
+   "licence": "project-original (no separate dedication; repository GPL-3.0-or-later)",
+   "licence_file": "LICENSE",
+   "notes": "title-logo.png: json says original_art=true, no Mojang logo pixels, but its source is a tmp/jobs team render with an unrecorded generation method. reception.png: rasterised from the original Earth SVG. Maintainer to confirm CC0 vs GPL dedication.",
+   "paths": [
+    "assets/gui/title-logo.png"
+   ],
+   "sha256": "62e29c600bf49d485e214ad3288b34719eb08f96d3c076be4e3ee617e7d53269",
+   "ships": "release-zip",
+   "source": "assets/gui/*.provenance.json",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "ASSET_ATTRIBUTION.md",
+   "author": "CaveWii project (CAVEX logo, team-made)",
+   "group": "icons",
+   "licence": "GPL-3.0-or-later",
+   "licence_file": "LICENSE",
+   "notes": "Maintainer ruling 2026-10-30 (R18 Q3, hub): project-own art (the new CAVEX logo). Covered by the repository licence.",
+   "paths": [
+    "icon.png"
+   ],
+   "sha256": "68bf870f32e2899134dec7371f5626f088fba0d6160dce57ee7477d61f79af55",
+   "ships": "release-zip (apps/CavEX/icon.png); source-export",
+   "source": "CaveWii project original (new CAVEX logo); design files kept in the private artwork/ tree",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "ASSET_ATTRIBUTION.md",
+   "author": "CaveWii project (derived from icon.png)",
+   "group": "pack-helper-icons",
+   "licence": "GPL-3.0-or-later",
+   "licence_file": "LICENSE",
+   "notes": "Pack Helper app icon (PNG master 256x256): the project-own CAVEX wordmark from icon.png, cropped and scaled 2x nearest-neighbour onto a flat square. Replaces the earlier Creeper-face icon (Mojang character), which is removed. No Mojang characters or textures.",
+   "paths": [
+    "tools/pack_helper/art/computer.png"
+   ],
+   "sha256": "123f134c08c86c14379657cbbdcd762bb0427a6291db5b0bf169bcaef6aa6bfc",
+   "ships": "source-export; Pack Helper build resources",
+   "source": "tools/pack_helper/art/computer.png from icon.png",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "ASSET_ATTRIBUTION.md",
+   "author": "CaveWii project (derived from icon.png)",
+   "group": "pack-helper-icons",
+   "licence": "GPL-3.0-or-later",
+   "licence_file": "LICENSE",
+   "notes": "Pack Helper app icon, multi-size ICO (256/128/64/48/32/16, nearest-neighbour) from computer.png.",
+   "paths": [
+    "tools/pack_helper/art/computer.ico"
+   ],
+   "sha256": "af3c74c10ca470da4565e3c6fc2ca377d9a59ac3eca674c0b0eacbb00bce21a7",
+   "ships": "source-export; Pack Helper build resources",
+   "source": "tools/pack_helper/art/computer.ico from icon.png",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "ASSET_ATTRIBUTION.md",
+   "author": "CaveWii project (CAVEX wordmark)",
+   "group": "pack-helper-icons",
+   "licence": "GPL-3.0-or-later",
+   "licence_file": "LICENSE",
+   "notes": "Pack Helper header wordmark, moved from private docs/pack_helper_design/art unchanged (the project CAVEX wordmark).",
+   "paths": [
+    "tools/pack_helper/art/logo.png"
+   ],
+   "sha256": "b1a72b5df70e78f684f9612db7d0f0446694c543d0717022fbb12a91b7d230d6",
+   "ships": "source-export; Pack Helper build resources",
+   "source": "CaveWii project original; moved from docs/pack_helper_design/art/logo.png",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "NOTICE; packs/isabella-ii/README.txt",
+   "author": "CaveWii project",
+   "group": "isabella-extras",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "",
+   "paths": [
+    "packs/isabella-ii/font/default.png"
+   ],
+   "sha256": "c108b39fa4e4e2dbac388c4c078d6a11e98dada677989660e6950b395eb49d96",
+   "ships": "release-zip (optional pack texturepacks/isabella-ii/)",
+   "source": "artwork/isabella-ii-extras/make_pointer_font.py",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "NOTICE; packs/isabella-ii/README.txt",
+   "author": "CaveWii project",
+   "group": "isabella-extras",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "",
+   "paths": [
+    "packs/isabella-ii/pointer.png"
+   ],
+   "sha256": "7e75dd26fbb3351cb59856918d46c076098188ce60c0214f523a7c6aad1bb8a8",
+   "ships": "release-zip (optional pack texturepacks/isabella-ii/)",
+   "source": "artwork/isabella-ii-extras/make_pointer_font.py",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "yes: credit Bonemouse, link licence, state changes",
+   "attribution_where": "LICENSES/Isabella-II/ (About Isabella.txt, LICENSE.txt); packs/isabella-ii/{README.txt,About Isabella.txt,LICENSE.txt}; NOTICE; README.md Credits",
+   "author": "Bonemouse (Isabella II)",
+   "group": "isabella-ii",
+   "licence": "CC-BY-3.0",
+   "licence_file": "LICENSES/Isabella-II/LICENSE.txt",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0/",
+   "notes": "MODIFIED for CaveWii_v2 (edited/re-arranged). anim.png is adapted (Beta motion in Isabella colours). Upstream About file says 'Some textures are based off the work of Mojang': residual upstream-rights question for the maintainer.",
+   "paths": [
+    "packs/isabella-ii/anim.png"
+   ],
+   "sha256": "e275eed97dc121fcf05bf6061ab2c8c9ec6db4c6547480329dc1f05a92861e75",
+   "ships": "release-zip (optional pack texturepacks/isabella-ii/)",
+   "source": "http://www.minecraftforum.net/topic/242175-Isabella/ (thread dead); 'Isabella 2 1.2vb1.zip'",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "yes: credit Bonemouse, link licence, state changes",
+   "attribution_where": "LICENSES/Isabella-II/ (About Isabella.txt, LICENSE.txt); packs/isabella-ii/{README.txt,About Isabella.txt,LICENSE.txt}; NOTICE; README.md Credits",
+   "author": "Bonemouse (Isabella II)",
+   "group": "isabella-ii",
+   "licence": "CC-BY-3.0",
+   "licence_file": "LICENSES/Isabella-II/LICENSE.txt",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0/",
+   "notes": "MODIFIED for CaveWii_v2 (edited/re-arranged). anim.png is adapted (Beta motion in Isabella colours). Upstream About file says 'Some textures are based off the work of Mojang': residual upstream-rights question for the maintainer.",
+   "paths": [
+    "packs/isabella-ii/environment/clouds.png"
+   ],
+   "sha256": "b7dc5fc006eee00979bbebeeb0052642571e1b1c06618da50988b6e377436681",
+   "ships": "release-zip (optional pack texturepacks/isabella-ii/)",
+   "source": "http://www.minecraftforum.net/topic/242175-Isabella/ (thread dead); 'Isabella 2 1.2vb1.zip'",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "yes: credit Bonemouse, link licence, state changes",
+   "attribution_where": "LICENSES/Isabella-II/ (About Isabella.txt, LICENSE.txt); packs/isabella-ii/{README.txt,About Isabella.txt,LICENSE.txt}; NOTICE; README.md Credits",
+   "author": "Bonemouse (Isabella II)",
+   "group": "isabella-ii",
+   "licence": "CC-BY-3.0",
+   "licence_file": "LICENSES/Isabella-II/LICENSE.txt",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0/",
+   "notes": "MODIFIED for CaveWii_v2 (edited/re-arranged). anim.png is adapted (Beta motion in Isabella colours). Upstream About file says 'Some textures are based off the work of Mojang': residual upstream-rights question for the maintainer.",
+   "paths": [
+    "packs/isabella-ii/gui/crafting.png"
+   ],
+   "sha256": "b8740e5e13eab96ba4ff16296cef22a7bb63bf7ddc6e71b888e4b69a1d4c8035",
+   "ships": "release-zip (optional pack texturepacks/isabella-ii/)",
+   "source": "http://www.minecraftforum.net/topic/242175-Isabella/ (thread dead); 'Isabella 2 1.2vb1.zip'",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "yes: credit Bonemouse, link licence, state changes",
+   "attribution_where": "LICENSES/Isabella-II/ (About Isabella.txt, LICENSE.txt); packs/isabella-ii/{README.txt,About Isabella.txt,LICENSE.txt}; NOTICE; README.md Credits",
+   "author": "Bonemouse (Isabella II)",
+   "group": "isabella-ii",
+   "licence": "CC-BY-3.0",
+   "licence_file": "LICENSES/Isabella-II/LICENSE.txt",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0/",
+   "notes": "MODIFIED for CaveWii_v2 (edited/re-arranged). anim.png is adapted (Beta motion in Isabella colours). Upstream About file says 'Some textures are based off the work of Mojang': residual upstream-rights question for the maintainer.",
+   "paths": [
+    "packs/isabella-ii/gui/furnace.png"
+   ],
+   "sha256": "79ba5a9636bbc4c47d6a1f647818ff9809d9cebd06ad1e7a19b8cd6c054d41a1",
+   "ships": "release-zip (optional pack texturepacks/isabella-ii/)",
+   "source": "http://www.minecraftforum.net/topic/242175-Isabella/ (thread dead); 'Isabella 2 1.2vb1.zip'",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "yes: credit Bonemouse, link licence, state changes",
+   "attribution_where": "LICENSES/Isabella-II/ (About Isabella.txt, LICENSE.txt); packs/isabella-ii/{README.txt,About Isabella.txt,LICENSE.txt}; NOTICE; README.md Credits",
+   "author": "Bonemouse (Isabella II)",
+   "group": "isabella-ii",
+   "licence": "CC-BY-3.0",
+   "licence_file": "LICENSES/Isabella-II/LICENSE.txt",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0/",
+   "notes": "MODIFIED for CaveWii_v2 (edited/re-arranged). anim.png is adapted (Beta motion in Isabella colours). Upstream About file says 'Some textures are based off the work of Mojang': residual upstream-rights question for the maintainer.",
+   "paths": [
+    "packs/isabella-ii/gui/gui.png"
+   ],
+   "sha256": "2851b33fb47f2fb1ad4e3fa7e41d245061389c8310b975c865394429ed09633d",
+   "ships": "release-zip (optional pack texturepacks/isabella-ii/)",
+   "source": "http://www.minecraftforum.net/topic/242175-Isabella/ (thread dead); 'Isabella 2 1.2vb1.zip'",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "yes: credit Bonemouse, link licence, state changes",
+   "attribution_where": "LICENSES/Isabella-II/ (About Isabella.txt, LICENSE.txt); packs/isabella-ii/{README.txt,About Isabella.txt,LICENSE.txt}; NOTICE; README.md Credits",
+   "author": "Bonemouse (Isabella II)",
+   "group": "isabella-ii",
+   "licence": "CC-BY-3.0",
+   "licence_file": "LICENSES/Isabella-II/LICENSE.txt",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0/",
+   "notes": "MODIFIED for CaveWii_v2 (edited/re-arranged). anim.png is adapted (Beta motion in Isabella colours). Upstream About file says 'Some textures are based off the work of Mojang': residual upstream-rights question for the maintainer.",
+   "paths": [
+    "packs/isabella-ii/gui/icons.png"
+   ],
+   "sha256": "d759d18535c498ea301b5f4e3fb85a99e135aea1d09686333924fba3b3c195f9",
+   "ships": "release-zip (optional pack texturepacks/isabella-ii/)",
+   "source": "http://www.minecraftforum.net/topic/242175-Isabella/ (thread dead); 'Isabella 2 1.2vb1.zip'",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "yes: credit Bonemouse, link licence, state changes",
+   "attribution_where": "LICENSES/Isabella-II/ (About Isabella.txt, LICENSE.txt); packs/isabella-ii/{README.txt,About Isabella.txt,LICENSE.txt}; NOTICE; README.md Credits",
+   "author": "Bonemouse (Isabella II)",
+   "group": "isabella-ii",
+   "licence": "CC-BY-3.0",
+   "licence_file": "LICENSES/Isabella-II/LICENSE.txt",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0/",
+   "notes": "MODIFIED for CaveWii_v2 (edited/re-arranged). anim.png is adapted (Beta motion in Isabella colours). Upstream About file says 'Some textures are based off the work of Mojang': residual upstream-rights question for the maintainer.",
+   "paths": [
+    "packs/isabella-ii/gui/inventory.png"
+   ],
+   "sha256": "67485b8ffd252e3d51247fb988faba3b0f8895acca48b6544cb7c2cd28b19faf",
+   "ships": "release-zip (optional pack texturepacks/isabella-ii/)",
+   "source": "http://www.minecraftforum.net/topic/242175-Isabella/ (thread dead); 'Isabella 2 1.2vb1.zip'",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "yes: credit Bonemouse, link licence, state changes",
+   "attribution_where": "LICENSES/Isabella-II/ (About Isabella.txt, LICENSE.txt); packs/isabella-ii/{README.txt,About Isabella.txt,LICENSE.txt}; NOTICE; README.md Credits",
+   "author": "Bonemouse (Isabella II)",
+   "group": "isabella-ii",
+   "licence": "CC-BY-3.0",
+   "licence_file": "LICENSES/Isabella-II/LICENSE.txt",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0/",
+   "notes": "MODIFIED for CaveWii_v2 (edited/re-arranged). anim.png is adapted (Beta motion in Isabella colours). Upstream About file says 'Some textures are based off the work of Mojang': residual upstream-rights question for the maintainer.",
+   "paths": [
+    "packs/isabella-ii/gui/items.png"
+   ],
+   "sha256": "b17ceb07c04e919b103cad32e9f755797b22fe7a1ef625050a91e4b6fc9b7819",
+   "ships": "release-zip (optional pack texturepacks/isabella-ii/)",
+   "source": "http://www.minecraftforum.net/topic/242175-Isabella/ (thread dead); 'Isabella 2 1.2vb1.zip'",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "yes: credit Bonemouse, link licence, state changes",
+   "attribution_where": "LICENSES/Isabella-II/ (About Isabella.txt, LICENSE.txt); packs/isabella-ii/{README.txt,About Isabella.txt,LICENSE.txt}; NOTICE; README.md Credits",
+   "author": "Bonemouse (Isabella II)",
+   "group": "isabella-ii",
+   "licence": "CC-BY-3.0",
+   "licence_file": "LICENSES/Isabella-II/LICENSE.txt",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0/",
+   "notes": "MODIFIED for CaveWii_v2 (edited/re-arranged). anim.png is adapted (Beta motion in Isabella colours). Upstream About file says 'Some textures are based off the work of Mojang': residual upstream-rights question for the maintainer.",
+   "paths": [
+    "packs/isabella-ii/particles.png"
+   ],
+   "sha256": "ed1943f3860218275905cd681d19f2ec74ecb716d8bddac2c7f2454db55a4c1c",
+   "ships": "release-zip (optional pack texturepacks/isabella-ii/)",
+   "source": "http://www.minecraftforum.net/topic/242175-Isabella/ (thread dead); 'Isabella 2 1.2vb1.zip'",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "yes: credit Bonemouse, link licence, state changes",
+   "attribution_where": "LICENSES/Isabella-II/ (About Isabella.txt, LICENSE.txt); packs/isabella-ii/{README.txt,About Isabella.txt,LICENSE.txt}; NOTICE; README.md Credits",
+   "author": "Bonemouse (Isabella II)",
+   "group": "isabella-ii",
+   "licence": "CC-BY-3.0",
+   "licence_file": "LICENSES/Isabella-II/LICENSE.txt",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0/",
+   "notes": "MODIFIED for CaveWii_v2 (edited/re-arranged). anim.png is adapted (Beta motion in Isabella colours). Upstream About file says 'Some textures are based off the work of Mojang': residual upstream-rights question for the maintainer.",
+   "paths": [
+    "packs/isabella-ii/terrain.png"
+   ],
+   "sha256": "1ba8c48e10a37fd2ba072291b13cd40db1061592d1f0b768b3d79d8a377bc033",
+   "ships": "release-zip (optional pack texturepacks/isabella-ii/)",
+   "source": "http://www.minecraftforum.net/topic/242175-Isabella/ (thread dead); 'Isabella 2 1.2vb1.zip'",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "yes: credit Bonemouse, link licence, state changes",
+   "attribution_where": "LICENSES/Isabella-II/ (About Isabella.txt, LICENSE.txt); packs/isabella-ii/{README.txt,About Isabella.txt,LICENSE.txt}; NOTICE; README.md Credits",
+   "author": "Bonemouse (Isabella II)",
+   "group": "isabella-ii",
+   "licence": "CC-BY-3.0",
+   "licence_file": "LICENSES/Isabella-II/LICENSE.txt",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0/",
+   "notes": "MODIFIED for CaveWii_v2 (edited/re-arranged). anim.png is adapted (Beta motion in Isabella colours). Upstream About file says 'Some textures are based off the work of Mojang': residual upstream-rights question for the maintainer.",
+   "paths": [
+    "packs/isabella-ii/terrain/moon.png"
+   ],
+   "sha256": "7407dc530214595e0d7e74d5fc2a2d9679992f15a7569e470cc58c25839e6fa7",
+   "ships": "release-zip (optional pack texturepacks/isabella-ii/)",
+   "source": "http://www.minecraftforum.net/topic/242175-Isabella/ (thread dead); 'Isabella 2 1.2vb1.zip'",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "yes: credit Bonemouse, link licence, state changes",
+   "attribution_where": "LICENSES/Isabella-II/ (About Isabella.txt, LICENSE.txt); packs/isabella-ii/{README.txt,About Isabella.txt,LICENSE.txt}; NOTICE; README.md Credits",
+   "author": "Bonemouse (Isabella II)",
+   "group": "isabella-ii",
+   "licence": "CC-BY-3.0",
+   "licence_file": "LICENSES/Isabella-II/LICENSE.txt",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0/",
+   "notes": "MODIFIED for CaveWii_v2 (edited/re-arranged). anim.png is adapted (Beta motion in Isabella colours). Upstream About file says 'Some textures are based off the work of Mojang': residual upstream-rights question for the maintainer.",
+   "paths": [
+    "packs/isabella-ii/terrain/sun.png"
+   ],
+   "sha256": "992ac82bdfb53c1f83ffa664d24f30fb05aaef262f372cbedb601121d4b678c8",
+   "ships": "release-zip (optional pack texturepacks/isabella-ii/)",
+   "source": "http://www.minecraftforum.net/topic/242175-Isabella/ (thread dead); 'Isabella 2 1.2vb1.zip'",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/gui/menu-background.md",
+   "author": "CaveWii project (Earth & Ash textures)",
+   "group": "menu-background",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "In-game render of CaveWii's own world generator (seed 42, fixed camera, bundled Earth & Ash textures), cropped and nearest-neighbour scaled to 1024x576.",
+   "paths": [
+    "assets/gui/menu-background.png"
+   ],
+   "sha256": "802b74ca6e386df152d5b941c84048194e00c8c43a5c7a5c11828cd1f541e7c9",
+   "ships": "release-zip",
+   "source": "assets/gui/menu-background.provenance.json",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project",
+   "group": "misc-colormaps",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "",
+   "paths": [
+    "assets/misc/foliagecolor.png"
+   ],
+   "sha256": "9eb2ee713337ddbffcc607e72eb937f8f52ea2c19a6446ed08972cadab764463",
+   "ships": "release-zip",
+   "source": "tools/gen_cc0_colormaps.py",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project",
+   "group": "misc-colormaps",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "",
+   "paths": [
+    "assets/misc/grasscolor.png"
+   ],
+   "sha256": "9a4a10d7b0840964e1e01e489def8e00a71f3e39c295992747b47631ea822296",
+   "ships": "release-zip",
+   "source": "tools/gen_cc0_colormaps.py",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/ambient/cave/cave1.wav"
+   ],
+   "sha256": "11c18aa3402672906a8fef6a8fabb2fe91103cae4d6559674f3d1674263dde83",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/fire/fire.wav"
+   ],
+   "sha256": "aefb9d96e40d4fee8859ae0e97670136182e87f7199140ca91dab47cf042a8a6",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/fire/ignite.wav"
+   ],
+   "sha256": "5c900f87ea367710c577ca7bf9df142616fe5a7eab0519e7b3dc4b122f61082a",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/liquid/water.wav"
+   ],
+   "sha256": "2a038344130f2db76ef47d4409930281a8e9f5679d0b03d8730657d258807911",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/chicken1.wav"
+   ],
+   "sha256": "0e6f16f5b10d6ca127653672558b436f244269bf106a41a3e0980b3b6b64f474",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/chickenhurt1.wav"
+   ],
+   "sha256": "78afa4d98a0e5eb16b52784e9665254e533e51f9af26f7016aff26a7f1819469",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/chickenplop.wav"
+   ],
+   "sha256": "5cd2325f846dc73e0ac35a14374172f560a23b19a22351e0f04862edc25674f0",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/cow1.wav"
+   ],
+   "sha256": "72ab9da2a62115ddcc2f7c832c80d578529f2b036d953e2878079e6496cca58f",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/cowhurt1.wav"
+   ],
+   "sha256": "6d63f461a747251ce78b8410755169dccd74f3471fe092e8e528884a67f0cc8c",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/creeper1.wav"
+   ],
+   "sha256": "735e047bb01a2f9992b36e451d556b61676941d9421d65f6c2e67ab7987bd257",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/creeperdeath1.wav"
+   ],
+   "sha256": "e8d0b5a2395a1ed9f71796fa9f1f41e1bc93dea0053fcf1b8683dd15529f5b5f",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/ghast/charge1.wav"
+   ],
+   "sha256": "12cfab1b450dd32040bd5ce2730c8f879a6e2b3b39c3c9cae1618ed3f667f5d4",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/ghast/death1.wav"
+   ],
+   "sha256": "776eab513aaa07853a6d875695f9dde721d445c6567de63bd1e577697ead63b4",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/ghast/fireball1.wav"
+   ],
+   "sha256": "7d872ee87c433c277577a0a425e593b47b92bcf8cfbba085fff76b967eee11f1",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/ghast/moan1.wav"
+   ],
+   "sha256": "dceae860740466a7b8ba2bfde6fa9f24df55073cfee830ccac905a968555c14c",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/ghast/scream1.wav"
+   ],
+   "sha256": "396f4164bd4ac38ceb223c53710629396102a461e61e4d11325786a7b83dfa24",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/pig1.wav"
+   ],
+   "sha256": "6a2001341a15fe59952ab5ea89644a37a04d802e989f79a75264abaa105cdcba",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/pigdeath1.wav"
+   ],
+   "sha256": "8eadc7316b46fc97436fdf5c8a3578cb93dbf583cb227367a0769b9cc9352703",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/sheep1.wav"
+   ],
+   "sha256": "74062ed4d8c21c93185ac9d647a3ee98974046766331bf8587d770b4d43ceac4",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/skeleton1.wav"
+   ],
+   "sha256": "0499a96fdf07c7aeffe9ab7b4b6b5565383419d5bc536079067a83e01ebe9b61",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/skeletonhurt1.wav"
+   ],
+   "sha256": "7752bd58c62dee4ef9cbec466a2b881ae33039f3ac4c94fbbdfe643460e482aa",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/slime1.wav"
+   ],
+   "sha256": "48dec6f6af32bec145d1e11f278a66d890e3f9bd1c46854c7210e7e3b08d64f4",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/slimeattack1.wav"
+   ],
+   "sha256": "4b483f21bc85a5629c5f98af74194433de2039180bced779d3dc820e64fd10d4",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/spider1.wav"
+   ],
+   "sha256": "8b06f411ec30799f8930ec95c1b4c225676fa82568a2aca2138505f95efbdf7d",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/spiderdeath1.wav"
+   ],
+   "sha256": "a2a109f2e92154bf1af5a472026e5e77d9b7dcc1cf5dd6c9b5b27125aaf34f1f",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/zombie1.wav"
+   ],
+   "sha256": "42512740bcf6ad5b336e3ab5282a07840a54caba0e34f0ed9db02ca7ad3fcb55",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/zombiedeath1.wav"
+   ],
+   "sha256": "ba6e079b52130a0171d549d23974e06e7b83b7ccbe596c3b9f3f5d90d6fb53bc",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/zombiehurt1.wav"
+   ],
+   "sha256": "4c7be426caf2e7874fb6a1ec2264bfa36211d49812fedf580f42bc9d825c2851",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/zombiepig/zpig1.wav"
+   ],
+   "sha256": "d7ee36b1090469bce4346aead4f75230cdeed2949156a4642731afd8bf30c87e",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/zombiepig/zpigangry1.wav"
+   ],
+   "sha256": "5d449a061cde259184d3cd3dff674b6bca042b2f1b029e27b5e95284cee0d831",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/zombiepig/zpigdeath1.wav"
+   ],
+   "sha256": "8f593ec52a012510769af29a98b30e29a9b9223faf054512ebce88084cdaa17d",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/mob/zombiepig/zpighurt1.wav"
+   ],
+   "sha256": "5382168c7862a55ed4d421bf983e9c2f61e0c1bb594c3a69afd4155ea85e040f",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/note/bassattack.wav"
+   ],
+   "sha256": "5ae52214358ca07763bec12e05c708f4771e3d59432c745e50e9e2de1b3bd279",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/note/bd.wav"
+   ],
+   "sha256": "115829c95e4d8e6c7520d30b2785edc1cbc24c517ce50b0d06ee612dc0945b31",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/note/harp.wav"
+   ],
+   "sha256": "3bd69f0e90ac3be386a5b6223ae1eaeb32dcf5c2c7e524eb7177426afe03c67c",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/note/hat.wav"
+   ],
+   "sha256": "43aa96775ebee9bc490e5e59e64258bf47527991aed1518339b61c22d6b0e593",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/note/snare.wav"
+   ],
+   "sha256": "d00720b77bf3d07245cc28fa94962502268ab6c8b01cd5c4912017a1b04d9e92",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/portal/portal.wav"
+   ],
+   "sha256": "cc552f046cca33d6488af765e0c1287263a40cedd358bf10d1e5e517ede0f3b2",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/portal/travel.wav"
+   ],
+   "sha256": "22200c4e5826283fa03696620c5478e409ff9c33bfbb1e3055e6bd56dc846869",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/portal/trigger.wav"
+   ],
+   "sha256": "bf6a2be043fc6d62d3f8f07e03f3883d368fd1616bd221c12627127b6047d987",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/random/bow.wav"
+   ],
+   "sha256": "15519c8a851f912d4dc51b59a52baa3947752b837b9a32d3a8051eec35da91b4",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/random/click.wav"
+   ],
+   "sha256": "51643fb1f86534fcd3e5bc4ee2f574e1853727aeef5bfb59763babbeaff7f626",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/random/door_close.wav"
+   ],
+   "sha256": "28d427a85121427690e1adfa680e2edceeff5d2a01ee3876df1046cbcd8067ba",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/random/door_open.wav"
+   ],
+   "sha256": "fcd802696beb34e73b76ac078e04caaaaf131b35e3a42bbc60c878b5611f5c9d",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/random/drr.wav"
+   ],
+   "sha256": "207bb2c40615f8529986615a29ad17372b3400d1c88582b0bceac600c7b6e30e",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/random/explode1.wav"
+   ],
+   "sha256": "4f49f1a61cf941c1c1dad082ce7806978a7749b3b6078f82435cfb21b97a5838",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/random/fizz.wav"
+   ],
+   "sha256": "1ccebac1444c61f5bea337a35f51b77f773c712366356146889a5349d50ff4e4",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/random/fuse.wav"
+   ],
+   "sha256": "4b1935355f2287b198d2d380087b1e3126c2c5b32b03de811fe72adc9620d2fa",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/random/glass1.wav"
+   ],
+   "sha256": "f64d92b53998c47ddeaea1e5363e056688de5fa983b833f72653fa28097016b2",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/random/hurt.wav"
+   ],
+   "sha256": "4c03d1a0724f01b6578d6ab9452cf65db94e83098fd81181c7b05f399c39bc6b",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/random/pop.wav"
+   ],
+   "sha256": "eb6075cf7cc68c86d3622d6cd8bd679ce268411a473433979ff465945bf495e1",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/random/splash.wav"
+   ],
+   "sha256": "a2ae469e64c2337183cc34dee00eaeb919882444653d855da72acb40cbc1c26a",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/step/cloth1.wav"
+   ],
+   "sha256": "306e49624c794a9028adf3268736cfe7695ed125bea9cc13f7a73cf005f31947",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/step/grass1.wav"
+   ],
+   "sha256": "e05ddc131c1819a40062f6790a4e6c91013df5dc3b3bfe16584b672bca746a20",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/step/gravel1.wav"
+   ],
+   "sha256": "348f781737046535cf7e91f8e6d4fcc77c870f21ba0b0eb4c029ee6ece938a95",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/step/sand1.wav"
+   ],
+   "sha256": "35554f639e395f27e19f6449d00add708ef8f079ef9560acd5c03eb9785bb810",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/step/stone1.wav"
+   ],
+   "sha256": "0af053b56c9e3b7709f5674bc486ea6a4d1f7033e993bb0f75b8063e2a945f93",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/step/wood1.wav"
+   ],
+   "sha256": "7db6275f37895b7d727a1ddf9f7864c080ca692b536ba8a8d7db1419bd2468c8",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/tile/piston/in.wav"
+   ],
+   "sha256": "f4e710a2363b79524548909c1713124f3ce8fefdc2a44376794fb87ed53ff0b7",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "paths": [
+    "assets/sound/tile/piston/out.wav"
+   ],
+   "sha256": "6fa3d6ae1fc6db38384892d1ab2abad70688d44ffbc3c741bd021e669d59f955",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "assets/sound/menu/README.md",
+   "author": "CaveWii project; Sync Spark connection cue approved 2026-09-07",
+   "group": "sound-menu",
+   "licence": "GPL-3.0-or-later (project-approved original, synthesized)",
+   "licence_file": "LICENSE",
+   "notes": "Synthesized; no console or other-game audio sampled. NOT covered by the CC0 placeholder statement.",
+   "paths": [
+    "assets/sound/menu/achievement.wav"
+   ],
+   "sha256": "1f5affdb33e1804a04895053cd027a5f0e5b6c6b367810bdd085965b8c7f8ea0",
+   "ships": "release-zip",
+   "source": "assets/sound/menu/README.md; docs/ui_design/approved/manifest.json; achievement.wav: docs/ui_design/approved/native-achievements.md (original synthesis)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "assets/sound/menu/README.md",
+   "author": "CaveWii project; Sync Spark connection cue approved 2026-09-07",
+   "group": "sound-menu",
+   "licence": "GPL-3.0-or-later (project-approved original, synthesized)",
+   "licence_file": "LICENSE",
+   "notes": "Synthesized; no console or other-game audio sampled. NOT covered by the CC0 placeholder statement.",
+   "paths": [
+    "assets/sound/menu/attention.wav"
+   ],
+   "sha256": "f75f3531daf9489a7ca6c7a7cf4f44ec876250216f2357a620d1904933150880",
+   "ships": "release-zip",
+   "source": "assets/sound/menu/README.md; docs/ui_design/approved/manifest.json; achievement.wav: docs/ui_design/approved/native-achievements.md (original synthesis)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "assets/sound/menu/README.md",
+   "author": "CaveWii project; Sync Spark connection cue approved 2026-09-07",
+   "group": "sound-menu",
+   "licence": "GPL-3.0-or-later (project-approved original, synthesized)",
+   "licence_file": "LICENSE",
+   "notes": "Synthesized; no console or other-game audio sampled. NOT covered by the CC0 placeholder statement.",
+   "paths": [
+    "assets/sound/menu/back.wav"
+   ],
+   "sha256": "f77469225c045851cf6b8561291d339265b3556fa48329a2d705a07fe2ba7ad3",
+   "ships": "release-zip",
+   "source": "assets/sound/menu/README.md; docs/ui_design/approved/manifest.json; achievement.wav: docs/ui_design/approved/native-achievements.md (original synthesis)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "assets/sound/menu/README.md",
+   "author": "CaveWii project; Sync Spark connection cue approved 2026-09-07",
+   "group": "sound-menu",
+   "licence": "GPL-3.0-or-later (project-approved original, synthesized)",
+   "licence_file": "LICENSE",
+   "notes": "Synthesized; no console or other-game audio sampled. NOT covered by the CC0 placeholder statement.",
+   "paths": [
+    "assets/sound/menu/category.wav"
+   ],
+   "sha256": "4ab8fc44112928de9be88bbbc63b7f106a6fbb50b3eee998259f12384c1d5fd0",
+   "ships": "release-zip",
+   "source": "assets/sound/menu/README.md; docs/ui_design/approved/manifest.json; achievement.wav: docs/ui_design/approved/native-achievements.md (original synthesis)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "assets/sound/menu/README.md",
+   "author": "CaveWii project; Sync Spark connection cue approved 2026-09-07",
+   "group": "sound-menu",
+   "licence": "GPL-3.0-or-later (project-approved original, synthesized)",
+   "licence_file": "LICENSE",
+   "notes": "Synthesized; no console or other-game audio sampled. NOT covered by the CC0 placeholder statement.",
+   "paths": [
+    "assets/sound/menu/connected.wav"
+   ],
+   "sha256": "eb95def2f8e29ae6a2a36fb9b73495dc0e86d459a80a810237cbef96f37d0fe4",
+   "ships": "release-zip",
+   "source": "assets/sound/menu/README.md; docs/ui_design/approved/manifest.json; achievement.wav: docs/ui_design/approved/native-achievements.md (original synthesis)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "assets/sound/menu/README.md",
+   "author": "CaveWii project; Sync Spark connection cue approved 2026-09-07",
+   "group": "sound-menu",
+   "licence": "GPL-3.0-or-later (project-approved original, synthesized)",
+   "licence_file": "LICENSE",
+   "notes": "Synthesized; no console or other-game audio sampled. NOT covered by the CC0 placeholder statement.",
+   "paths": [
+    "assets/sound/menu/item.wav"
+   ],
+   "sha256": "c9773d76ae9db8c2fcdfe48a7552808fb97218e287728cd2eb3ade5111ae41f8",
+   "ships": "release-zip",
+   "source": "assets/sound/menu/README.md; docs/ui_design/approved/manifest.json; achievement.wav: docs/ui_design/approved/native-achievements.md (original synthesis)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "assets/sound/menu/README.md",
+   "author": "CaveWii project; Sync Spark connection cue approved 2026-09-07",
+   "group": "sound-menu",
+   "licence": "GPL-3.0-or-later (project-approved original, synthesized)",
+   "licence_file": "LICENSE",
+   "notes": "Synthesized; no console or other-game audio sampled. NOT covered by the CC0 placeholder statement.",
+   "paths": [
+    "assets/sound/menu/scroll.wav"
+   ],
+   "sha256": "6c4f522b9f288077c2a877b7cbde5d4e2cb3ef934d51b6b516161235e0cf5b94",
+   "ships": "release-zip",
+   "source": "assets/sound/menu/README.md; docs/ui_design/approved/manifest.json; achievement.wav: docs/ui_design/approved/native-achievements.md (original synthesis)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "assets/sound/menu/README.md",
+   "author": "CaveWii project; Sync Spark connection cue approved 2026-09-07",
+   "group": "sound-menu",
+   "licence": "GPL-3.0-or-later (project-approved original, synthesized)",
+   "licence_file": "LICENSE",
+   "notes": "Synthesized; no console or other-game audio sampled. NOT covered by the CC0 placeholder statement.",
+   "paths": [
+    "assets/sound/menu/select.wav"
+   ],
+   "sha256": "71d562a40fe4dc5867020fc538e3c947265ffd7ea6bc3c94f9bb04290d54fe6e",
+   "ships": "release-zip",
+   "source": "assets/sound/menu/README.md; docs/ui_design/approved/manifest.json; achievement.wav: docs/ui_design/approved/native-achievements.md (original synthesis)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "assets/sound/menu/README.md",
+   "author": "CaveWii project; Sync Spark connection cue approved 2026-09-07",
+   "group": "sound-menu",
+   "licence": "GPL-3.0-or-later (project-approved original, synthesized)",
+   "licence_file": "LICENSE",
+   "notes": "Synthesized; no console or other-game audio sampled. NOT covered by the CC0 placeholder statement.",
+   "paths": [
+    "assets/sound/menu/type.wav"
+   ],
+   "sha256": "3ba7678d1237902c765e4efaa6960a9f52d72aa74e40625eee9a6eeab1b5b800",
+   "ships": "release-zip",
+   "source": "assets/sound/menu/README.md; docs/ui_design/approved/manifest.json; achievement.wav: docs/ui_design/approved/native-achievements.md (original synthesis)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "tests/fixtures/*/README.md",
+   "author": "CaveWii project (ffmpeg synthetic sine/noise)",
+   "group": "tests-fixtures",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "",
+   "paths": [
+    "tests/fixtures/audio_deferred/cave_mono.ogg"
+   ],
+   "sha256": "96fc79a18b909075d1d3e1d0228340cab119c0e669312717cd298dd6a97dadf2",
+   "ships": "source-export (tests only)",
+   "source": "tests/fixtures/*/README.md",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "tests/fixtures/*/README.md",
+   "author": "CaveWii project (ffmpeg synthetic sine/noise)",
+   "group": "tests-fixtures",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "",
+   "paths": [
+    "tests/fixtures/audio_deferred/cave_stereo.ogg"
+   ],
+   "sha256": "3fec231b614dd4712e71f23d26aaefa03e450279add743b19478d277b8d4ffdd",
+   "ships": "source-export (tests only)",
+   "source": "tests/fixtures/*/README.md",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "tests/fixtures/*/README.md",
+   "author": "CaveWii project (ffmpeg synthetic sine/noise)",
+   "group": "tests-fixtures",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "",
+   "paths": [
+    "tests/fixtures/music_readahead/empty_stereo.ogg"
+   ],
+   "sha256": "1e556552fa7983cd23ec006c2cc6a2b17ead67cd005e407fb002b91af89de589",
+   "ships": "source-export (tests only)",
+   "source": "tests/fixtures/*/README.md",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "tests/fixtures/*/README.md",
+   "author": "CaveWii project (ffmpeg synthetic sine/noise)",
+   "group": "tests-fixtures",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "",
+   "paths": [
+    "tests/fixtures/music_readahead/stream_stereo_12s.ogg"
+   ],
+   "sha256": "d90a28aef2109e9ae635eda4289d3498c6a1142ce188615c51f4040ac2623942",
+   "ships": "source-export (tests only)",
+   "source": "tests/fixtures/*/README.md",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "yes: credit Bonemouse, link licence, state changes",
+   "attribution_where": "LICENSES/Isabella-II/ (About Isabella.txt, LICENSE.txt); packs/isabella-ii/{README.txt,About Isabella.txt,LICENSE.txt}; NOTICE; README.md Credits",
+   "author": "Bonemouse (Isabella II)",
+   "group": "isabella-ii",
+   "licence": "CC-BY-3.0",
+   "licence_file": "LICENSES/Isabella-II/LICENSE.txt",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0/",
+   "notes": "MODIFIED for CaveWii_v2: in-game render of CaveWii terrain drawn with Isabella II textures, cropped and scaled to 1024x576.",
+   "paths": [
+    "packs/isabella-ii/gui/menu-background.png"
+   ],
+   "sha256": "e65d85d5809c0835e7335ace2805c19a078f0470df239ddfaa35d29bcab016ba",
+   "ships": "release-zip (optional pack texturepacks/isabella-ii/)",
+   "source": "http://www.minecraftforum.net/topic/242175-Isabella/ (thread dead); 'Isabella 2 1.2vb1.zip'",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "yes: credit Bonemouse, link licence, state changes",
+   "attribution_where": "LICENSES/Isabella-II/ (About Isabella.txt, LICENSE.txt); packs/isabella-ii/{README.txt,About Isabella.txt,LICENSE.txt}; NOTICE; README.md Credits",
+   "author": "Bonemouse (Isabella II)",
+   "group": "isabella-ii",
+   "licence": "CC-BY-3.0",
+   "licence_file": "LICENSES/Isabella-II/LICENSE.txt",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0/",
+   "notes": "MODIFIED for CaveWii_v2: original CaveWii/Astra 64x32 player skin adapted to Isabella II's palette and shading. Not Bonemouse's original skin.",
+   "paths": [
+    "packs/isabella-ii/mob/char.png"
+   ],
+   "sha256": "ef44bb86f654c99111680dc72fa13582198c4e219d93268d1666eea81d337160",
+   "ships": "release-zip (optional pack texturepacks/isabella-ii/)",
+   "source": "http://www.minecraftforum.net/topic/242175-Isabella/ (thread dead); 'Isabella 2 1.2vb1.zip'",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "NOTICE: BagHeads boot-card artwork (c) 2026 BagHeads, CC BY-ND 4.0; forks must remove or replace the BagHeads name and card",
+   "attribution_where": "NOTICE",
+   "author": "BagHeads (maintainer-supplied image; AI style transfer, then hand-edited into a 6-frame animation)",
+   "group": "startup-credits-art",
+   "licence": "CC-BY-ND-4.0",
+   "licence_url": "https://creativecommons.org/licenses/by-nd/4.0/",
+   "notes": "Licence CC BY-ND 4.0 + BagHeads brand notice (maintainer approved 2026-10-28; text in NOTICE). Frame sheet 576x384 RGBA8 raw (CWSA header), six 192x192 frames derived from docs/ui_design/startup-credits-prototype/gamers.png, built by assets/gui/startup-credits/build_atlas.py. Provenance: AI style transfer from an original image by the maintainer, then hand-edited into a 6-frame animation.",
+   "paths": [
+    "assets/gui/startup-credits/credits-frames.bin"
+   ],
+   "sha256": "b93afe9f30d20112e7c95d26945f69cd90648236f383ff0330a77e97aa25da6c",
+   "ships": "release-zip",
+   "source": "docs/ui_design/startup-credits-prototype/provenance.json; tmp/jobs/boot-credits-1028/design-opus-v3/NOTES.md",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "startup-credits-font",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Raw RGBA8 copy of assets/font/default.png with RGB set to white and alpha unchanged. The boot cards use it, independent of the selected pack.",
+   "paths": [
+    "assets/gui/startup-credits/credits-font.bin"
+   ],
+   "sha256": "e6dd661ae563a7c07222bd8bd448fd6549575abcf3a03262c487df7320bfaafd",
+   "ships": "release-zip",
+   "source": "assets/font/default.png via assets/gui/startup-credits/build_atlas.py",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none; the BagHeads name follows the brand notice in NOTICE",
+   "attribution_where": "NOTICE; ASSET_ATTRIBUTION.md",
+   "author": "CaveWii project (BagHeads boot-credit cards)",
+   "group": "startup-credits-fixtures",
+   "licence": "GPL-3.0-or-later",
+   "licence_file": "LICENSE",
+   "notes": "Lead ruling 2026-10-30 (R18): project-own BagHeads credit art. Text-only renders (no BagHeads character frames); upstream CavEX/fCavEX author names are credits, not art.",
+   "paths": [
+    "tests/fixtures/startup_credits/card1-text.png"
+   ],
+   "sha256": "b45ef6bb756470bd015ff07c82f159a84170e5c9e141f37bd4d6147528b415b8",
+   "ships": "source-export (tests only)",
+   "source": "render of the game's own boot credit cards (CC0 font copy, text only); tests/fixtures/startup_credits/",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none; the BagHeads name follows the brand notice in NOTICE",
+   "attribution_where": "NOTICE; ASSET_ATTRIBUTION.md",
+   "author": "CaveWii project (BagHeads boot-credit cards)",
+   "group": "startup-credits-fixtures",
+   "licence": "GPL-3.0-or-later",
+   "licence_file": "LICENSE",
+   "notes": "Lead ruling 2026-10-30 (R18): project-own BagHeads credit art. Text-only renders (no BagHeads character frames); upstream CavEX/fCavEX author names are credits, not art.",
+   "paths": [
+    "tests/fixtures/startup_credits/card2-built-on.png"
+   ],
+   "sha256": "d2eeadc41e505623f343f35093274abf92db9294b94fd62391e165e744c106d2",
+   "ships": "source-export (tests only)",
+   "source": "render of the game's own boot credit cards (CC0 font copy, text only); tests/fixtures/startup_credits/",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none; the BagHeads name follows the brand notice in NOTICE",
+   "attribution_where": "NOTICE; ASSET_ATTRIBUTION.md",
+   "author": "CaveWii project (BagHeads boot-credit cards)",
+   "group": "startup-credits-fixtures",
+   "licence": "GPL-3.0-or-later",
+   "licence_file": "LICENSE",
+   "notes": "Lead ruling 2026-10-30 (R18): project-own BagHeads credit art. Text-only renders (no BagHeads character frames); upstream CavEX/fCavEX author names are credits, not art.",
+   "paths": [
+    "tests/fixtures/startup_credits/card2-stall-footer.png"
+   ],
+   "sha256": "289a2a0d6410b8f60136753a76c806b0d14592103d9b2c3dc8afad206840ab6d",
+   "ships": "source-export (tests only)",
+   "source": "render of the game's own boot credit cards (CC0 font copy, text only); tests/fixtures/startup_credits/",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "ASSET_ATTRIBUTION.md",
+   "author": "CaveWii project (original synthesis, approved Warm bell cue)",
+   "group": "achievement-cue-fixture",
+   "licence": "GPL-3.0-or-later",
+   "licence_file": "LICENSE",
+   "notes": "Lead ruling 2026-10-30 (R18): project-own sound; the approved source of the shipped assets/sound/menu/achievement.wav cue, compared by tests/test_achievements_notice.c. No sampled Nintendo or Minecraft audio.",
+   "paths": [
+    "tests/fixtures/achievement/achievement-02-warm-bell.wav"
+   ],
+   "sha256": "1f5affdb33e1804a04895053cd027a5f0e5b6c6b367810bdd085965b8c7f8ea0",
+   "ships": "source-export (tests only)",
+   "source": "original synthesized cue (project controller-sound synthesis technique); approved 2026-09-21",
+   "status": "ok"
+  }
+ ],
+ "excluded_proprietary": [
+  "Mojang/Beta 1.7.3 textures and sounds: user-imported by the Pack Helper into texturepacks/beta-1.7.3 on the user's card, never in the export or zip",
+  "owned oracle JARs, decompiles, beta_pack, .minecraft (denied by tools/clean_export.py)",
+  "saves/ including 'CaveWii Tutorial' (untracked; not in the export or release zip)"
+ ],
+ "generated_from": "HEAD records from tmp/jobs/release-plan/REL-18e4/gen_assets.py, filtered 2026-10-30 to the paths docs/release-allowlist.json exports (artwork/ and private docs/ records dropped: maintainer Q1/Q2)",
+ "groups": [
+  {
+   "attribution_required": "credit given (licence unstated)",
+   "attribution_where": "NOTICE; ASSET_ATTRIBUTION.md",
+   "author": "WiiBrew users Clorox, Flark, Hiker13526, Crayon (26 cells in 0-31 are pixel-identical to artwork/controller-glyphs/original-wii-atlas.png; cells 14, 15, 22, 23 are project-own blank Classic keycaps, 2026-10-31)",
+   "group": "approved-controls",
+   "licence": "not stated on wiibrew.org (credited; kept by maintainer ruling)",
+   "licence_url": "https://wiibrew.org/wiki/Category:Controller_Buttons",
+   "notes": "Controller button glyphs (26 cells of assets/gui/approved-controls.png) match WiiBrew's Category:Controller_Buttons images (uploaders Clorox, Hiker13526, 2008). No licence is stated on wiibrew.org; licence_url is that source page, where no licence is stated. Kept unchanged and credited: maintainer rulings 2026-10-22 and 2026-10-30 (R18 Q3). Cells 14, 15, 22 and 23 (Classic L, R, ZL, ZR) were replaced 2026-10-31 by four identical project-own blank keycaps (GPL-3.0-or-later); the game draws the letters with the active pack font.",
+   "ships": "release-zip",
+   "source": "artwork/controller-glyphs/README.md",
+   "status": "credited-licence-unstated"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "ASSET_ATTRIBUTION.md; packs/beta-base/README.txt",
+   "author": "CaveWii project generator (tools/gen_anim_fx/bake_anim_fx.sh)",
+   "group": "beta-base-anim",
+   "licence": "GPL-3.0-or-later",
+   "licence_file": "LICENSE",
+   "notes": "Maintainer ruling 2026-10-30 (R18 Q3, hub): project-own output of our generator (CaveWii's ports of the Beta 1.7.3 procedural fire/lava/water/portal animations). Copied into packs built from the player's own game, and shipped in the release zip as assets/beta-base/anim.png (byte copy) so the loader composes anim.png for a raw b1.7.3.jar unzip (source/platform/tex_beta_compose.h).",
+   "ships": "release-zip; source-export; copied into user-built Beta packs; runtime base for raw-jar packs",
+   "source": "tools/gen_anim_fx/bake_anim_fx.sh (CaveWii generator output)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "ASSET_ATTRIBUTION.md; assets/README.md",
+   "author": "CaveWii project team (controller drawings made 2026-10-29)",
+   "group": "controller-pictures",
+   "licence": "GPL-3.0-or-later",
+   "licence_file": "LICENSE",
+   "notes": "Maintainer ruling 2026-10-30 (R18 Q3, hub): project-own original controller drawings (FINAL sheet, large and mini tiers). Covered by the repository licence.",
+   "ships": "release-zip",
+   "source": "CaveWii project original (team design round, maintainer-approved); working files private",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project; GameCube cells 32-41 by Sol (CC0)",
+   "group": "controls-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Pixel check 2026-10-22: no cell identical to the WiiBrew atlas.",
+   "ships": "release-zip",
+   "source": "tools/gen_cc0_controls.py + tools/apply_gc_glyph_style_c.py",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md; texturepacks/README.txt in zip",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "ea-default",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Original scripted pixel art. 'No Mojang or Isabella raster pixels copied' is the project's own claim, hash-pinned by the manifest.",
+   "ships": "release-zip",
+   "source": "assets/earth-and-ash-manifest.json (per-file hash/method)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "assets/gui/*.provenance.json",
+   "author": "CaveWii project",
+   "group": "gui-provenance-json",
+   "licence": "project-original (no separate dedication; repository GPL-3.0-or-later)",
+   "licence_file": "LICENSE",
+   "notes": "title-logo.png: json says original_art=true, no Mojang logo pixels, but its source is a tmp/jobs team render with an unrecorded generation method. reception.png: rasterised from the original Earth SVG. Maintainer to confirm CC0 vs GPL dedication.",
+   "ships": "release-zip",
+   "source": "assets/gui/*.provenance.json",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "ASSET_ATTRIBUTION.md",
+   "author": "CaveWii project (CAVEX logo, team-made)",
+   "group": "icons",
+   "licence": "GPL-3.0-or-later",
+   "licence_file": "LICENSE",
+   "notes": "Maintainer ruling 2026-10-30 (R18 Q3, hub): project-own art (the new CAVEX logo). Covered by the repository licence.",
+   "ships": "release-zip (apps/CavEX/icon.png); source-export",
+   "source": "CaveWii project original (new CAVEX logo); design files kept in the private artwork/ tree",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "NOTICE; packs/isabella-ii/README.txt",
+   "author": "CaveWii project",
+   "group": "isabella-extras",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "",
+   "ships": "release-zip (optional pack texturepacks/isabella-ii/)",
+   "source": "artwork/isabella-ii-extras/make_pointer_font.py",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "yes: credit Bonemouse, link licence, state changes",
+   "attribution_where": "LICENSES/Isabella-II/ (About Isabella.txt, LICENSE.txt); packs/isabella-ii/{README.txt,About Isabella.txt,LICENSE.txt}; NOTICE; README.md Credits",
+   "author": "Bonemouse (Isabella II)",
+   "group": "isabella-ii",
+   "licence": "CC-BY-3.0",
+   "licence_file": "LICENSES/Isabella-II/LICENSE.txt",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0/",
+   "notes": "MODIFIED for CaveWii_v2 (edited/re-arranged). anim.png is adapted (Beta motion in Isabella colours). Upstream About file says 'Some textures are based off the work of Mojang': residual upstream-rights question for the maintainer.",
+   "ships": "release-zip (optional pack texturepacks/isabella-ii/)",
+   "source": "http://www.minecraftforum.net/topic/242175-Isabella/ (thread dead); 'Isabella 2 1.2vb1.zip'",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/gui/menu-background.md",
+   "author": "CaveWii project (Earth & Ash pack)",
+   "group": "menu-background",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Resized derivative of the generated Earth & Ash valley illustration.",
+   "ships": "release-zip",
+   "source": "assets/gui/menu-background.provenance.json",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project",
+   "group": "misc-colormaps",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "",
+   "ships": "release-zip",
+   "source": "tools/gen_cc0_colormaps.py",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "assets/README.md",
+   "author": "CaveWii project (procedural placeholders)",
+   "group": "sound-cc0",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "Procedural tones/noise, 22050 Hz mono PCM16. No Mojang audio. No music files ship.",
+   "ships": "release-zip",
+   "source": "assets/README.md sound/ entry",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none",
+   "attribution_where": "assets/sound/menu/README.md",
+   "author": "CaveWii project; Sync Spark connection cue approved 2026-09-07",
+   "group": "sound-menu",
+   "licence": "GPL-3.0-or-later (project-approved original, synthesized)",
+   "licence_file": "LICENSE",
+   "notes": "Synthesized; no console or other-game audio sampled. NOT covered by the CC0 placeholder statement.",
+   "ships": "release-zip",
+   "source": "assets/sound/menu/README.md; docs/ui_design/approved/manifest.json; achievement.wav: docs/ui_design/approved/native-achievements.md (original synthesis)",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
+   "attribution_where": "tests/fixtures/*/README.md",
+   "author": "CaveWii project (ffmpeg synthetic sine/noise)",
+   "group": "tests-fixtures",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "",
+   "ships": "source-export (tests only)",
+   "source": "tests/fixtures/*/README.md",
+   "status": "ok"
+  }
+ ],
+ "hash_basis": "sha256 of git blob bytes (what tools/clean_export.py exports)",
+ "r18_blocked": false,
+ "schema": 1,
+ "status": "inventory-not-legal-clearance"
+}

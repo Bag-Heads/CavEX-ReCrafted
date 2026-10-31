@@ -22,10 +22,19 @@
 
 #include "../cglm/cglm.h"
 
-#include "../item/items.h"
+#include "../item/item_types.h"
 
 void render_item_init(void);
 void render_item_update_light(uint8_t light);
+// Held map (render slice part 2): first-person live map draw; every other
+// env falls through to render_item_flat (Beta keeps the static sprite there).
+// Upload the requested plane before drawing; false on scratch allocation failure.
+bool render_item_map_upload(int32_t map_id);
+struct item_map_marker;
+void render_item_map_marker_transform(const struct item_map_marker* marker,
+	mat4 view, mat4 out, uint8_t uv[4][2]);
+void render_item_map(struct item* item, struct item_data* stack, mat4 view,
+					 bool fullbright, enum render_item_env env);
 void render_item_flat(struct item* item, struct item_data* stack, mat4 view,
 					  bool fullbright, enum render_item_env env);
 void render_item_block(struct item* item, struct item_data* stack, mat4 view,

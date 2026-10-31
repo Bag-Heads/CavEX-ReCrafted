@@ -17,6 +17,9 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../graphics/render_block.h" // direct include (was transitive via blocks.h pre-split)
+#include "../graphics/render_item.h" // direct include (was transitive via blocks.h pre-split)
+#include "block_leaves.h" // block_leaves_on_log_removal (BlockLog.onBlockRemoval)
 #include "blocks.h"
 
 static enum block_material getMaterial(struct block_info* this) {
@@ -48,7 +51,7 @@ static uint8_t getTextureIndex(struct block_info* this, enum side side) {
 }
 
 static size_t getDroppedItem(struct block_info* this, struct item_data* it,
-							 struct random_gen* g, struct server_local* s) {
+							 struct java_random* g, struct server_local* s) {
 	if(it) {
 		it->id = this->block->type;
 		it->durability = this->block->metadata;
@@ -65,6 +68,9 @@ struct block block_log = {
 	.getMaterial = getMaterial,
 	.getTextureIndex = getTextureIndex,
 	.getDroppedItem = getDroppedItem,
+	// BlockLog.onBlockRemoval [740c583 BlockLog.java:23-42]: flag leaves in
+	// the 9x9x9 cube for the Beta decay check (body lives in block_leaves.c).
+	.onBlockRemoval = block_leaves_on_log_removal,
 	.onRandomTick = NULL,
 	.onRightClick = NULL,
 	.transparent = false,

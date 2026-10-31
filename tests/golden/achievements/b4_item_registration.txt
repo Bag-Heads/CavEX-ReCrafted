@@ -1,0 +1,209 @@
+# CaveWii_v2 -- lane B brief F4 (R2 MED 8 / HIGH 2), 2026-09-14.
+# Beta 1.7.3's per-array statistic REGISTRATION for ITEM ids (>= 256), i.e.
+# the half of StatList the module used to wave through: before F4 an item id
+# reached craftItem and breakItem counters unconditionally, so "crafting" an
+# apple and "breaking" a snowball both counted where Beta registers no
+# StatBase at all and EntityPlayerSP.addStat returns early.
+#
+# This file is the GOLDEN: hand-derived from the decompile (McBetaCpp/
+# srcorigjava), not dumped from the code.  tests/test_stats_counters.c pins
+# CW_ITEM_CRAFT_OUTPUT_ROWS / CW_ITEM_DAMAGABLE_ROWS and
+# stat_alias_block_in() to it, and tests/test_achievements_seam.c's reference
+# model READS it (together with b3_alias_table.txt) instead of calling the
+# module's own gate/alias code -- which is the R2 HIGH 2 finding: a reference
+# that computes the answer with the code under test cannot disagree with it.
+#
+# Format: one line per registered id, whitespace separated
+#     <array> <id> <citation...>
+# where <array> is `craft` or `break`.  An id absent from a section has NO
+# counter in that array.  Lines beginning with '#' are comments.
+#
+# ---------------------------------------------------------------- DERIVATION
+# Item ids are Beta's `shiftedIndex = 256 + i` (Item.java:32) for an item
+# built as `new Item...(i)`; the id list is Item.java:218-323 (the field
+# initialisers) plus Item.java:333-372 (the static block).
+#
+#   craftItem   StatList.func_25157_c (StatList.java:42-79).
+#               DECIDING LINES :50-53  -- the itemID of every CraftingManager
+#                                         recipe output, into a HashSet;
+#                             :56-59  -- plus every FurnaceRecipes smelting
+#                                         output;
+#                             :70,:75 -- registered iff
+#                                         `Item.itemsList[id] != null`.
+#               Nothing else is ever registered, so an item that is not an
+#               output of some recipe has no craftItem counter.  Sources
+#               enumerated: CraftingManager.<init> (the 24 direct item
+#               outputs), RecipesTools (20 tools + shears, :39 and :46),
+#               RecipesWeapons (5 swords at :33, bow :40, arrow :43),
+#               RecipesIngots (:38, the ingot/gem "uncraft" half of each
+#               storage-block pair), RecipesFood (:20/:23 stew, :26 cookie),
+#               RecipesArmor (20 pieces at :39), RecipesDyes (:28-:70, all
+#               dyePowder) and FurnaceRecipes.<init> (:24-:33).
+#               RecipesCrafting outputs blocks only.
+#
+#   breakItem   StatList.func_25149_b (StatList.java:126-145).
+#               DECIDING LINE :134 -- `Item.itemsList[l] != null &&
+#               Item.itemsList[l].isDamagable()`, and isDamagable() is
+#               `maxDamage > 0 && !hasSubtypes` (Item.java:115-118).
+#               maxDamage defaults to 0 (Item.java:28) and only these
+#               constructors raise it:
+#                 ItemTool.java:22          getMaxUses() -- ItemSpade,
+#                                           ItemPickaxe, ItemAxe
+#                 ItemSword.java:19         getMaxUses()
+#                 ItemHoe.java:19           getMaxUses()
+#                 ItemArmor.java:21         maxDamageArray[l] * 3 << j
+#                 ItemFishingRod.java:19    64
+#                 ItemFlintAndSteel.java:20 64
+#                 ItemShears.java:19        238
+#               (EnumToolMaterial maxUses: WOOD 59, STONE 131, IRON 250,
+#               EMERALD 1561, GOLD 32.)  The BOW is NOT damagable in b1.7.3 --
+#               ItemBow.java:16-20 sets only maxStackSize.  ItemCoal,
+#               ItemDye and ItemCloth call setMaxDamage(0) AND
+#               setHasSubtypes(true), so they fail the test twice.
+#
+#   useItem     StatList.func_25155_a (StatList.java:100-124).  DECIDING LINE
+#               :108, `if(Item.itemsList[l] == null) continue;` and nothing
+#               else -- so EVERY item id carries a useItem counter and this
+#               file has no `use` section.
+#
+#   mineBlock   func_25153_a builds `new StatBase[256]` (StatList.java:83):
+#               there is no mineBlock entry above 255 at all.
+#
+# No replaceSimilarBlocks row names an id above 255 (StatList.java:147-160 is
+# eleven BLOCK pairs), so an item never folds onto another id: it keeps its
+# own counter or it has none.  That is why this table is two id lists and not
+# a four-column map like b3_alias_table.txt.
+#
+# Counts, as a shape check: craftItem 82 item ids, breakItem 48.
+#
+# --------------------------------------------------------------------- CELLS
+craft 256 RecipesTools.java:39       iron shovel
+craft 257 RecipesTools.java:39       iron pickaxe
+craft 258 RecipesTools.java:39       iron axe
+craft 259 CraftingManager.java:146   flint and steel
+craft 261 RecipesWeapons.java:40     bow
+craft 262 RecipesWeapons.java:43     arrow
+craft 263 FurnaceRecipes.java:33     coal (charcoal, damage 1)
+craft 264 RecipesIngots.java:38      diamond (also FurnaceRecipes.java:26)
+craft 265 RecipesIngots.java:38      iron ingot (also FurnaceRecipes.java:24)
+craft 266 RecipesIngots.java:38      gold ingot (also FurnaceRecipes.java:25)
+craft 267 RecipesWeapons.java:33     iron sword
+craft 268 RecipesWeapons.java:33     wooden sword
+craft 269 RecipesTools.java:39       wooden shovel
+craft 270 RecipesTools.java:39       wooden pickaxe
+craft 271 RecipesTools.java:39       wooden axe
+craft 272 RecipesWeapons.java:33     stone sword
+craft 273 RecipesTools.java:39       stone shovel
+craft 274 RecipesTools.java:39       stone pickaxe
+craft 275 RecipesTools.java:39       stone axe
+craft 276 RecipesWeapons.java:33     diamond sword
+craft 277 RecipesTools.java:39       diamond shovel
+craft 278 RecipesTools.java:39       diamond pickaxe
+craft 279 RecipesTools.java:39       diamond axe
+craft 280 CraftingManager.java:107   stick
+craft 281 CraftingManager.java:116   bowl
+craft 282 RecipesFood.java:20        mushroom stew (also :23)
+craft 283 RecipesWeapons.java:33     gold sword
+craft 284 RecipesTools.java:39       gold shovel
+craft 285 RecipesTools.java:39       gold pickaxe
+craft 286 RecipesTools.java:39       gold axe
+craft 290 RecipesTools.java:39       wooden hoe
+craft 291 RecipesTools.java:39       stone hoe
+craft 292 RecipesTools.java:39       iron hoe
+craft 293 RecipesTools.java:39       diamond hoe
+craft 294 RecipesTools.java:39       gold hoe
+craft 297 CraftingManager.java:149   bread
+craft 298 RecipesArmor.java:39       leather helmet
+craft 299 RecipesArmor.java:39       leather chestplate
+craft 300 RecipesArmor.java:39       leather leggings
+craft 301 RecipesArmor.java:39       leather boots
+craft 302 RecipesArmor.java:39       chain helmet
+craft 303 RecipesArmor.java:39       chain chestplate
+craft 304 RecipesArmor.java:39       chain leggings
+craft 305 RecipesArmor.java:39       chain boots
+craft 306 RecipesArmor.java:39       iron helmet
+craft 307 RecipesArmor.java:39       iron chestplate
+craft 308 RecipesArmor.java:39       iron leggings
+craft 309 RecipesArmor.java:39       iron boots
+craft 310 RecipesArmor.java:39       diamond helmet
+craft 311 RecipesArmor.java:39       diamond chestplate
+craft 312 RecipesArmor.java:39       diamond leggings
+craft 313 RecipesArmor.java:39       diamond boots
+craft 314 RecipesArmor.java:39       gold helmet
+craft 315 RecipesArmor.java:39       gold chestplate
+craft 316 RecipesArmor.java:39       gold leggings
+craft 317 RecipesArmor.java:39       gold boots
+craft 320 FurnaceRecipes.java:28     cooked porkchop
+craft 321 CraftingManager.java:161   painting
+craft 322 CraftingManager.java:164   golden apple
+craft 323 CraftingManager.java:94    sign
+craft 324 CraftingManager.java:85    wooden door
+craft 325 CraftingManager.java:143   bucket
+craft 328 CraftingManager.java:128   minecart
+craft 330 CraftingManager.java:91    iron door
+craft 333 CraftingManager.java:140   boat
+craft 336 FurnaceRecipes.java:31     brick (item)
+craft 339 CraftingManager.java:34    paper
+craft 340 CraftingManager.java:37    book
+craft 342 CraftingManager.java:134   minecart with chest
+craft 343 CraftingManager.java:137   minecart with furnace
+craft 345 CraftingManager.java:179   compass
+craft 346 CraftingManager.java:155   fishing rod
+craft 347 CraftingManager.java:176   clock
+craft 350 FurnaceRecipes.java:29     cooked fish
+craft 351 RecipesDyes.java:28        dye powder (also RecipesIngots:38, Furnace:32)
+craft 353 CraftingManager.java:101   sugar
+craft 354 CraftingManager.java:97    cake
+craft 355 CraftingManager.java:204   bed
+craft 356 CraftingManager.java:173   redstone repeater (item)
+craft 357 RecipesFood.java:26        cookie
+craft 358 CraftingManager.java:182   map
+craft 359 RecipesTools.java:46       shears
+break 256 ItemTool.java:22           iron shovel        maxUses IRON 250
+break 257 ItemTool.java:22           iron pickaxe       maxUses IRON 250
+break 258 ItemTool.java:22           iron axe           maxUses IRON 250
+break 259 ItemFlintAndSteel.java:20  flint and steel    64
+break 267 ItemSword.java:19          iron sword         maxUses IRON 250
+break 268 ItemSword.java:19          wooden sword       maxUses WOOD 59
+break 269 ItemTool.java:22           wooden shovel      maxUses WOOD 59
+break 270 ItemTool.java:22           wooden pickaxe     maxUses WOOD 59
+break 271 ItemTool.java:22           wooden axe         maxUses WOOD 59
+break 272 ItemSword.java:19          stone sword        maxUses STONE 131
+break 273 ItemTool.java:22           stone shovel       maxUses STONE 131
+break 274 ItemTool.java:22           stone pickaxe      maxUses STONE 131
+break 275 ItemTool.java:22           stone axe          maxUses STONE 131
+break 276 ItemSword.java:19          diamond sword      maxUses EMERALD 1561
+break 277 ItemTool.java:22           diamond shovel     maxUses EMERALD 1561
+break 278 ItemTool.java:22           diamond pickaxe    maxUses EMERALD 1561
+break 279 ItemTool.java:22           diamond axe        maxUses EMERALD 1561
+break 283 ItemSword.java:19          gold sword         maxUses GOLD 32
+break 284 ItemTool.java:22           gold shovel        maxUses GOLD 32
+break 285 ItemTool.java:22           gold pickaxe       maxUses GOLD 32
+break 286 ItemTool.java:22           gold axe           maxUses GOLD 32
+break 290 ItemHoe.java:19            wooden hoe         maxUses WOOD 59
+break 291 ItemHoe.java:19            stone hoe          maxUses STONE 131
+break 292 ItemHoe.java:19            iron hoe           maxUses IRON 250
+break 293 ItemHoe.java:19            diamond hoe        maxUses EMERALD 1561
+break 294 ItemHoe.java:19            gold hoe           maxUses GOLD 32
+break 298 ItemArmor.java:21          leather helmet     11*3<<0 = 33
+break 299 ItemArmor.java:21          leather chestplate 16*3<<0 = 48
+break 300 ItemArmor.java:21          leather leggings   15*3<<0 = 45
+break 301 ItemArmor.java:21          leather boots      13*3<<0 = 39
+break 302 ItemArmor.java:21          chain helmet       11*3<<1 = 66
+break 303 ItemArmor.java:21          chain chestplate   16*3<<1 = 96
+break 304 ItemArmor.java:21          chain leggings     15*3<<1 = 90
+break 305 ItemArmor.java:21          chain boots        13*3<<1 = 78
+break 306 ItemArmor.java:21          iron helmet        11*3<<2 = 132
+break 307 ItemArmor.java:21          iron chestplate    16*3<<2 = 192
+break 308 ItemArmor.java:21          iron leggings      15*3<<2 = 180
+break 309 ItemArmor.java:21          iron boots         13*3<<2 = 156
+break 310 ItemArmor.java:21          diamond helmet     11*3<<3 = 264
+break 311 ItemArmor.java:21          diamond chestplate 16*3<<3 = 384
+break 312 ItemArmor.java:21          diamond leggings   15*3<<3 = 360
+break 313 ItemArmor.java:21          diamond boots      13*3<<3 = 312
+break 314 ItemArmor.java:21          gold helmet        11*3<<1 = 66
+break 315 ItemArmor.java:21          gold chestplate    16*3<<1 = 96
+break 316 ItemArmor.java:21          gold leggings      15*3<<1 = 90
+break 317 ItemArmor.java:21          gold boots         13*3<<1 = 78
+break 346 ItemFishingRod.java:19     fishing rod        64
+break 359 ItemShears.java:19         shears             238

@@ -17,10 +17,39 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../graphics/render_block.h" // direct include (was transitive via blocks.h pre-split)
+#include "../graphics/render_item.h" // direct include (was transitive via blocks.h pre-split)
+#include "../network/server_local.h"
+#include "../network/server_local_state.h" // full server state (split from server_local.h)
+#include "../network/server_world.h"
+#include "block_sand.h"
 #include "blocks.h"
 
 static enum block_material getMaterial(struct block_info* this) {
 	return MATERIAL_ORGANIC;
+}
+
+// BlockGravel extends BlockSand in Beta and inherits onBlockAdded/
+// onNeighborBlockChange/updateTick UNCHANGED -- only idDropped (below)
+// differs. Byte-identical wrappers to block_sand.c's own (kept per-file,
+// like this port's other duplicated-per-block-file hook wrappers -- e.g. the
+// three torch blocks each carry their own thin onBlockAdded/
+// onNeighbourBlockChange in block_torch.c) rather than cross-including
+// block_sand.c; the shared logic itself lives once in block_sand_try_to_fall.
+// [decompile 740c583 BlockGravel extends BlockSand]
+static void gravel_added(struct server_local* s, struct block_info* info) {
+	server_world_schedule_block_tick(block_world(s), info->x, info->y, info->z,
+									 info->block->type);
+}
+
+static void gravel_neighbour_change(struct server_local* s,
+									struct block_info* info) {
+	server_world_schedule_block_tick(block_world(s), info->x, info->y, info->z,
+									 info->block->type);
+}
+
+static void gravel_world_tick(struct server_local* s, struct block_info* info) {
+	block_sand_try_to_fall(s, info->x, info->y, info->z, info->block->type);
 }
 
 static size_t getBoundingBox(struct block_info* this, bool entity,
@@ -40,9 +69,15 @@ static uint8_t getTextureIndex(struct block_info* this, enum side side) {
 }
 
 static size_t getDroppedItem(struct block_info* this, struct item_data* it,
-							 struct random_gen* g, struct server_local* s) {
+							 struct java_random* g, struct server_local* s) {
 	if(it) {
-		it->id = (rand_gen(g) % 10) == 0 ? ITEM_FLINT : this->block->type;
+		// Beta [740c583 BlockGravel.idDropped]: return var2.nextInt(10) == 0 ?
+		// Item.flint.shiftedIndex : this.blockID. This project's nextInt(n) port
+		// is rand_gen_int (see block_ore.c's drop_redstone/drop_lapis comments,
+		// and block_leaves.c's FH-02 fix note) -- raw `rand_gen(g) % 10` is the
+		// same ad hoc formula FH-02 already replaced there, kept as an outlier
+		// here.
+		it->id = jrand_next_int_bound(g, 10) == 0 ? ITEM_FLINT : this->block->type;
 		it->durability = 0;
 		it->count = 1;
 	}
@@ -57,6 +92,10 @@ struct block block_gravel = {
 	.getMaterial = getMaterial,
 	.getTextureIndex = getTextureIndex,
 	.getDroppedItem = getDroppedItem,
+	.onBlockAdded = gravel_added,
+	.onNeighbourBlockChange = gravel_neighbour_change,
+	.onWorldTick = gravel_world_tick,
+	.tick_delay = BLOCK_SAND_TICK_RATE,
 	.onRandomTick = NULL,
 	.onRightClick = NULL,
 	.transparent = false,

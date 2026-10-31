@@ -17,7 +17,10 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../graphics/render_block.h" // direct include (was transitive via blocks.h pre-split)
+#include "../graphics/render_item.h" // direct include (was transitive via blocks.h pre-split)
 #include "../network/server_local.h"
+#include "../network/server_local_state.h" // full server state (split from server_local.h)
 #include "blocks.h"
 
 static enum block_material getMaterial(struct block_info* this) {
@@ -60,7 +63,7 @@ static uint8_t getTextureIndex(struct block_info* this, enum side side) {
 	return tex_atlas_lookup(TEXAT_LADDER);
 }
 
-static bool onItemPlace(struct server_local* s, struct item_data* it,
+static bool onItemPlace(struct server_local* s, struct server_player* actor, struct item_data* it,
 						struct block_info* where, struct block_info* on,
 						enum side on_side) {
 	if(!blocks[on->block->type] || blocks[on->block->type]->can_see_through)
@@ -75,7 +78,7 @@ static bool onItemPlace(struct server_local* s, struct item_data* it,
 		default: return false;
 	}
 
-	server_world_set_block(s, where->x, where->y, where->z,
+	server_world_set_block(block_world(s), where->x, where->y, where->z,
 						   (struct block_data) {
 							   .type = it->id,
 							   .metadata = metadata,
@@ -83,6 +86,56 @@ static bool onItemPlace(struct server_local* s, struct item_data* it,
 							   .torch_light = 0,
 						   });
 	return true;
+}
+
+// [740c583 BlockLadder.onNeighborBlockChange] FH-03: an unsupported ladder
+// must pop -- transcribed as Beta's own four INDEPENDENT checks (not
+// else-if), so any metadata outside 2..5 (corrupt/legacy data) leaves
+// support absent and always drops, exactly like the real method.
+// Metadata 2 checks the normal cube at +Z; metadata 3 checks -Z;
+// metadata 4 checks +X; metadata 5 checks -X. Each check independently
+// establishes support when its orientation and neighbor both match.
+// Without support, the ladder drops its item using the current metadata,
+// then replaces its cell with air and notifies neighbors.
+//
+//
+//
+//
+//
+// isBlockNormalCube's C proxy here is the SAME "solid mount face" predicate
+// this file's own onItemPlace already gates placement on two screens up
+// (!blocks[type] || can_see_through) -- reusing it means a ladder legally
+// placed against a wall can never immediately pop itself off, and a ladder
+// that survives can never be resting on something onItemPlace would refuse.
+static void onNeighbourBlockChange(struct server_local* s,
+								   struct block_info* info) {
+	uint8_t meta = info->block->metadata;
+	bool has_support = false;
+	struct block_data nb;
+
+	if(meta == 2 && server_world_get_block(block_world(s), info->x, info->y,
+										   info->z + 1, &nb)
+	   && blocks[nb.type] && !blocks[nb.type]->can_see_through)
+		has_support = true;
+	if(meta == 3 && server_world_get_block(block_world(s), info->x, info->y,
+										   info->z - 1, &nb)
+	   && blocks[nb.type] && !blocks[nb.type]->can_see_through)
+		has_support = true;
+	if(meta == 4 && server_world_get_block(block_world(s), info->x + 1, info->y,
+										   info->z, &nb)
+	   && blocks[nb.type] && !blocks[nb.type]->can_see_through)
+		has_support = true;
+	if(meta == 5 && server_world_get_block(block_world(s), info->x - 1, info->y,
+										   info->z, &nb)
+	   && blocks[nb.type] && !blocks[nb.type]->can_see_through)
+		has_support = true;
+
+	if(!has_support) {
+		server_local_spawn_block_drops(s, info);
+		server_world_set_block(block_world(s), info->x, info->y, info->z,
+							   (struct block_data) {.type = BLOCK_AIR,
+													 .metadata = 0});
+	}
 }
 
 struct block block_ladder = {
@@ -93,6 +146,7 @@ struct block block_ladder = {
 	.getTextureIndex = getTextureIndex,
 	.getDroppedItem = block_drop_default,
 	.onRandomTick = NULL,
+	.onNeighbourBlockChange = onNeighbourBlockChange,
 	.onRightClick = NULL,
 	.transparent = false,
 	.renderBlock = render_block_ladder,

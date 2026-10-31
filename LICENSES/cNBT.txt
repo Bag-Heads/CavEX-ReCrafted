@@ -1,0 +1,17 @@
+cNBT (vendored subset under source/cNBT/, from https://github.com/chmod222/cNBT,
+commit 3ff982eff62b01f7a67079a365b8fbf8a4b47423 -- see source/cNBT/README.md)
+
+Verified 2026-09-02 by reading the license header actually embedded at the
+top of every vendored source file (buffer.c, buffer.h, nbt.h, nbt_util.c
+sampled directly; nbt_loading.c/nbt_parsing.c/nbt_treeops.c/list.h carry the
+identical banner per the upstream project's single-license convention).
+This is NOT the zlib license previously guessed in a "MAINTAINER TO REVIEW"
+note -- the real license is the Beer-Ware License:
+
+-----------------------------------------------------------------------------
+"THE BEER-WARE LICENSE" (Revision 42):
+Lukas Niederbremer <webmaster@flippeh.de> and Clark Gaebel <cg.wowus.cg@gmail.com>
+wrote this file. As long as you retain this notice you can do whatever you
+want with this stuff. If we meet some day, and you think this stuff is worth
+it, you can buy us a beer in return.
+-----------------------------------------------------------------------------

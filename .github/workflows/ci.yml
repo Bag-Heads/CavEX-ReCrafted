@@ -1,0 +1,97 @@
+name: CI
+
+# Phase-0 detection layer in CI: every push/PR runs the faithfulness suite + a short
+# AddressSanitizer streaming soak; a nightly schedule runs a long soak. GitHub's Ubuntu
+# runners have ASan natively (no WSL friction), so the heap-corruption gate that took ~10
+# on-Wii builds to localize now runs automatically off-hardware on every change.
+
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: '0 6 * * *'   # nightly: long soak (see CI_SOAK_ITERS below)
+  workflow_dispatch:       # allow manual runs (with the default short soak)
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Install toolchain + deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential cmake ninja-build \
+            zlib1g-dev libglfw3-dev libglew-dev libgl1-mesa-dev libglu1-mesa-dev \
+            python3-pil
+
+      - name: Require complete tooling test inventory
+        run: echo "CI_CMAKE_ARGS=-DCAVEWII_REQUIRE_TEST_TOOLS=ON" >> "$GITHUB_ENV"
+
+      # EAD-007 (2026-10-11): Beta colours live in packs/beta-base; the Earth & Ash
+      # default (assets/) and the Isabella II pack carry the same Beta motion in
+      # their own colour ramps. All three variants must rebake byte-identically.
+      - name: Verify animated texture bake pipeline (Beta, Earth & Ash, Isabella II)
+        run: python3 tools/gen_anim_fx/verify_pack_bakes.py
+
+      - name: Tests + ASan soak
+        run: bash tools/ci.sh
+        env:
+          # short soak on push/PR (fast gate); long soak on the nightly schedule.
+          CI_SOAK_ITERS: ${{ github.event_name == 'schedule' && '200000' || '8000' }}
+
+  # Wii .dol build: proves the shipping target still compiles + links on every change, and
+  # uploads the built .dol as an artifact (download it straight from the run instead of
+  # building locally). Uses the official devkitPPC container; `wii-dev` ships the tuxedo
+  # libogc the watchdog/panic seam needs (docs/baseline_recipe.md). If a future toolchain
+  # bump breaks this, it's isolated to this job and doesn't block the PC tests/ASan gate.
+  #
+  # Build the pinned patched libogc inside the container. This remains CI compile
+  # evidence, not a staged release or real-Wii hardware proof.
+  wii-build:
+    runs-on: ubuntu-latest
+    # devkitpro/devkitppc:latest resolved 2026-09-02; re-resolve with
+    # `docker manifest inspect devkitpro/devkitppc:latest` (or the registry HTTP
+    # API) and update both the tag and digest together when the toolchain needs
+    # to move.
+    container: devkitpro/devkitppc:latest@sha256:44cb1a920e1ec3ec7c06767493c3b85f8d643d6137cc4661f0201895ac6e4967
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Ensure Wii toolchain and sidecar builder
+        run: |
+          test -f "$DEVKITPRO/libogc/include/gccore.h"
+          command -v catnip
+      - name: Build pinned patched libogc sidecar
+        run: bash tools/build_libogc_sidecar.sh --container /tmp/cavewii-libogc-sidecar
+      - name: Build sidecar-linked Wii image
+        run: make DEVKITPPC=$DEVKITPRO/devkitPPC DEVKITPRO=$DEVKITPRO LIBOGC_LIB=/tmp/cavewii-libogc-sidecar/stage-lib
+      - name: Wii stack usage check (2026-08-26 boot-death class guard)
+        run: MAKEFLAGS=LIBOGC_LIB=/tmp/cavewii-libogc-sidecar/stage-lib bash tools/check_wii_stack_usage.sh
+      - name: Checksum + provenance (CI-only sidecar build)
+        run: |
+          test -s CaveWii_v2.dol
+          test -s /tmp/cavewii-libogc-sidecar/stage-lib/.sidecar-provenance
+          mv CaveWii_v2.dol CaveWii_v2-ci.dol
+          sha256sum CaveWii_v2-ci.dol > CaveWii_v2-ci.dol.sha256
+          {
+            echo "artifact: CaveWii_v2-ci.dol (CI-only; no hardware certification)"
+            echo "container_image: devkitpro/devkitppc:latest@sha256:44cb1a920e1ec3ec7c06767493c3b85f8d643d6137cc4661f0201895ac6e4967"
+            echo "git_sha: ${GITHUB_SHA}"
+            cat /tmp/cavewii-libogc-sidecar/stage-lib/.sidecar-provenance
+            echo "devkitPPC/libogc package versions (best-effort; dkp-pacman package"
+            echo "naming/output may vary by image build):"
+            dkp-pacman -Q 2>/dev/null | grep -Ei 'devkitppc|libogc|ppc-zlib|wii-dev' \
+              || echo "  (dkp-pacman -Q query failed or matched nothing)"
+          } > CaveWii_v2-ci.dol.provenance.txt
+          cat CaveWii_v2-ci.dol.provenance.txt
+      - name: Upload CI-only sidecar-linked .dol artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: CaveWii_v2-ci-dol-NOT-FOR-HARDWARE
+          path: |
+            CaveWii_v2-ci.dol
+            CaveWii_v2-ci.dol.sha256
+            CaveWii_v2-ci.dol.provenance.txt
+          if-no-files-found: error

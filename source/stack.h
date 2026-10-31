@@ -22,17 +22,34 @@
 
 #include <stdbool.h>
 #include <stddef.h>
+#include <stdint.h>
 
 struct stack {
 	size_t length;
 	size_t index;
 	size_t element_size;
 	void* data;
+	// When true, `data` is a caller-owned fixed-capacity buffer (e.g. carved
+	// from an arena). stack_push will not grow it (overflow asserts) and
+	// stack_destroy will not free it. Set by stack_create_fixed.
+	bool fixed;
 };
 
 void stack_create(struct stack* stk, size_t inital_size, size_t element_size);
 
+// Wrap a caller-provided buffer of `capacity` elements. The buffer must
+// outlive the stack and is never grown or freed by the stack — push past
+// `capacity` asserts. Use when the worst-case depth is known up front and
+// the backing memory comes from somewhere other than malloc (e.g. an arena),
+// to avoid a malloc/free pair per use.
+void stack_create_fixed(struct stack* stk, void* buffer, size_t capacity,
+						size_t element_size);
+
 void stack_push(struct stack* stk, void* obj);
+
+// Ensure room for `need` elements in total. Returns false (stack unchanged,
+// nothing dropped) when the grow fails or the stack is fixed and too small.
+bool stack_reserve(struct stack* stk, size_t need);
 
 bool stack_empty(struct stack* stk);
 
@@ -45,5 +62,10 @@ bool stack_pop(struct stack* stk, void* obj);
 void stack_clear(struct stack* stk);
 
 void stack_destroy(struct stack* stk);
+
+// Count of grow-pushes refused because realloc OOM'd (the push was DROPPED, not
+// crashed). 0 in healthy operation; non-zero flags heap exhaustion / a runaway
+// producer. Surfaced in the watchdog hang report.
+uint32_t stack_oom_drops(void);
 
 #endif

@@ -1,0 +1,289 @@
+CaveWii -- third-party component notices
+=========================================
+
+This file lists the third-party source/library components vendored under
+third_party/ and source/*, or linked at build time, and the runtime assets
+under assets/ that carry a license other than this project's own, with the
+verified license, upstream URL, and copyright holder for each. Full license
+TEXT for every entry below ships alongside this file under
+LICENSES/<name>.txt -- this file summarizes and points to that text; the
+LICENSES/ file is authoritative for the exact terms.
+
+Runtime/binary assets (textures, sounds) shipped under assets/ have their
+own licenses, documented in assets/README.md (shipped alongside this file
+in the release) -- that file, not this one, is authoritative for asset
+credits and covers CC0/CC-BY grants per file. The bundled default textures
+are Earth & Ash, original art dedicated under CC0 1.0 (listed with hashes in
+assets/earth-and-ash-manifest.json; licence text assets/CC0-1.0.txt). Two
+asset entries are worth calling out here specifically: one asset carrying a
+copyleft license, and the optional Isabella II texture pack, whose CC BY 3.0
+license requires attribution:
+
+- The Wii hand pointer: assets/pointer.png and packs/beta-base/pointer.png
+  We did not make this pointer; we use it unchanged, with thanks.
+  Author: the Homebrew Channel team (Team Twiizers / fail0verflow).
+  License: GNU General Public License v2 (GPLv2).
+  Origin: Homebrew Channel, https://github.com/fail0verflow/hbc/tree/master/channel/channelapp/data
+  (per https://wiibrew.org/wiki/Homebrew_Channel). Kept as-is (known
+  license). Since 2026-10-27 (maintainer decision) it is the pointer for
+  every texture pack, including the default; the Earth & Ash arrow is no
+  longer used.
+  License file: LICENSES/GPL-2.0.txt
+
+- Controller button glyphs (cells 0-31 of assets/gui/approved-controls.png
+  and of the fallback atlas assets/controls.png)
+  We did not make these; we use them, with credit.
+  Authors: the WiiBrew uploaders Clorox, Hiker13526, Flark and Crayon (2008),
+  from WiiBrew's Category:Controller_Buttons,
+  https://wiibrew.org/wiki/Category:Controller_Buttons
+  No licence is stated on wiibrew.org. Used with credit by the maintainer's
+  2026-10-22 decision. Cells 32-41 of approved-controls.png and the other
+  cells of controls.png are original CaveWii art, CC0 1.0.
+  In approved-controls.png, 26 of cells 0-31 are WiiBrew art. Cells 14, 15,
+  22 and 23 (the Classic Controller L, R, ZL and ZR keycaps) are blank
+  keycaps drawn by the CaveWii project (2026-10-31, GPL-3.0-or-later); the
+  game draws their letters with the active pack font.
+  Cells 44-49 of approved-controls.png (PC keyboard and mouse: a blank 1u
+  key, a blank wide key over cells 45-46, and the left, right and wheel
+  mouse buttons) are drawn by the CaveWii project (2026-10-31,
+  GPL-3.0-or-later); the game draws key names with the active pack font.
+
+- CavEX / fCavEX, the upstream engine this project builds on
+  We did not write the original engine; we build on it.
+  Authors: xtreme8000 (CavEX, Copyright (c) 2022 ByteBit/xtreme8000), with
+  further fork work by yyy257, ByteBit and jilleb (named in meta.xml).
+  Licence: GNU General Public License v3 (GPLv3).
+  Origin: https://github.com/xtreme8000/CavEX
+  This covers resources/vertex.shader and resources/fragment.shader
+  (xtreme8000) and the original parts of source/. CaveWii changes are under
+  the same licence.
+
+- Original CaveWii artwork that is GPL, not CC0
+  icon.png (the new CAVEX logo, project-own art, maintainer 2026-10-30),
+  assets/sound/menu/*.wav (nine menu cues, synthesised in-project, no
+  recordings from other games), assets/gui/title-logo.png and
+  assets/gui/reception.png (rasterised from the committed original Earth
+  SVG), assets/gui/controller-pictures.png (controller drawings, made by the
+  original CaveWii team art, maintainer-approved 2026-10-28;
+  not Nintendo artwork). Original CaveWii artwork, GPL-3.0-or-later, same as
+  the code. They are not CC0.
+
+- Colormaps and menu backdrop
+  assets/misc/grasscolor.png and assets/misc/foliagecolor.png: CaveWii
+  generated colormaps (tools/gen_cc0_colormaps.py); the earlier files had an
+  untraceable origin and were replaced. CC0 1.0.
+  assets/gui/menu-background.png: in-game render of CaveWii's own world
+  generator (seed 42, fixed camera, bundled Earth & Ash textures), cropped and
+  nearest-neighbour scaled to 1024x576. CC0 1.0. Provenance:
+  assets/gui/menu-background.provenance.json.
+
+- Optional texture pack: "Isabella II" by Bonemouse
+  License: Creative Commons Attribution 3.0 Unported (CC BY 3.0 Unported),
+  http://creativecommons.org/licenses/by/3.0/
+  Forum thread: http://www.minecraftforum.net/topic/242175-Isabella/
+  Textures by Bonemouse. Files derived from Isabella II (some of them
+  modified for CaveWii_v2) ship ONLY in the optional pack folder
+  texturepacks/isabella-ii/ (a pick-able, partial pack -- source
+  packs/isabella-ii/ in the repository; files it lacks fall back to the
+  Earth & Ash default in assets/; no Isabella II file is in assets/):
+  terrain.png, particles.png, gui/items.png, terrain/sun.png,
+  terrain/moon.png, environment/clouds.png, gui/crafting.png,
+  gui/furnace.png, gui/gui.png, gui/icons.png and gui/inventory.png, plus
+  anim.png (adapted 2026-10-11: Beta 1.7.3 animation motion recoloured with
+  Isabella II tile colours, with Isabella II's own ice tile). The same
+  folder's pointer.png and font/default.png are NOT Isabella II files: they
+  are original CaveWii artwork dedicated under CC0 1.0 (2026-10-11,
+  artwork/isabella-ii-extras/make_pointer_font.py).
+  The pack's own "About Isabella.txt" ships UNEDITED (as its licence
+  requires) in LICENSES/Isabella-II/About Isabella.txt and in
+  texturepacks/isabella-ii/About Isabella.txt.
+  License file: LICENSES/Isabella-II/LICENSE.txt (also
+  texturepacks/isabella-ii/LICENSE.txt)
+  Also modified/derived from Isabella II (CC BY 3.0, Bonemouse):
+  packs/isabella-ii/gui/menu-background.png (shipped as
+  texturepacks/isabella-ii/gui/menu-background.png): in-game render of
+  CaveWii terrain drawn with Isabella II textures, cropped and scaled to
+  1024x576. packs/isabella-ii/mob/char.png (shipped as
+  texturepacks/isabella-ii/mob/char.png): original CaveWii/Astra 64x32 player
+  skin adapted to Isabella II's palette and shading; Isabella II by Bonemouse,
+  CC BY 3.0 (http://creativecommons.org/licenses/by/3.0/,
+  http://www.minecraftforum.net/topic/242175-Isabella/). Not Bonemouse's
+  original skin.
+
+- Boot credit cards (assets/gui/startup-credits/)
+  BagHeads boot-card artwork (assets/gui/startup-credits/*) (c) 2026 BagHeads.
+  Licensed CC BY-ND 4.0: redistribute freely with this game, including format
+  conversion and atlas packing; no derivative artwork. The BagHeads name and
+  card identify the original publisher of CaveWii; forks must remove or replace
+  them and may not present modified builds as BagHeads releases. Provenance: AI
+  style transfer from an original image by the maintainer, then hand-edited
+  into a 6-frame animation.
+  Card text uses the bundled CC0 Earth & Ash bitmap font
+  (assets/font/default.png). The "Built on" card credits CavEX by xtreme8000
+  and fCavEX by yyy257, ByteBit and jilleb; it states that CaveWii is not
+  affiliated with Mojang or Nintendo. credits.txt and build_atlas.py in that
+  folder are project text/code (GPL-3.0-or-later).
+
+-------------------------------------------------------------------------
+
+Third-party SOURCE/LIBRARY components vendored under third_party/ and
+source/*, or linked at build time. Every entry below was verified
+2026-09-02 by reading the license actually present in the vendored source
+(a header comment, an in-tree LICENSE file, or text embedded at the end of
+a single-file library) and, where no in-tree copy existed, by fetching the
+exact upstream license file from the project's own canonical source. No
+license here was guessed or assumed.
+
+- cglm (source/cglm/)
+  License: MIT License. Copyright (c) 2015 Recep Aslantas <info@recp.me>.
+  Upstream: https://github.com/recp/cglm
+  License file: source/cglm/LICENSE.cglm (in-tree, verified) /
+  LICENSES/cglm.txt
+
+- cNBT, vendored subset (source/cNBT/)
+  License: "THE BEER-WARE LICENSE" (Revision 42). Copyright Lukas
+  Niederbremer <webmaster@flippeh.de> and Clark Gaebel
+  <cg.wowus.cg@gmail.com>.
+  Upstream: https://github.com/chmod222/cNBT,
+  commit 3ff982eff62b01f7a67079a365b8fbf8a4b47423 (source/cNBT/README.md).
+  Verified 2026-09-02 by reading the header actually embedded at the top of
+  the vendored files (buffer.c, buffer.h, nbt.h, nbt_util.c read directly;
+  the rest carry the identical banner per upstream's single-license
+  convention) -- NOT the zlib license an earlier draft of this file
+  guessed; that guess is now corrected.
+  License file: LICENSES/cNBT.txt
+
+- lodepng (source/lodepng/)
+  License: zlib-style license. Copyright (c) 2005-2018 Lode Vandevenne.
+  Upstream: https://github.com/lvandeve/lodepng
+  License file: source/lodepng/LICENSE.lodepng (in-tree, verified) /
+  LICENSES/lodepng.txt
+
+- parson (source/parson/)
+  License: MIT License. Copyright (c) 2012-2022 Krzysztof Gabis.
+  Upstream: https://github.com/kgabis/parson
+  License file: source/parson/LICENSE.parson (in-tree, verified) /
+  LICENSES/parson.txt
+  Note: not listed in an earlier draft of this file -- found during the
+  2026-09-02 review by sweeping source/ for vendored LICENSE files.
+  Compiled into the same source manifests as the shipped engine (see
+  CMakeLists.txt), not a PC-only build tool.
+
+- m-lib (third_party/m-lib/)
+  License: BSD 2-Clause License. Copyright (c) 2017-2025, Patrick Pelissier.
+  Upstream: https://github.com/P-p-H-d/mlib
+  License file: third_party/m-lib/LICENSE.mlib (in-tree, verified) /
+  LICENSES/m-lib.txt
+
+- miniaudio (third_party/miniaudio/miniaudio.h, v0.11.25)
+  License: dual-licensed, CaveWii uses the Public Domain
+  (www.unlicense.org) alternative; the file also offers "MIT No
+  Attribution" (Copyright 2026 David Reid) as the other choice.
+  Upstream: https://miniaud.io / https://github.com/mackron/miniaudio
+  Verified 2026-09-02 by reading the license text embedded verbatim at the
+  bottom of the vendored miniaudio.h (no separate LICENSE file ships
+  upstream; see third_party/miniaudio/PATCHES.md for the vendoring record).
+  License file: LICENSES/miniaudio.txt
+
+- stb_vorbis (third_party/stb/stb_vorbis.c, v1.22)
+  License: dual-licensed, CaveWii uses the Public Domain
+  (www.unlicense.org) alternative; the file also offers MIT (Copyright (c)
+  2017 Sean Barrett) as the other choice.
+  Upstream: http://nothings.org/stb_vorbis/ / https://github.com/nothings/stb
+  Verified 2026-09-02 by reading the license text embedded verbatim at the
+  bottom of the vendored stb_vorbis.c (no separate LICENSE file ships
+  upstream; see third_party/stb/PATCHES.md for the vendoring record).
+  License file: LICENSES/stb-vorbis.txt
+
+- libogc KERNEL_HEAP sidecar patch set (third_party/libogc-kernel-heap/)
+  Patches (diffs) against upstream devkitPro/libogc v3.1.0
+  (commit c70bdf2fc36bf6c6c12d946ae3ad70d604366d1b) -- see
+  third_party/libogc-kernel-heap/README.md. libogc itself is NOT vendored
+  into this repo (it is a whole SDK, not a header-only library); only the
+  patch files and the sidecar build recipe live here.
+  libogc's own license, verified 2026-09-02 against the upstream repo's
+  root LICENSE file (https://github.com/devkitPro/libogc, tag v3.1.0):
+  a zlib-style license, Copyright (C) 2004-2025 Michael Wiedenbauer
+  (shagkur) and Dave Murphy (WinterMute), for the bulk of the codebase;
+  the threading code specifically (which patch 0004,
+  0004-tuxedo-clear-lazy-fpu-owner-on-thread-exit.patch, touches) is
+  BSD-2-Clause, derived from the RTEMS project, Copyright 1989-1999
+  On-Line Applications Research Corporation (OAR) and Copyright (C) 1999
+  Eric Valette. Full text: LICENSES/libogc.txt. CaveWii's own patch text
+  (the diffs themselves) is authored by CaveWii contributors and covered
+  by this project's own license (see repo-root LICENSE, GPLv3) like any
+  other source change in this tree; the patched libogc code they apply to
+  remains under libogc's license above.
+
+- zlib (system-provided by devkitPPC's ppc-zlib package on the Wii build;
+  find_package(ZLIB) on the PC dev build -- not vendored in-tree either
+  way)
+  The Wii boot.dol links ppc-zlib 1.3.1 (pacman ppc-zlib-1.3.1-1).
+  License: zlib License. Copyright (C) 1995-2024 Jean-loup Gailly and Mark
+  Adler (zlib 1.3.1).
+  Upstream: https://www.zlib.net/ (license text at
+  https://www.zlib.net/zlib_license.html)
+  License file: LICENSES/zlib.txt (the licence header of the installed
+  devkitPro ppc-zlib 1.3.1 zlib.h, copied 2026-10-30). The PC dev build
+  links zlib 1.3.2 under the same terms; no PC binary is in the release.
+
+- libbte (libogc's Bluetooth stack, derived from lwBT), linked into boot.dol
+  We did not write it; it is part of libogc 3.1.0, used unchanged.
+  License: BSD 3-Clause style. Copyright (c) 2003 EISLAB, Lulea University
+  of Technology (lwBT, author Conny Ohult; modified 2025 by Zarithya), and
+  Copyright (c) 2001-2003 Adam Dunkels (headers taken from uIP).
+  Upstream: https://github.com/devkitPro/libogc (lwbt/), tag v3.1.0.
+  License file: LICENSES/libbte.txt (both notices, copied from the libogc
+  v3.1.0 sources)
+
+- wiiuse (libogc's Wiimote library, libwiiuse), linked into boot.dol
+  We did not write it; it is part of libogc 3.1.0, used unchanged.
+  License: GNU General Public License v3 or later, with the libogc linking
+  exception that wiiuse/license_libogc.txt adds as section 18. Copyright
+  2006-2007 Michael Laforest (wiiuse); the libogc-written files (for
+  example wpad.c, Copyright (C) 2008-2025 Michael Wiedenbauer, Dave Murphy,
+  Hector Martin, Zarithya) are under libogc's own licence
+  (LICENSES/libogc.txt).
+  Upstream: https://github.com/devkitPro/libogc (wiiuse/), tag v3.1.0.
+  License file: LICENSES/wiiuse.txt (wiiuse/license_libogc.txt, copied
+  unchanged from the libogc v3.1.0 sources)
+
+- libfat (libfat-ogc 2.1.0, built from devkitPro/libdvm v2.1.0), linked into
+  boot.dol
+  License: Zope Public License 2.1 (SPDX ZPL-2.1, per the installed fat.h).
+  Copyright fincs, devkitPro. Upstream: https://github.com/devkitPro/libdvm
+  It includes FatFs (Copyright (C) 2024, ChaN; FatFs licence) from
+  https://github.com/devkitPro/fatfs-mod.
+  License file: LICENSES/libfat.txt (libdvm v2.1.0 COPYING and the FatFs
+  notice, fetched from upstream 2026-10-30)
+
+- newlib (devkitPPC libc, libm and libsysbase 4.6.0.20260123), linked into
+  boot.dol
+  License: a collection of permissive licences; each file's own notice
+  applies, and COPYING.NEWLIB lists them.
+  Upstream: https://sourceware.org/newlib/
+  License file: LICENSES/newlib.txt (COPYING.NEWLIB from sourceware
+  newlib-cygwin, identical at tag newlib-4.6.0 and at HEAD b097f952,
+  fetched 2026-10-30)
+
+- libgcc (devkitPPC GCC 15.2.0 runtime), linked into boot.dol
+  License: GNU General Public License v3 or later WITH the GCC Runtime
+  Library Exception, version 3.1 (stated in the installed GCC headers).
+  Copyright Free Software Foundation, Inc.
+  License file: LICENSES/GCC-exception-3.1.txt (GCC COPYING.RUNTIME,
+  releases/gcc-15); GPL v3 text: LICENSE
+
+- greatest (test framework, third_party/greatest/)
+  License: ISC-style permissive license. Copyright (c) 2011-2018 Scott
+  Vokes <vokes.s@gmail.com>.
+  Upstream: https://github.com/silentbicycle/greatest
+  License file: third_party/greatest/LICENSE (in-tree, verified) /
+  LICENSES/greatest.txt
+  Test-only: greatest.h is compiled into the ctest suite's test binaries,
+  never into the shipped Wii .dol or the PC app -- not part of this
+  release's linked binary, listed here for completeness only.
+
+- This project's own code (everything else under source/, third_party/
+  patch text, and the tooling under tools/) is licensed under the terms in
+  the repo-root LICENSE file (GPLv3), per meta.xml's <coder>/copyright
+  notice.

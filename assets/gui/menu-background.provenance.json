@@ -1,0 +1,14 @@
+{
+  "schema_version": 2,
+  "path": "gui/menu-background.png",
+  "license": "CC0-1.0",
+  "source": "tmp/jobs/design-round-1027/astra/menu-background-earth-ash.png",
+  "source_sha256": "802b74ca6e386df152d5b941c84048194e00c8c43a5c7a5c11828cd1f541e7c9",
+  "sha256": "802b74ca6e386df152d5b941c84048194e00c8c43a5c7a5c11828cd1f541e7c9",
+  "dimensions": [
+    1024,
+    576
+  ],
+  "mode": "RGB",
+  "method": "In-game render of CaveWii worldgen with bundled Earth & Ash textures. Overworld seed 42, eye (0.5, 68.62, 64.5), engine yaw 270, polar pitch 94, world time 6000, clear weather, HUD/hand hidden, 640x480 viewport cropped (0,96)-(640,456) then nearest-neighbour to 1024x576. No retouching. Recipe: tmp/jobs/design-round-1027/astra/NOTES.md. No Mojang pixels."
+}

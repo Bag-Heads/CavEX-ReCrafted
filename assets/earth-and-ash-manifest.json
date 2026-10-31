@@ -1,0 +1,738 @@
+[
+  {
+    "path": "mob/char.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "c761ecd83e206fe51e26263f7a256f1de2e1d7e163e0ab063b10d9cdaa854f45",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": [
+      "biped.headUV",
+      "biped.bodyUV",
+      "biped.legUV",
+      "biped.armUV"
+    ]
+  },
+  {
+    "path": "mob/zombie.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "1370cc7415fba9a2d7d2279659cb2b10add1e91b7cf194059097eab9b7e7f9fc",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": [
+      "biped.headUV",
+      "biped.bodyUV",
+      "biped.legUV",
+      "biped.armUV"
+    ]
+  },
+  {
+    "path": "mob/pigzombie.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "8ca7a52f566dd3abb241ebdc645fedf8c7168d29fdbce462de3e0b9a545d0998",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": [
+      "biped.headUV",
+      "biped.bodyUV",
+      "biped.legUV",
+      "biped.armUV"
+    ]
+  },
+  {
+    "path": "mob/skeleton.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "12bbaee4e596df92548902476a5db4dad9121672f0cee797fa697ba37cf1fb8d",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": [
+      "biped.headUV",
+      "biped.bodyUV",
+      "biped.legUVthin",
+      "biped.armUVthin"
+    ]
+  },
+  {
+    "path": "mob/pig.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "f660bb65e3dad1e3668549b2c83c01a3740fa91e52506158bccc8c3b39718686",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": [
+      "pig.headUV",
+      "pig.bodyUV",
+      "pig.legUV"
+    ]
+  },
+  {
+    "path": "mob/cow.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "3fb46f891db77be2345bd2c35e57cefe3efa17b6c24352b1e823ff4c82e17d2a",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": [
+      "cow.cowHeadUV",
+      "cow.cowBodyUV",
+      "cow.cowLegUV",
+      "cow.cowHornUV",
+      "cow.cowUdderUV"
+    ]
+  },
+  {
+    "path": "mob/sheep.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "394bf8c170e92507dead795baa7d275950afe7cec4a05022b3b12ba0c49e2a49",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": [
+      "sheep.sheepHeadUV",
+      "sheep.sheepBodyUV",
+      "sheep.sheepLegUV"
+    ]
+  },
+  {
+    "path": "mob/creeper.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "f4788cf827f457586ff0b103d43a17e87e765a9ce3c1d0ad6abf6ffc85e21cf1",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": [
+      "creeper.creeperHeadUVs",
+      "creeper.creeperBodyUVs",
+      "creeper.creeperLegUVs"
+    ]
+  },
+  {
+    "path": "mob/sheep_fur.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "d9708c09e2f4c48877ff7691cbf65407a429d2514c54534994a635aec79513c5",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": [
+      "sheep.woolHeadUV",
+      "sheep.woolBodyUV",
+      "sheep.woolLegUV"
+    ]
+  },
+  {
+    "path": "mob/chicken.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "592a38f5e53a848b0e7dae0e4d33c0888f0996429251761f045c8cf887fc0d01",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": [
+      "chicken.chkHeadUV",
+      "chicken.chkBodyUV",
+      "chicken.chkWingUV",
+      "chicken.chkBillUV",
+      "chicken.chkChinUV",
+      "chicken.chkLegUV"
+    ]
+  },
+  {
+    "path": "mob/wolf.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "0d2b48a7233bda84047ae8d479192980eac2515f33624e3fcdf86114b9d3d4d7",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "mob/wolf_tame.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "338dfb9f29b425071744854779d3213804283d8fc4c3a00e20ae485baa2d4c75",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "mob/wolf_angry.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "7ca7c775d70efe3bc97d9583703e98eee7fd5e46fe942434707babf0a3903504",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "mob/spider.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "d0c888732041988e179d59a6cd4a15ca345141bd7d3d5ee04aa13bb3d9b9e6c4",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": [
+      "spider.spiderHeadUV",
+      "spider.spiderNeckUV",
+      "spider.spiderBodyUV",
+      "spider.spiderLegUV"
+    ]
+  },
+  {
+    "path": "mob/spider_eyes.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "f69263076cb196d26ee8e30f770dd40261fdd35b0614e650d8c3431b82dc1920",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "mob/squid.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "0a7e284efba6e5cdcd4512be845309c120e193fadc27596fcd99c5ac64cd1078",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": [
+      "squid.bodyUV",
+      "squid.tentUV"
+    ]
+  },
+  {
+    "path": "mob/slime.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "b1da200fa4276074232ece82efbf7ae52bf41fb357f0f20ec250df78b37d9ab4",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": [
+      "slime.coreUV",
+      "slime.eyeRUV",
+      "slime.eyeLUV",
+      "slime.mouthUV",
+      "slime.gelUV"
+    ]
+  },
+  {
+    "path": "mob/ghast.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "af15bf82e850b66b374faf15c0cfe3f87e5cd5e0b61ba81cb8fb35c4f9370182",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": [
+      "ghast.bodyUV",
+      "ghast.tentUV"
+    ]
+  },
+  {
+    "path": "mob/ghast_fire.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "cde9c07446d452525fbc026d214530add4a9f3e72a1d7df6c98a68e10f483966",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": [
+      "ghast.bodyUV",
+      "ghast.tentUV"
+    ]
+  },
+  {
+    "path": "armor/cloth_1.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "d852dceac1636b6ffa4eb2f9d041b5daf22613baaec5dc8ef916d72a3c65fbe2",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "armor/cloth_2.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "8ac179ca019d45163edb8b4628e1051b1f75587c461068477816cfbac76e03c6",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "armor/chain_1.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "cdda7eff87564ca517991fbddc3faab186900f0c147fd98de05007a5c9eeb017",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "armor/chain_2.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "68c1cc07d6a8d13506482d80c4c2353d7e4319b721dfd864fac9ec1efa3e0b7c",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "armor/iron_1.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "56f94f196ffe96328c043232fa6b5973adfc166e7647bf1aa433823d2be4ab45",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "armor/iron_2.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "538f0fd5a2492fcd7d379965ee750de677bcedb9f46ff28418297256ade96363",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "armor/gold_1.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "7453bd9a928784af69227aa06a9d2da87bcac362c15ee63e53dba56de021ad8d",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "armor/gold_2.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "d17a62ba6cb364375250a0bf8e772b0310412e3650445f1c1bfbf3253e606d50",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "armor/diamond_1.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "649b9a0d5022f1a095733b9f18065dc1df9102d3111390cd593aec33a723e633",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "armor/diamond_2.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "44f9245a8156fe8c8fe0c7e510fd24448d363932399338e346ef58a2677c3885",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "item/cart.png",
+    "size": [
+      64,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "e38c8f9e83d6a496188d47d0cc64d8914ec1d1be14ff11e981398dd43e4d7f46",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": [
+      "cart.bottomSideUV",
+      "cart.rightSideUV",
+      "cart.leftSideUV",
+      "cart.backSideUV",
+      "cart.frontSideUV"
+    ]
+  },
+  {
+    "path": "misc/mapbg.png",
+    "size": [
+      128,
+      128
+    ],
+    "mode": "RGBA",
+    "sha256": "4b409b28adfa01e1f9cfe190bb0cd5b49d59b163fdec7be282fa148a504f6ac4",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "misc/mapicons.png",
+    "size": [
+      32,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "69405510d0da34e4ba5854d5c05d2909f5371327a5d5ba877af893525e81bf31",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art (tmp/jobs/mapicons-cc0-1005/make_mapicons.py): 4x4 grid of 8x8 map marker cells, cell 0 = player arrow, cells 1-15 transparent",
+    "uv_sets": []
+  },
+  {
+    "path": "misc/dial.png",
+    "size": [
+      16,
+      16
+    ],
+    "mode": "RGBA",
+    "sha256": "1d45349a0cbfa954fa6c6eacc0d3f426a1f8fb43361d010da260d5bd3f5cbf7f",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "misc/water.png",
+    "size": [
+      16,
+      16
+    ],
+    "mode": "RGBA",
+    "sha256": "7a1a30372469a5db1567f7451365dcbde1abb71b0d85aea7cec10043bd34677f",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "misc/shadow.png",
+    "size": [
+      64,
+      64
+    ],
+    "mode": "RGBA",
+    "sha256": "c0ab5521f11d5d58c63fdddbad2a9f187cf636e3b2155f7965a1b180508ebb87",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "environment/rain.png",
+    "size": [
+      32,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "25b64e362e0a80f599002c87b3ba31f572565a21d183226c48155f8d80f1b779",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "environment/snow.png",
+    "size": [
+      32,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "f66b08801aa8ef3e6f88481d624a48b2dcac289f36676b06fb23f53f84f307e4",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "gui/trap.png",
+    "size": [
+      256,
+      256
+    ],
+    "mode": "RGBA",
+    "sha256": "29d6f5befae405a7592be3a3720109c201117a6c0fa16c002aa299d5412273ad",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "art/kz.png",
+    "size": [
+      256,
+      256
+    ],
+    "mode": "RGBA",
+    "sha256": "ca944d8942ea01d195f314e31a42105ff0e25b83e037249aad0a869748dad416",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "gui/crafting.png",
+    "size": [
+      256,
+      256
+    ],
+    "mode": "RGBA",
+    "sha256": "0521eb3f115bcd82043252b613ce4b23952de588a3f43e9a9227c255dc4ac3c4",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "gui/inventory.png",
+    "size": [
+      256,
+      256
+    ],
+    "mode": "RGBA",
+    "sha256": "fe1baf79ad28f2d42cc64f0d39a240e1b14770cd85aceaa731c00e6ce8a3ee52",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "gui/chest.png",
+    "size": [
+      256,
+      256
+    ],
+    "mode": "RGBA",
+    "sha256": "74c2b6415caf113f5743810c8fb6568a225a3c13517697b5d82f216b2bda0a10",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "gui/furnace.png",
+    "size": [
+      256,
+      256
+    ],
+    "mode": "RGBA",
+    "sha256": "c7469cbf7dd34b91010cec923878e299c4a925370d708fc0dfadb16b4e41a279",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "gui/gui.png",
+    "size": [
+      256,
+      256
+    ],
+    "mode": "RGBA",
+    "sha256": "95fcc1768afd466433baa2b7321201642e3ceecc32a1d32733333c5fb3c433bf",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "gui/icons.png",
+    "size": [
+      256,
+      256
+    ],
+    "mode": "RGBA",
+    "sha256": "b90d56adf021fddbc3f18f74fe05f30b243692a2e57d80b4b1212e11d61dad5a",
+    "license": "CC0-1.0",
+    "method": "original scripted pixel art",
+    "uv_sets": []
+  },
+  {
+    "path": "terrain.png",
+    "size": [
+      256,
+      256
+    ],
+    "mode": "RGBA",
+    "sha256": "585bfb50ecdb121cd3bc11a4eca55c5b1bb956c323acd913f1225d7f82474b71",
+    "license": "CC0-1.0",
+    "method": "Original native pixel artwork: full_terrain.py; includes the 38 round-2 tile redraws approved 2026-10-10 (bundled default since 2026-10-10)"
+  },
+  {
+    "path": "gui/items.png",
+    "size": [
+      256,
+      256
+    ],
+    "mode": "RGBA",
+    "sha256": "5601e8db0689e1cdb09b38e5657addfe1f6f48b13388fa75fee214bfa2781fe1",
+    "license": "CC0-1.0",
+    "method": "Original native pixel artwork: full_items.py; includes the 38 round-2 tile redraws approved 2026-10-10 (bundled default since 2026-10-10)"
+  },
+  {
+    "path": "particles.png",
+    "size": [
+      128,
+      128
+    ],
+    "mode": "RGBA",
+    "sha256": "889cbc2b232b0ec752726e2ea198855dc9b5e7e6aa1cc1b4eeb2c26100adc062",
+    "license": "CC0-1.0",
+    "method": "Original native pixel artwork: full_effects.py (bundled default since 2026-10-10)"
+  },
+  {
+    "path": "terrain/sun.png",
+    "size": [
+      32,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "1e430859d0c7ccafa2f328577109189ee4040635404cfa5959681ecf7dd49676",
+    "license": "CC0-1.0",
+    "method": "Original native pixel artwork: full_effects.py (bundled default since 2026-10-10)"
+  },
+  {
+    "path": "terrain/moon.png",
+    "size": [
+      32,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "8caa0b94f8c44a6d3e1836c49ceb56720ad656a5bd7a137fcf6da10f7a5b2f74",
+    "license": "CC0-1.0",
+    "method": "Original native pixel artwork: full_effects.py (bundled default since 2026-10-10)"
+  },
+  {
+    "path": "environment/clouds.png",
+    "size": [
+      256,
+      256
+    ],
+    "mode": "RGBA",
+    "sha256": "66f484b07b440391aa8db4d6e0500c72808347127da1ed8e531242f21dcefd64",
+    "license": "CC0-1.0",
+    "method": "Original native pixel artwork: full_effects.py (bundled default since 2026-10-10)"
+  },
+  {
+    "path": "gui_2.png",
+    "size": [
+      256,
+      256
+    ],
+    "mode": "RGBA",
+    "sha256": "38bba459720809bb22319a9c74b168aeabd050ece44f0f1c45b766b65a18c9c6",
+    "license": "CC0-1.0",
+    "method": "Original native pixel artwork: full_ui_extras.py (bundled default since 2026-10-10)"
+  },
+  {
+    "path": "gui/iron_chest.png",
+    "size": [
+      256,
+      256
+    ],
+    "mode": "RGBA",
+    "sha256": "85408b95acd0b15d80faaebf8fe9ad6f68e4bd9fa4c61808b6ff44b1344c6123",
+    "license": "CC0-1.0",
+    "method": "Original native pixel artwork: full_ui_extras.py (bundled default since 2026-10-10)"
+  },
+  {
+    "path": "item/arrows.png",
+    "size": [
+      32,
+      32
+    ],
+    "mode": "RGBA",
+    "sha256": "b11189c2ee4735bb9d1b66f426decc74c45566363bbfd48b1928c3a5c77f0429",
+    "license": "CC0-1.0",
+    "method": "Original native pixel artwork: full_items.py; flying-arrow sheet drawn 2026-10-11 on the maintainer request, RenderArrow UV layout (bundled default since 2026-10-11)"
+  },
+  {
+    "path": "font/default.png",
+    "size": [
+      128,
+      128
+    ],
+    "mode": "RGBA",
+    "sha256": "dd8574fc88504aad9cc32895c4b2ddbc021ea31e644e72a527d2cd1185755cac",
+    "license": "CC0-1.0",
+    "method": "Original native pixel artwork: full_ui_extras.py (bundled default since 2026-10-11)"
+  },
+  {
+    "path": "anim.png",
+    "size": [
+      256,
+      256
+    ],
+    "mode": "RGBA",
+    "sha256": "967db36afba79b57b455b6b0a4730ef75a5a840d81aa1639168ebce6eacb8d9e",
+    "license": "CC0-1.0",
+    "method": "Original native pixel artwork: full_effects.py (ice, layout) + Beta 1.7.3 fire/lava/water/flow/portal motion baked by tools/gen_anim_fx in Earth & Ash colours (artwork/fx_ramps.py) (bundled default since 2026-10-11)"
+  }
+]

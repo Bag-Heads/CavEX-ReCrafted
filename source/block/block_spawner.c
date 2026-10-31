@@ -19,6 +19,10 @@
 
 #include "blocks.h"
 
+#include "../network/server_spawner.h" // spawner_te_free (FH-17)
+#include "../graphics/render_block.h" // direct include (was transitive via blocks.h pre-split)
+#include "../graphics/render_item.h" // direct include (was transitive via blocks.h pre-split)
+
 static enum block_material getMaterial(struct block_info* this) {
 	return MATERIAL_STONE;
 }
@@ -40,8 +44,18 @@ static uint8_t getTextureIndex(struct block_info* this, enum side side) {
 }
 
 static size_t getDroppedItem(struct block_info* this, struct item_data* it,
-							 struct random_gen* g, struct server_local* s) {
+							 struct java_random* g, struct server_local* s) {
 	return 0;
+}
+
+// FH-17: ownership teardown -- the spawner's mob type/delay is never dropped
+// as an item (getDroppedItem above is Beta-faithful 0: digging a mob spawner
+// drops nothing), but the spawner_te_pos/spawner_tes row must not survive the
+// block, or a later save would persist a "MobSpawner" tile entity at a
+// position that is no longer one. Mirrors block_noteblock.c's onBreak/
+// noteblock_te_free precedent exactly.
+static void onBreak(struct server_local* s, struct block_info* this) {
+	spawner_te_free(s, this->x, this->y, this->z); /* A1b: slot-0 adapter (D4 bridge) */
 }
 
 struct block block_spawner = {
@@ -51,6 +65,7 @@ struct block block_spawner = {
 	.getMaterial = getMaterial,
 	.getTextureIndex = getTextureIndex,
 	.getDroppedItem = getDroppedItem,
+	.onBreak = onBreak,
 	.onRandomTick = NULL,
 	.onRightClick = NULL,
 	.transparent = false,
@@ -59,14 +74,28 @@ struct block block_spawner = {
 	.luminance = 0,
 	.double_sided = false,
 	.can_see_through = true,
-	.opacity = 1,
+	// Beta lightOpacity[52] == 0: Block.<init> (Block.java:151-152) sets
+	// `lightOpacity = isOpaqueCube() ? 255 : 0`, BlockMobSpawner.isOpaqueCube
+	// (BlockMobSpawner.java:22-24) is false, and the registration
+	// (Block.java:75) never calls setLightOpacity. So a spawner neither stops
+	// the heightmap nor dims skylight passing through it (the glass/cactus
+	// encoding: can_see_through + opacity 0). It was 1, which darkened
+	// every sky-exposed spawner column by one level per cell and raised the
+	// heightmap onto it. Block-light/sky horizontal spread is unchanged
+	// (lighting.c uses MAX(opacity, 1)); LOS is unchanged (opacity != 15).
+	.opacity = 0,
 	.ignore_lighting = false,
 	.flammable = false,
 	.place_ignore = false,
+	// Beta hardness x1500: Block.java:644 mobSpawner `.setHardness(5.0F)` ->
+	// 7500 (already correct). `.best = TOOL_TIER_ANY` (not WOOD):
+	// ItemPickaxe.blocksEffectiveAgainst omits Block.mobSpawner entirely, so
+	// getStrVsBlock is flat 1.0F for any pickaxe tier -- no per-tier bonus
+	// (same mechanism as block_ore.c's redstone-ore comment).
 	.digging.hardness = 7500,
 	.digging.tool = TOOL_TYPE_PICKAXE,
 	.digging.min = TOOL_TIER_WOOD,
-	.digging.best = TOOL_TIER_WOOD,
+	.digging.best = TOOL_TIER_ANY,
 	.block_item = {
 		.has_damage = false,
 		.max_stack = 64,

@@ -17,6 +17,7 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../item/items.h" // direct include (was transitive via inventory.h pre-split)
 #include "inventory_logic.h"
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
@@ -25,6 +26,7 @@ bool inventory_collect(struct inventory* inv, struct item_data* item,
 					   uint8_t* slot_priority, size_t slot_length,
 					   set_inv_slot_t changes) {
 	assert(inv && item && item->id != 0 && changes);
+	if(item_data_pinned(item)) return false;
 
 	struct item* it = item_get(item);
 
@@ -41,6 +43,7 @@ bool inventory_collect(struct inventory* inv, struct item_data* item,
 			uint8_t slot = slot_priority[k];
 
 			if(inv->items[slot].id == item->id
+			   && inv->items[slot].nbt_record == item->nbt_record
 			   && inv->items[slot].durability == item->durability
 			   && inv->items[slot].count < it->max_stack) {
 				has_canidate_equal = true;
@@ -61,6 +64,7 @@ bool inventory_collect(struct inventory* inv, struct item_data* item,
 				= min(it->max_stack - inv->items[candidate].count, item->count);
 			inv->items[candidate].id = item->id;
 			inv->items[candidate].durability = item->durability;
+			inv->items[candidate].nbt_record = item->nbt_record;
 			inv->items[candidate].count += additional;
 			item->count -= additional;
 			set_inv_slot_push(changes, candidate);

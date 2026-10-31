@@ -17,7 +17,10 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../graphics/render_block.h" // direct include (was transitive via blocks.h pre-split)
+#include "../graphics/render_item.h" // direct include (was transitive via blocks.h pre-split)
 #include "../network/server_local.h"
+#include "../network/server_local_state.h" // full server state (split from server_local.h)
 #include "blocks.h"
 
 static enum block_material getMaterial(struct block_info* this) {
@@ -46,7 +49,7 @@ static uint8_t getTextureIndex(struct block_info* this, enum side side) {
 }
 
 static size_t getDroppedItem(struct block_info* this, struct item_data* it,
-							 struct random_gen* g, struct server_local* s) {
+							 struct java_random* g, struct server_local* s) {
 	if(it) {
 		it[0].id = BLOCK_LOG;
 		it[0].durability = this->block->metadata >> 1;
@@ -59,7 +62,7 @@ static size_t getDroppedItem(struct block_info* this, struct item_data* it,
 	return 2;
 }
 
-static void onRightClick(struct server_local* s, struct item_data* it,
+static void onRightClick(struct server_local* s, struct server_player* actor, struct item_data* it,
 						 struct block_info* where, struct block_info* on,
 						 enum side on_side) {
 	server_local_spawn_item((vec3){where->x + 0.5F, where->y + 0.5F, where->z + 0.5F},
@@ -73,7 +76,7 @@ static void onRightClick(struct server_local* s, struct item_data* it,
 		.durability = 0,
 		.count = 8
 	}, false, s);
-	server_world_set_block(s, on->x, on->y, on->z, (struct block_data) {
+	server_world_set_block(block_world(s), on->x, on->y, on->z, (struct block_data) {
 		.type = BLOCK_SAPLING,
 		.metadata = on->block->metadata >> 1
 	});

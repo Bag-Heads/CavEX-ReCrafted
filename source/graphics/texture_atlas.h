@@ -90,6 +90,7 @@ enum tex_atlas_entry {
 	TEXAT_JUKBEBOX_TOP,
 	TEXAT_SAPLING_BIRCH,
 	TEXAT_TORCH,
+	TEXAT_LEVER, // Beta lever blockIndexInTexture=96 = atlas tile (0,6)
 	TEXAT_DOOR_WOOD_TOP,
 	TEXAT_DOOR_IRON_TOP,
 	TEXAT_LADDER,
@@ -113,6 +114,19 @@ enum tex_atlas_entry {
 	TEXAT_GLOWSTONE,
 	TEXAT_RAIL_CURVED,
 	TEXAT_REDSTONE_TORCH,
+	// Redstone repeater TOP faces (Beta BlockRedstoneRepeater.getBlockTextureFromSideAndMetadata:
+	// top idle=131 active=147). Real CC BY 3.0 Isabella II art already in assets/terrain.png. The
+	// bottom faces (idle 115 / active 99) ARE the redstone-torch tiles (3,7)/(3,6) -> reuse
+	// TEXAT_REDSTONE_TORCH[_LIT]; the sides use TEXAT_STONE (Beta idx 5).
+	TEXAT_REPEATER_TOP_OFF, // terrain idx 131, tile (3,8)
+	TEXAT_REPEATER_TOP_ON,	// terrain idx 147, tile (3,9)
+	// Piston faces (Beta BlockPistonBase blockIndexInTexture 106-110 / PistonBlockTextures). The
+	// shipped terrain.png reserves these tiles; a Beta 1.7.3 pack supplies the real art.
+	TEXAT_PISTON_TOP_STICKY, // terrain idx 106, tile (10,6) -- sticky head plate
+	TEXAT_PISTON_TOP,		 // terrain idx 107, tile (11,6) -- normal head plate / base front (retracted)
+	TEXAT_PISTON_SIDE,		 // terrain idx 108, tile (12,6)
+	TEXAT_PISTON_BACK,		 // terrain idx 109, tile (13,6)
+	TEXAT_PISTON_INNER,		 // terrain idx 110, tile (14,6) -- base front when extended/powered
 	TEXAT_LOG_SPRUCE_SIDE,
 	TEXAT_LOG_BIRCH_SIDE,
 	TEXAT_PUMPKIN_SIDE,
@@ -150,8 +164,28 @@ enum tex_atlas_entry {
     TEXAT_REDSTONE_WIRE_L13,
     TEXAT_REDSTONE_WIRE_L14,
     TEXAT_REDSTONE_WIRE_L15,
-	TEXAT_REDSTONE_WIRE_INTERSECT_OFF,
-	TEXAT_REDSTONE_WIRE_INTERSECT_ON,
+	// Beta BlockRedstoneWire renders a CROSS tile (terrain idx 164 = tile (4,10))
+	// for junctions/dots and a LINE tile (idx 165 = tile (5,10), the L1..L15 set
+	// above) for straight runs -- see render_block_redstone_wire. Power level
+	// 0..15 is colour-baked into each, exactly like the LINE variants. (The old
+	// dead TEXAT_REDSTONE_WIRE_INTERSECT_OFF/ON mapped to tile (5,11)=181, blank
+	// in both the Isabella and real-Beta atlases, and were never consumed.)
+	TEXAT_REDSTONE_WIRE_CROSS_OFF,
+	TEXAT_REDSTONE_WIRE_CROSS_L1,
+	TEXAT_REDSTONE_WIRE_CROSS_L2,
+	TEXAT_REDSTONE_WIRE_CROSS_L3,
+	TEXAT_REDSTONE_WIRE_CROSS_L4,
+	TEXAT_REDSTONE_WIRE_CROSS_L5,
+	TEXAT_REDSTONE_WIRE_CROSS_L6,
+	TEXAT_REDSTONE_WIRE_CROSS_L7,
+	TEXAT_REDSTONE_WIRE_CROSS_L8,
+	TEXAT_REDSTONE_WIRE_CROSS_L9,
+	TEXAT_REDSTONE_WIRE_CROSS_L10,
+	TEXAT_REDSTONE_WIRE_CROSS_L11,
+	TEXAT_REDSTONE_WIRE_CROSS_L12,
+	TEXAT_REDSTONE_WIRE_CROSS_L13,
+	TEXAT_REDSTONE_WIRE_CROSS_L14,
+	TEXAT_REDSTONE_WIRE_CROSS_L15,
 	TEXAT_SANDSTONE_TOP,
 	TEXAT_RAIL_POWERED_ON,
 	TEXAT_SANDSTONE_SIDE,
@@ -222,6 +256,35 @@ enum tex_atlas_entry {
     TEXAT_PARTICLE_DROP_FALL,
     TEXAT_PARTICLE_DROP_ROUND,
 
+	// DC-GRASS G2: appended AFTER every pre-existing entry (and registered
+	// after every pre-existing atlas cell in tex_atlas_block) so no existing
+	// enum value or atlas slot moves -- non-grass output stays byte-identical
+	// (tests/test_mesher_nongrass_equiv.c).
+	// Beta terrain tile 38 = (6,2), the greyscale grass side overlay that
+	// RenderBlocks draws biome-tinted over the untinted side tile 3
+	// (RenderBlocks.java:1954-1970, 2276-2281). Raw, untinted.
+	TEXAT_GRASS_SIDE_OVERLAY,
+	// Baked grass cells for consumers without a per-vertex tint: the
+	// held/inventory/dropped grass ITEM (render_item.c) and, for the side,
+	// far-ring LOD skirts (chunk_mesher.c). Colour applied once (tile 0 x
+	// fallback; tile 38 x fallback over tile 3) = the pre-G2 grass cells.
+	TEXAT_GRASS_TOP_ITEM,
+	TEXAT_GRASS_SIDE_ITEM,
+	// Beta FAST leaves (render.fancy_graphics off, the default): the opaque
+	// tiles blockIndexInTexture + 1 -- 53 = (5,3) oak/birch, 133 = (5,8)
+	// spruce [BlockLeaves.java:177-184]. A pack whose fast cell is empty
+	// gets the fancy cell with its holes filled opaque (opaque_from below).
+	TEXAT_LEAVES_OAK_FAST,
+	TEXAT_LEAVES_SPRUCE_FAST,
+	TEXAT_LEAVES_BIRCH_FAST,
+	// Raw (uncoloured) oak leaf tiles 52 / 53, for oak faces the mesher tints
+	// with the column's biome foliage colour: Beta multiplies the raw texture
+	// by colorMultiplier ONCE [BlockLeaves.java:19-29]. The baked _OAK cells
+	// above stay for untinted consumers (items, particles, no-colormap
+	// columns), like the G2 grass _ITEM cells.
+	TEXAT_LEAVES_OAK_RAW,
+	TEXAT_LEAVES_OAK_FAST_RAW,
+
 	TEXAT_MAX,
 };
 
@@ -236,6 +299,13 @@ struct texture_entry {
 		bool enable;
 		uint8_t x : 4, y : 4;
 	} bg;
+	/* If the source cell (x, y) has no opaque texel at all (a pack without
+	 * that tile), build it from cell (opaque_from.x, .y) instead, with every
+	 * cut-out texel filled by that cell's darkened mean colour, alpha 255. */
+	struct {
+		bool enable;
+		uint8_t x : 4, y : 4;
+	} opaque_from;
 };
 
 ARRAY_DEF(dict_atlas_src, struct texture_entry, M_POD_OPLIST)
@@ -256,8 +326,22 @@ void* tex_atlas_compute(dict_atlas_src_t atlas, uint8_t* atlas_dst,
 void* tex_atlas_block(const char* filename, size_t* width, size_t* height);
 void* tex_atlas_particles(const char* filename, size_t* width, size_t* height);
 
+// Live-water atlas slot (pixel origin + tile size), captured by tex_atlas_compute
+// when the block atlas is built, so water_fx can blit its animated tile in place.
+// g_water_atlas_x/y are -1 until captured.
+extern int g_water_atlas_x, g_water_atlas_y, g_water_atlas_tile;
+
+/* pack-cache-0927: the lookup tables the two atlas builds fill (TEXAT_MAX
+   bytes each), for the pack cache to save after a fresh load and restore on
+   a hit together with the g_water_atlas_* capture. */
+void tex_atlas_tables_export(uint8_t* block, uint8_t* particle);
+void tex_atlas_tables_import(const uint8_t* block, const uint8_t* particle);
+
 uint8_t tex_atlas_lookup(enum tex_atlas_entry name);
 uint8_t tex_atlas_lookup_particle(enum tex_atlas_entry name);
+
+/* Content UV rectangle in the packed atlas, excluding duplicated borders. */
+bool tex_atlas_tile_uv(size_t width, size_t height, uint8_t tile, float uv[4]);
 
 
 #endif

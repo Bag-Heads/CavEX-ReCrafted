@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  Template for the Homebrew Channel meta.xml (RELEASE: public text only, no
+  dev notes). Do not hand-edit the generated meta.xml's version or
+  release_date: both come from the repo-root VERSION file and the packaged
+  commit's date via tools/gen_meta_xml.sh, which tools/make_release.sh also
+  calls at package time. Edit THIS template (or VERSION) instead, then
+  regenerate:
+
+      bash tools/gen_meta_xml.sh --out meta.xml
+
+  Two placeholders below are substituted by gen_meta_xml.sh: the CW VERSION
+  token (VERSION file content, or --version) and the CW RELEASE DATE token
+  (commit author date as YYYYMMDDHHMMSS, or --date). Dev/rig notes live only
+  in tools/meta.xml.dev.in, which the release never uses.
+-->
+<app version="1">
+	<name>CavEX: Re-Crafted Edition</name>
+	<version>@CW_VERSION@</version>
+	<release_date>@CW_RELEASE_DATE@</release_date>
+	<coder>BagHeads</coder>
+	<short_description>Blocky survival and building for the Wii</short_description>
+<long_description>Blocky survival and building for the Wii that plays like Beta 1.7.3.
+Fully playable with a Wii Remote + Nunchuk, a Classic Controller or a GameCube controller.
+Single player, local split-screen, and online play on Beta 1.7.3 servers.
+Built on CavEX by xtreme8000 and fCavEX.
+Not affiliated with Mojang or Nintendo.
+Full credits are in the NOTICE file.
+</long_description>
+	<ahb_access/>
+</app>

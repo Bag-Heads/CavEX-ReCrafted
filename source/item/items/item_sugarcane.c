@@ -17,21 +17,19 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../../graphics/render_item.h" // direct include (was transitive via blocks.h pre-split)
 #include "../../network/server_local.h"
+#include "../../network/server_local_state.h" // full server state (split from server_local.h)
 
-static bool onItemPlace(struct server_local* s, struct item_data* it,
+static bool onItemPlace(struct server_local* s, struct server_player* actor, struct item_data* it,
 						struct block_info* where, struct block_info* on,
 						enum side on_side) {
-	struct block_data blk;
-	if(!server_world_get_block(&s->world, where->x, where->y - 1, where->z,
-							   &blk))
+	// Beta BlockReed.canPlaceBlockAt: reed-on-reed is fine; dirt/grass needs adjacent water. (Was missing
+	// the water requirement -- sugarcane could be placed on any dry dirt/grass.)
+	if(!reed_can_block_stay(s, where->x, where->y, where->z))
 		return false;
 
-	if(blk.type != BLOCK_DIRT && blk.type != BLOCK_GRASS
-	   && blk.type != BLOCK_REED)
-		return false;
-
-	return block_place_default(s,
+	return block_place_default(s, actor,
 							   &(struct item_data) {
 								   .id = BLOCK_REED,
 								   .durability = 0,

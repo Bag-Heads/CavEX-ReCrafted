@@ -1,0 +1,79 @@
+diff --git a/libogc/wiisd.c b/libogc/wiisd.c
+index 486b858..4feebdd 100644
+--- a/libogc/wiisd.c
++++ b/libogc/wiisd.c
+@@ -151,6 +151,21 @@ static u8 __sd0_functions[64] ATTRIBUTE_ALIGN(32);
+ static bool __sdio_initialized = false;
+ static char _sd0_fs[] ATTRIBUTE_ALIGN(32) = "/dev/sdio/slot0";
+ 
++/* EXPERIMENTAL, HARDWARE-UNCONFIRMED (see
++ * third_party/libogc-kernel-heap/README.md): counts how many times
++ * __sd0_initio() has been entered this boot, i.e. how hard SD/FAT init had
++ * to try. Bumped unconditionally at the top of __sd0_initio() below. This
++ * patch does NOT wire this into any game-side boot-phase band/breadcrumb
++ * code -- it is an accessor only, so a caller elsewhere can later declare
++ * `extern u32 sd0_get_init_attempts(void);` and report it once this
++ * cold-boot-retry experiment is confirmed on the physical rig. */
++static u32 sd0_init_attempts = 0;
++
++u32 sd0_get_init_attempts(void)
++{
++	return sd0_init_attempts;
++}
++
+ static s32 __sdio_sendcommand(u32 cmd,u32 cmd_type,u32 rsp_type,u32 arg,u32 blk_cnt,u32 blk_size,void *buffer,void *reply,u32 rlen)
+ {
+ 	s32 ret;
+@@ -384,11 +399,28 @@ static	bool __sd0_initio(void)
+ {
+ 	s32 ret;
+ 	s32 tries;
++	s32 reset_tries;
+ 	u32 status;
+ 	u32 clock = 1;
+ 	struct _sdioresponse resp;
+ 
+-	__sdio_resetcard();
++	sd0_init_attempts++;
++
++	/* EXPERIMENTAL, HARDWARE-UNCONFIRMED fix for the pre-FAT cold-boot
++	 * death pathology (see third_party/libogc-kernel-heap/README.md):
++	 * devkitPro sourceforge bug #94 documents cards that fail exactly
++	 * here -- __sdio_resetcard() erroring out right after Wii power-up --
++	 * and the stock code called it unconditionally, never even inspecting
++	 * the return value. Retry the reset up to 3x with a 100ms settle
++	 * between tries; if it STILL reports failure, treat that as
++	 * NON-FATAL and fall through into the normal init sequence anyway --
++	 * bug #94's own evidence is that some cards only succeed once the
++	 * reset step is tolerated/skipped, not hammered on. */
++	reset_tries = 3;
++	while(reset_tries-- > 0) {
++		if(__sdio_resetcard() >= 0) break;
++		usleep(100000);
++	}
+ 	status = __sdio_getstatus();
+ 	
+ 	if(!(status & SDIO_STATUS_CARD_INSERTED))
+@@ -438,7 +470,12 @@ static	bool __sd0_initio(void)
+ 		if(ret < 0) goto fail;
+ 		if((resp.rsp_fields[0] & 0xff) != 0xaa) goto fail;
+ 
+-		tries = 10;
++		/* EXPERIMENTAL, HARDWARE-UNCONFIRMED (see
++		 * third_party/libogc-kernel-heap/README.md): widened from 10
++		 * tries @10ms to 20 tries @200ms -- cold cards need more
++		 * settle time before ACMD41 reports ready, matching the same
++		 * cold-boot pathology as the resetcard retry above. */
++		tries = 20;
+ 		while(tries-- > 0)
+ 		{
+ 			ret = __sdio_sendcommand(SDIO_CMD_APPCMD, SDIOCMD_TYPE_AC,SDIO_RESPONSE_R1,0,0,0,NULL,NULL,0);
+@@ -447,7 +484,7 @@ static	bool __sd0_initio(void)
+ 			if(ret < 0) goto fail;
+ 			if(resp.rsp_fields[0] & (1 << 31)) break;
+ 
+-			usleep(10000);
++			usleep(200000);
+ 		}
+ 		if(tries < 0) goto fail;
+ 

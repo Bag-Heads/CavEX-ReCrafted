@@ -18,20 +18,42 @@
 */
 
 #include "../../network/server_local.h"
+#include "../../network/server_local_state.h" // full server state (split from server_local.h)
 #include "../../network/client_interface.h"
 #include "../../network/server_interface.h"
+#include "../../graphics/render_item.h" // direct include (was transitive via blocks.h pre-split)
 
-static bool onItemPlace(struct server_local* s, struct item_data* it,
+static bool onItemPlace(struct server_local* s, struct server_player* actor, struct item_data* it,
 						struct block_info* where, struct block_info* on,
 						enum side on_side) {
-	server_local_set_player_health(s, s->player.health-16);
+	/* S1-a3 OPENED (Astra call #8 Q2): the actor-aware health transaction now
+	 * exists, so the ACTING actor eats and heals through it. Beta 1.7.3 has no
+	 * hunger -- ItemFood.onItemRightClick is `--stackSize; player.heal(
+	 * healAmount);` with NO health gate [ItemFood.java:14-18], so Beta eats
+	 * (and wastes) food at full health. The full-health refusal below is NOT
+	 * Beta: it is playability carve-out #2 (Astra ruling B, 2026-09-24;
+	 * docs/wii_controller_playability.md #30) -- eating fires instantly on the
+	 * shared use/place/activate button, so a stray press would throw food
+	 * away. The heal itself is Beta's: the same amount, capped at
+	 * MAX_PLAYER_HEALTH inside the writer.
+	 * A zero-health body never reaches here (the dead action barrier drops the
+	 * verb) and would be refused by the writer anyway [EntityLiving.heal gates
+	 * on health > 0]. The health reply rides the actor owner+generation
+	 * envelope, so a guest bite repaints the GUEST hearts, never P1 hearts. */
+	// Beta porkRaw = ItemFood(63, 3): eating HEALS 3 health points (1.5 hearts =
+	// +24 on CaveWii's 8x/160 scale), never damages. The old `health-16` was a
+	// leftover debug stub that HURT the player one heart. The full-health refusal
+	// is carve-out #2, shared with the sibling foods (see above).
+	// [decompile 740c583 Item.porkRaw + ItemFood]
+	if(actor->health >= MAX_PLAYER_HEALTH) return false;
+	(void)server_local_heal_actor(s, actor, actor->health + HEALTH_PER_HEART + (HEALTH_PER_HEART / 2));
 	return true;
 }
 
 struct item item_porkchop = {
 	.name = "Raw Porkchop",
 	.has_damage = false,
-	.max_stack = 64,
+	.max_stack = 1, // Beta ItemFood.maxStackSize == 1
 	.fuel = 0,
 	.renderItem = render_item_flat,
 	.onItemPlace = onItemPlace,

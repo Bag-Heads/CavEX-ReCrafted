@@ -1,0 +1,75 @@
+# Normalize line endings across all platforms.
+#
+# `text=auto` lets git auto-detect text vs. binary on each file.
+# `eol=lf` forces the in-repo blob to use LF, regardless of what the
+# checked-out working tree uses. Windows clones still get CRLF in their
+# working tree via core.autocrlf=true (the default on Windows installs);
+# Linux/macOS clones get LF natively. This eliminates the 36,836-line
+# phantom diff that was haunting the repo.
+#
+# Run `git add --renormalize .` after editing this file to apply the
+# normalization to existing tracked content.
+
+* text=auto eol=lf
+
+# Force binary so git never tries to munge these.
+*.png binary
+*.dol binary
+*.elf binary
+*.zip binary
+*.tpl binary
+*.scf binary
+*.bin binary
+*.raw binary
+*.ico binary
+*.bmp binary
+
+# Force LF on shell scripts and Makefiles (which break with CRLF).
+*.sh   text eol=lf
+Makefile text eol=lf
+*.mk   text eol=lf
+
+# Windows-only files keep CRLF so cmd.exe and Notepad don't choke.
+*.cmd  text eol=crlf
+*.bat  text eol=crlf
+*.ps1  text eol=crlf
+
+# Preserve exact bytes for reviewed design snapshots and their SHA-256 receipts.
+# These explicit files feed frozen-source/generation checks; other text remains LF.
+/artwork/cc0-pack/earth-and-ash-complete/README.md -text
+/artwork/cc0-pack/earth-and-ash-complete/manifest.json -text
+/artwork/cc0-pack/native-proof-2026-09-11/manifest.json -text
+/docs/ui_design/achievement-concept/catalog5.js -text
+/docs/ui_design/achievement-concept/console10.html -text
+/docs/ui_design/achievement-concept/console10.js -text
+/docs/ui_design/achievement-concept/console7.css -text
+/docs/ui_design/achievement-concept/style.css -text
+/docs/ui_design/control-revision-2026-09-10/chests.html -text
+/docs/ui_design/control-revision-2026-09-10/menus.html -text
+/docs/ui_design/front-end-refined/PHONE-PREVIEW.md -text
+/docs/ui_design/front-end-refined/assets.js -text
+/docs/ui_design/front-end-refined/binding-snapshot.js -text
+/docs/ui_design/front-end-refined/check-review-fixes.cjs -text
+/docs/ui_design/front-end-refined/editor.js -text
+/docs/ui_design/front-end-refined/fonts/provenance.json -text
+/docs/ui_design/front-end-refined/fonts/verification.json -text
+/docs/ui_design/front-end-refined/fonts/widths.json -text
+/docs/ui_design/front-end-refined/index.html -text
+/docs/ui_design/front-end-refined/revision.css -text
+/docs/ui_design/front-end-refined/studio.css -text
+/docs/ui_design/front-end-refined/studio.js -text
+/docs/ui_design/gameplay-pack-review/FABLE-DESIGN-REVIEW.md -text
+/docs/ui_design/gameplay-pack-review/FABLE-RECONCILIATION.md -text
+/docs/ui_design/gameplay-pack-review/FINAL-PRECOMMIT-REVIEW.md -text
+/docs/ui_design/gameplay-pack-review/FINAL-REVIEW-FIXES.md -text
+/docs/ui_design/gameplay-pack-review/achievements.html -text
+/docs/ui_design/gameplay-pack-review/achievements.js -text
+/docs/ui_design/gameplay-pack-review/chests.html -text
+/docs/ui_design/gameplay-pack-review/menus.html -text
+
+# Third-party licensor files that must ship UNEDITED (byte-identical, CRLF as
+# published): Isabella II's licence forbids editing "About Isabella.txt".
+/LICENSES/Isabella-II/** -text
+# Same rule for the copies inside the optional Isabella II pack source
+# (packs/isabella-ii/, shipped as texturepacks/isabella-ii/ in the release zip).
+/packs/isabella-ii/*.txt -text

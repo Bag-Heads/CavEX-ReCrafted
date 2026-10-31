@@ -1,0 +1,152 @@
+{
+ "paths": {
+  "texturepack": "texturepacks/beta-1.7.3",
+  "worlds": "saves"
+ },
+ "input": {
+  "player_forward": [
+   0,
+   200,
+   910
+  ],
+  "player_backward": [
+   1,
+   201,
+   911
+  ],
+  "player_left": [
+   2,
+   202,
+   912
+  ],
+  "player_right": [
+   3,
+   203,
+   913
+  ],
+  "player_jump": [
+   5,
+   210
+  ],
+  "player_sneak": [
+   211
+  ],
+  "item_action_left": [
+   100,
+   204,
+   4
+  ],
+  "item_action_right": [
+   101,
+   205,
+   7
+  ],
+  "scroll_left": [
+   9,
+   208,
+   213
+  ],
+  "scroll_right": [
+   8,
+   209,
+   212
+  ],
+  "inventory": [
+   6,
+   206
+  ],
+  "open_menu": [
+   10,
+   214
+  ],
+  "gui_up": [
+   0,
+   200,
+   900,
+   910,
+   920
+  ],
+  "gui_down": [
+   1,
+   201,
+   901,
+   911,
+   921
+  ],
+  "gui_left": [
+   2,
+   202,
+   902,
+   912,
+   922
+  ],
+  "gui_right": [
+   3,
+   203,
+   903,
+   913,
+   923
+  ],
+  "gui_click": [
+   4,
+   204
+  ],
+  "gui_click_alt": [
+   5,
+   205
+  ],
+  "screenshot": [
+   7
+  ],
+  "debug_overlay": [
+   207,
+   9008
+  ]
+ },
+ "debug": {
+  "overlay": "force",
+  "give": "on",
+  "autoboot_world": "off",
+  "runtime_trace": "off",
+  "movement_benchmark": "off",
+  "stack_verify": "off",
+  "stack_verify_item_id": "3",
+  "stack_verify_count": "3",
+  "container_smoke": "off",
+  "chest_selftest": "off",
+  "fluid_demo": "off",
+  "water_demo": "off",
+  "texpack_reload_test": "off",
+  "autopilot": "aim",
+  "autopilot_pitch_deg": 98,
+  "autopilot_yaw_deg": 0,
+  "autopilot_place": "off",
+  "autopilot_place_period": 0,
+  "superflat": "on",
+  "auto_screenshot": "on",
+  "piston_blast_demo": "off",
+  "piston_demo": "off",
+  "piston_anim": "off",
+  "redstone_demo": "off",
+  "spider_demo": "off",
+  "pig_demo": "off",
+  "zombie_demo": "off",
+  "furnace_demo": "off",
+  "render_mob": -1,
+  "redstone_drop": "off",
+  "start_nether": "off",
+  "nether_demo": "off",
+  "portal_demo": "off",
+  "auto_screenshot_max": 40,
+  "piston_sticky_demo": "on"
+ },
+ "autoload": "+new",
+ "lod": {
+  "far_view_distance": 10,
+  "far_mode": "trees",
+  "high_detail_radius": 2
+ },
+ "sim": {
+  "scheduled_tick_budget": 128
+ }
+}

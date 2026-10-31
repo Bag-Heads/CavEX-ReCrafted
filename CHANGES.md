@@ -1,10 +1,32 @@
-# Changes between fCavEX 0.3.0\_f1 and CavEX 0.3.0
+# Changes: CavEX: Re-Crafted Edition vs CavEX / fCavEX
 
-## Fixes
+Base: xtreme8000/CavEX, then yyy257/fCavEX, ByteBit, jilleb/fCavEX (fork point 7023e0e). Beta 1.7.3 parity first; additions never change the world's rules. Full history: `git log 7023e0e..HEAD`.
+
+Parity work (toward Beta 1.7.3)
+- Redstone, pistons, repeaters, fluids, mob spawning, recipes and world generation checked against Beta with golden and oracle tests.
+- Saves written closer to Beta's encoding; real Beta worlds load (furnaces, spawn-chunk tile entities).
+- Block collision and selection boxes corrected toward Beta values (candidate; door UV golden still open).
+
+Additions
+- Beta 1.7.3 multiplayer client (protocol 14, offline mode) with pause-menu keep-alive.
+- Local two-player split-screen.
+- Wii Remote + Nunchuk, Classic and GameCube control schemes; menus, chat keyboard, controller-reconnect pause.
+- Optional far-land (LOD) rendering beyond Beta's view distance.
+- Watchdog and telemetry, halt-stop handling, performance work for the Broadway CPU (measured on real Wii).
+- Creative mode (maintainer-sanctioned), tutorial world, texture-pack screen, new title screen and boot credits, Earth & Ash default art (CC0), optional Isabella II pack.
+- Homebrew Channel name "CavEX: Re-Crafted Edition" by BagHeads.
+
+---
+
+# Older history (upstream)
+
+## Changes between fCavEX 0.3.0\_f1 and CavEX 0.3.0
+
+### Fixes
 * Fixed the game randomly crashing or corrupting the player data when spawning an entity.
 * Fixed the game crashing when crafting or breaking a chest.
 
-## Additions
+### Additions
 * Compile-time video settings (set in `source/graphics/gfx_settings.h`).
 * The video settings allow disabling/enabling clouds, changing rsolution on PC, GUI scaling and setting liquids to fancy or fast.
 * Fancy liquids are transparent, slightly lower than full blocks and animated.
@@ -32,7 +54,7 @@
 * "2D tree" blocks obtainable only by inventory editing, meant as a WIP alternative to 3D trees which uses less vertices/quads.
 * 2D trees use a vertically stretched sapling texture, can exist in 2 heights, can be sheared for leaves and chopped for logs and saplings.
 
-## Changes
+### Changes
 * Leaves are now rendered differently, which uses less vertices/quads, improving performance on low-end GPUs.
 * Item entities are now rendered as 2D billboarded sprites, which uses less vertices/quads (3D item entities may come back in future releases).
 * Item durability values are now only 8-bit, which is not enough for high durability tools and slightly breaks save compatibility, but tools in fCavEX are unbreakable.
@@ -64,7 +86,7 @@
 * Raw porkchops and raw fish hurt the player when eaten.
 * The default `config.json` file is now meant for the PC - when building for the Wii, replace it with `config_wii.json`.
 
-## Removals
+### Removals
 * 3D item rendering (may come back in future releases).
 * Tool durability.
 

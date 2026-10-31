@@ -1,0 +1,57 @@
+{
+  "base_head": "0d1bcb5e7 + owned test-only instrumentation",
+  "scope": "Separate slice-2 fix-round scene; original 3f5bf6b goldens unchanged",
+  "platform": "PC UCRT64; asserts enabled",
+  "capture_command": "./build-verify/test_column_dedup_scene_equiv.exe --capture",
+  "mesh_completions": 36,
+  "tinted_lists": 126,
+  "plain_lists": 152,
+  "moving_batches": 36,
+  "halo_values_per_gather": 5832,
+  "piston_sidecars_before_failure": 8,
+  "piston_sidecars_after_failure": 4,
+  "inherited_bug": "Failed CRPC_CHUNK replacement retains old copied voxels but deletes their old column sidecars. Pinned, not fixed.",
+  "files": [
+    {
+      "file": "slice2_scene_render.gz",
+      "compressed_bytes": 499882,
+      "decoded_bytes": 2375888,
+      "sha256": "48d996c5fdc80e50e094c87ceda80752d73a7cd6fd34c8ac68c492e25eee2319",
+      "decoded_sha256": "7b5d3ff0949c34615aca41f6054f96a37d3961c36fb3ae93d51dff290090e5b4"
+    },
+    {
+      "file": "slice2_scene_moving.gz",
+      "compressed_bytes": 19304,
+      "decoded_bytes": 870836,
+      "sha256": "1ce3228fae9bf4346623c24f70ea13a88d5a56a90c84b8bcc223d7bb20929796",
+      "decoded_sha256": "10fae97ce396b989787404eaadeeccdc34e8ae8ce21eb407547ec76f3293dffb"
+    }
+  ],
+  "assets": {
+    "assets\\misc\\grasscolor.png": "9a4a10d7b0840964e1e01e489def8e00a71f3e39c295992747b47631ea822296",
+    "assets\\misc\\foliagecolor.png": "9eb2ee713337ddbffcc607e72eb937f8f52ea2c19a6446ed08972cadab764463"
+  },
+  "repin": {
+    "head": "0d1bcb5e7",
+    "accepted_commit": "3ae40e9d9",
+    "old_pin_commit": "728a5f6f8",
+    "old_pins": {
+      "render": {
+        "sha256": "055d6b0f2731be6b826412596b0c9aae1ce37b7f8d14f3750dbc3b6ae10fb328",
+        "decoded_sha256": "ba0ea057226aaebe78d0d163741178d7440da8c66f49c68641c1d6ed8db54d04"
+      },
+      "moving": {
+        "sha256": "f542ef7a81f970f14f138a96423ebdb20b9ee11229da77057c9f901722317d90",
+        "decoded_sha256": "50408a79f02fc8526619402524102258ee7fbd1e9757af04d0be1ca94e92e7cf"
+      }
+    },
+    "attribution": "ATTRIBUTION-test_column_dedup_scene_equiv.md",
+    "proof": "tmp/jobs/integ-1011/prove-scene.py: complete byte stream reconstruction",
+    "placement_arms": [
+      "default",
+      "lowest"
+    ],
+    "old_manifest_base_head": "9fb330a",
+    "verification": "8/8 identical in default arm; 8/8 identical in LOWEST arm"
+  }
+}

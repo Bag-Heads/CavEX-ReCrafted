@@ -17,7 +17,10 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../graphics/render_block.h" // direct include (was transitive via blocks.h pre-split)
+#include "../graphics/render_item.h" // direct include (was transitive via blocks.h pre-split)
 #include "../network/server_local.h"
+#include "../network/server_local_state.h" // full server state (split from server_local.h)
 #include "blocks.h"
 
 static enum block_material getMaterial(struct block_info* this) {
@@ -41,7 +44,7 @@ static uint8_t getTextureIndex(struct block_info* this, enum side side) {
 }
 
 static size_t getDroppedItem(struct block_info* this, struct item_data* it,
-							 struct random_gen* g, struct server_local* s) {
+							 struct java_random* g, struct server_local* s) {
 	if(it) {
 		it->id = ITEM_REED;
 		it->durability = 0;
@@ -51,49 +54,82 @@ static size_t getDroppedItem(struct block_info* this, struct item_data* it,
 	return 1;
 }
 
-static void onRandomTick(struct server_local* s, struct block_info* this) {
-	// TODO: check for water
-	bool has_support = false;
-	int height = 1;
-	for(int k = 0; k < 2; k++) {
-		struct block_data below;
-		if(!server_world_get_block(&s->world, this->x, this->y - k - 1, this->z,
-								   &below))
-			below.type = BLOCK_AIR;
+// Beta BlockReed.canPlaceBlockAt/canBlockStay: below is reed -> ok; else below must be dirt/grass AND
+// have water on one of the 4 horizontal sides of that base block. (Material.water = flowing or still.)
+bool reed_can_block_stay(struct server_local* s, int x, int y, int z) {
+	struct block_data below;
+	if(!server_world_get_block(block_world(s), x, y - 1, z, &below))
+		return false;
+	if(below.type == BLOCK_REED)
+		return true;
+	if(below.type != BLOCK_DIRT && below.type != BLOCK_GRASS)
+		return false;
+	static const int dx[4] = {-1, 1, 0, 0};
+	static const int dz[4] = {0, 0, -1, 1};
+	struct block_data n;
+	for(int i = 0; i < 4; i++)
+		if(server_world_get_block(block_world(s), x + dx[i], y - 1, z + dz[i], &n)
+		   && (n.type == BLOCK_WATER_FLOW || n.type == BLOCK_WATER_STILL))
+			return true;
+	return false;
+}
 
-		if(below.type == BLOCK_REED) {
+// Beta BlockReed.onNeighborBlockChange -> checkBlockCoordValid: drop + clear when it can no longer stay
+// (the base block or its adjacent water was removed).
+static void reed_remove(struct server_local* s, struct block_info* this) {
+	server_local_spawn_block_drops(s, this);
+	server_world_set_block(block_world(s), this->x, this->y, this->z,
+						   (struct block_data) {.type = BLOCK_AIR, .metadata = 0});
+}
+static void onNeighbourBlockChange(struct server_local* s, struct block_info* info) {
+	if(!reed_can_block_stay(s, info->x, info->y, info->z))
+		reed_remove(s, info);
+}
+
+// Beta BlockReed.canPlaceBlockAt IS its canBlockStay: the old bare block_place_default let a
+// reed be placed on stone, where it popped on the first neighbour change.
+static bool reed_place(struct server_local* s, struct server_player* actor, struct item_data* it,
+					   struct block_info* where, struct block_info* on,
+					   enum side on_side) {
+	if(!reed_can_block_stay(s, where->x, where->y, where->z))
+		return false;
+	return block_place_default(s, actor, it, where, on, on_side);
+}
+
+static void onRandomTick(struct server_local* s, struct block_info* this) {
+	// Beta BlockReed.updateTick: the ENTIRE growth body -- including the metadata counter --
+	// is gated on air above. A blocked or full-height reed leaves its counter UNTOUCHED (the
+	// old code incremented meta unconditionally, so a meta-15 reed under a ceiling silently
+	// wrapped its ready-to-grow state back to 0).
+	struct block_data above;
+	if(server_world_get_block(block_world(s), this->x, this->y + 1, this->z, &above)
+	   && above.type != BLOCK_AIR)
+		return;
+
+	// height = this reed + the reeds stacked directly below (Beta `for(var6=1; below==reed; ++var6)`).
+	int height = 1;
+	for(int k = 1; k <= 2; k++) {
+		struct block_data below;
+		if(server_world_get_block(block_world(s), this->x, this->y - k, this->z, &below)
+		   && below.type == BLOCK_REED)
 			height++;
-			has_support = true;
-		} else {
-			if(below.type == BLOCK_DIRT || below.type == BLOCK_GRASS)
-				has_support = true;
+		else
 			break;
-		}
 	}
 
-	if(!has_support) {
-		server_world_set_block(s, this->x, this->y, this->z,
-							   (struct block_data) {
-								   .type = BLOCK_AIR,
-								   .metadata = 0,
-							   });
-		server_local_spawn_block_drops(s, this);
-	} else if(height < 3) {
+	if(height < 3) {
 		if(this->block->metadata == 0xF) {
-			struct block_data above;
-			if(!server_world_get_block(&s->world, this->x, this->y + 1, this->z,
-									   &above)
-			   || above.type == BLOCK_AIR)
-				server_world_set_block(s, this->x, this->y + 1, this->z,
-									   (struct block_data) {
-										   .type = BLOCK_REED,
-										   .metadata = 0,
-									   });
+			// Beta: place the new segment, then reset THIS segment's counter to 0.
+			server_world_set_block(block_world(s), this->x, this->y + 1, this->z,
+								   (struct block_data) {
+									   .type = BLOCK_REED,
+									   .metadata = 0,
+								   });
+			this->block->metadata = 0;
+		} else {
+			this->block->metadata++;
 		}
-
-		this->block->metadata++;
-		server_world_set_block(s, this->x, this->y, this->z,
-							   *this->block);
+		server_world_set_block(block_world(s), this->x, this->y, this->z, *this->block);
 	}
 }
 
@@ -106,6 +142,7 @@ struct block block_reed = {
 	.getDroppedItem = getDroppedItem,
 	.onRandomTick = onRandomTick,
 	.onRightClick = NULL,
+	.onNeighbourBlockChange = onNeighbourBlockChange, // Beta checkBlockCoordValid (drop if unsupported)
 	.transparent = false,
 	.renderBlock = render_block_cross,
 	.renderBlockAlways = NULL,
@@ -125,7 +162,7 @@ struct block block_reed = {
 		.has_damage = false,
 		.max_stack = 64,
 		.renderItem = render_item_flat,
-		.onItemPlace = block_place_default,
+		.onItemPlace = reed_place, // Beta canPlaceBlockAt (base + adjacent water)
 		.fuel = 0,
 		.armor.is_armor = false,
 		.tool.type = TOOL_TYPE_ANY,

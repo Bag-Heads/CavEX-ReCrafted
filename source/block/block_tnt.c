@@ -22,111 +22,81 @@
 #include "../graphics/render_item.h"
 #include "../graphics/texture_atlas.h"
 #include "../item/tool.h"
+#include "../network/client_interface.h"
 #include "../network/server_local.h"
+#include "../network/server_local_state.h" // A1a: block_world(s) needs the full server state (as block_chest.c)
 #include "../network/server_world.h"
-#include "../particle.h"
+#include "redstone_server.h" // redstone_server_indirect_power (Beta isBlockIndirectlyGettingPowered)
+#include "../entity/entity_primed_tnt.h"
 #include "aabb.h"
 #include "blocks.h"
 #include "blocks_data.h"
 #include "face_occlusion.h"
-#include <math.h>
-#include "../game/game_state.h"
+#include "redstone_power.h"
+#include "tnt_texture.h"
+#define TNT_FUSE_TICKS TNT_FUSE_DEFAULT
 
+// Beta World.isBlockIndirectlyGettingPowered side order. This is the same
+// canonical power view used by pistons, including strong power through solids.
+static bool tnt_is_powered(struct server_local* s, int x, int y, int z) {
+	return redstone_server_indirect_power(s, x, y - 1, z, 0, true)
+		|| redstone_server_indirect_power(s, x, y + 1, z, 1, true)
+		|| redstone_server_indirect_power(s, x, y, z - 1, 2, true)
+		|| redstone_server_indirect_power(s, x, y, z + 1, 3, true)
+		|| redstone_server_indirect_power(s, x - 1, y, z, 4, true)
+		|| redstone_server_indirect_power(s, x + 1, y, z, 5, true);
+}
 
-//todo: cleanup
-//todo: move explosion logic to a helper function outside of this?
+static bool tnt_prime_if_powered(struct server_local* s, int x, int y, int z) {
+	if(!tnt_is_powered(s, x, y, z))
+		return false;
+	return server_local_prime_tnt_block(s, x, y, z, TNT_FUSE_TICKS);
+}
 
-#define TNT_POWER 4.0f	  // blast radius 4 looks to be right, but crashes the game
-#define TNT_FUSE_TICKS 15 // amount of ticks before TNT explodes
-#define NUM_RAYS 1000	// amount of rays cast for an explosion 1000 is pretty heavy.. 300 maybe too weak.
-#define STEP_SIZE 0.25f
-#define HARDNESS_SCALE 0.0005f // how much the digging.hardness influences the resistance to explosion. Higher = materials don't break.
-#define MAX_BROKEN 1024
-struct broken_coord { w_coord_t x, y, z; };
+static void onBlockAdded(struct server_local* s, struct block_info* info) {
+	/* Beta BlockTNT.onBlockAdded delegates to the same powered-neighbour check.
+	 * The generic world hook also covers piston/world-edit placement, not only
+	 * this block item's placement callback. */
+	(void)tnt_prime_if_powered(s, info->x, info->y, info->z);
+}
 
-#ifndef M_PI
-#define M_PI 3.14159265358979323846
-#endif
-
-void random_unit_vector(vec3 out) {
-    float z = 2.0f * ((rand() / (float)RAND_MAX) - 0.5f);
-    float t = 2.0f * M_PI * (rand() / (float)RAND_MAX);
-    float r = sqrtf(1.0f - z * z);
-    out[0] = r * cosf(t);
-    out[1] = r * sinf(t);
-    out[2] = z;
+// Beta BlockTNT.onNeighborBlockChange is synchronous and only reacts when the
+// changed block can provide power. A primed entity never competes for admission
+// to World's scheduled block tick set.
+static void onNeighbourBlockChange(struct server_local* s,
+								   struct block_info* info) {
+	uint8_t origin = server_world_notify_origin();
+	/* R1d: the old "metadata != 0 primes on ANY neighbour update" legacy branch
+	 * is DELETED. Its stated window ("before its legacy archive record is
+	 * restored") cannot occur: server_world_load_chunk installs the chunk and
+	 * runs server_local_restore_chunk_entities synchronously on the one server
+	 * thread, before any tick or notify can reach its blocks, and that restore
+	 * migrates block-backed TNT by record (server_local.c legacy_tnt). What the
+	 * branch DID do was detonate Beta's flint-stamped TNT (meta 1, persisted)
+	 * on a torch/water/sand change beside it; Beta primes only on power here
+	 * or on the player break. A record-less legacy meta!=0 block now behaves
+	 * exactly like Beta's stamped TNT. [740c583: BlockTNT.java:22-28,44-60] */
+	if(origin > 0 && redstone_id_can_provide_power(origin))
+		(void)tnt_prime_if_powered(s, info->x, info->y, info->z);
 }
 
 
-// helper to perform the ray-cast block destruction
-// 1) Ray-cast to collect blocks to destroy
-// 2) Batch-remove them and spawn drops
 
-
-// simplified explode: only TNT removal, particle effects, and delegate destruction
-void tnt_explode(struct server_local* s,
-                 w_coord_t x, w_coord_t y, w_coord_t z,
-                 float power)
-{
-    if (power > TNT_POWER) power = TNT_POWER;
-
-    // remove TNT block
-    server_world_set_block(s,
-                           x, y, z,
-                           (struct block_data){ 0 });
-
-
-    vec3 center = { x+0.5f, y+0.5f, z+0.5f };
-
-    // initial explosion flash
-    particle_generate_explosion_flash(center, power);
-
-    // destroy blocks
-    server_world_explode(s, center,	 TNT_POWER);
-
-
-    // final explosion puffs
-    particle_generate_explosion_smoke(center, power);
-
+// R1: Beta BlockTNT.onBlockClicked -- a LEFT-click with flint & steel held stamps metadata 1
+// through World.setBlockMetadata (chunk write only: no neighbour notify, no client packet --
+// server_world_set_block_metadata_quiet is that exact port), then falls to the
+// base no-op. The stamp is consumed by the player break (hardness 0 -> the same click breaks
+// it): onBlockDestroyedByPlayer sees (meta & 1) and primes instead of dropping -- see
+// server_local_dig_primes_tnt. The item is NOT damaged on this path (Beta never calls
+// damageItem here; the right-click prime's wear is carve-out entry #3 in docs/deviations.md).
+// [740c583: BlockTNT.java:54-60, World.java:426-438]
+static void onBlockClicked(struct server_local* s, struct server_player* actor,
+						   const struct item_data* held, struct block_info* this) {
+	(void)actor;
+	if(!held || held->id != ITEM_FLINT_STEEL)
+		return;
+	(void)server_world_set_block_metadata_quiet(block_world(s), this->x, this->y, this->z, 1);
 }
-
-static void onWorldTick(struct server_local* s, struct block_info* info) {
-    uint8_t fuse = info->block->metadata;
-    if (fuse == 0) {
-        bool powered = false;
-        for (int side = 0; side < SIDE_MAX; ++side) {
-            if (!info->neighbours) break;
-            struct block_data nb = info->neighbours[side];
-            uint8_t m = nb.metadata & 0x0F;
-            if ((nb.type == BLOCK_REDSTONE_WIRE && m > 0) ||
-                nb.type == BLOCK_REDSTONE_TORCH_LIT ||
-                ((nb.type == BLOCK_STONE_PRESSURE_PLATE ||
-                  nb.type == BLOCK_WOOD_PRESSURE_PLATE) &&
-                 (m & 0x01)))
-            {
-                powered = true;
-                break;
-            }
-        }
-        if (powered) {
-            server_world_set_block(s, info->x, info->y, info->z,
-                (struct block_data){ .type = BLOCK_TNT, .metadata = TNT_FUSE_TICKS });
-        }
-        return;
-    }
-    if (fuse > 1) {
-        info->block->metadata--;
-        server_world_set_block(s, info->x, info->y, info->z, *info->block);
-        vec3 center = { info->x + 0.5f, info->y + 0.5f, info->z + 0.5f };
-        particle_generate_smoke(center, 1.0f);
-    } else {
-        server_world_set_block(s, info->x, info->y, info->z,
-            (struct block_data){ .type = BLOCK_AIR, .metadata = 0, .sky_light = 0, .torch_light = 15 });
-        tnt_explode(s, info->x, info->y, info->z, TNT_POWER);
-    }
-}
-
-
 
 static enum block_material getMaterial(struct block_info* this) {
 	return MATERIAL_ORGANIC;
@@ -142,29 +112,12 @@ static struct face_occlusion* getSideMask(struct block_info* this, enum side sid
 }
 
 static uint8_t getTextureIndex(struct block_info* this, enum side side) {
-	if (this->block->metadata > 0 && (this->block->metadata % 4 < 2)) {
-		return tex_atlas_lookup(TEXAT_SNOW); // flashing
-	}
-
-	switch (side) {
-		case SIDE_TOP:
-		case SIDE_BOTTOM:
-			return tex_atlas_lookup(TEXAT_TNT_TOP);
-		default:
-			return tex_atlas_lookup(TEXAT_TNT_SIDE);
-	}
+	// Primed TNT is an entity now, so every world/item face is always the base
+	// Beta TNT tile. EntityTNTPrimed's white pulse is a render overlay, never snow.
+	return tex_atlas_lookup(tnt_face_texat(this->block->metadata, side));
 }
 
-static void onRightClick(struct server_local* s, struct item_data* it,
-						 struct block_info* where, struct block_info* on,
-						 enum side on_side) {
-	if (on->block->type == BLOCK_TNT && on->block->metadata == 0) {
-		server_world_set_block(s, on->x, on->y, on->z,
-			(struct block_data){ .type = BLOCK_TNT, .metadata = TNT_FUSE_TICKS });
-	}
-}
-
-static bool onItemPlace(struct server_local* s, struct item_data* it,
+static bool onItemPlace(struct server_local* s, struct server_player* actor, struct item_data* it,
 							struct block_info* where, struct block_info* on,
 							enum side on_side) {
 	struct block_data blk = (struct block_data) {
@@ -177,12 +130,10 @@ static bool onItemPlace(struct server_local* s, struct item_data* it,
 	struct block_info blk_info = *where;
 	blk_info.block = &blk;
 
-	if(entity_local_player_block_collide(
-		   (vec3) {s->player.x, s->player.y, s->player.z}, &blk_info))
+	if(block_place_obstructed_for(s, actor, &blk_info)) // player + all entities (Beta gate)
 		return false;
 
-	server_world_set_block(s, where->x, where->y, where->z, blk);
-	return true;
+	return server_world_set_block(block_world(s), where->x, where->y, where->z, blk);
 }
 
 struct block block_tnt = {
@@ -192,9 +143,14 @@ struct block block_tnt = {
 	.getMaterial = getMaterial,
 	.getTextureIndex = getTextureIndex,
 	.getDroppedItem = block_drop_default,
+	.onBlockAdded = onBlockAdded,
 	.onRandomTick = NULL,
-	.onWorldTick = onWorldTick,
-	.onRightClick = onRightClick,
+	.onWorldTick = NULL,
+	.onNeighbourBlockChange = onNeighbourBlockChange,
+	// Beta BlockTNT.blockActivated delegates to Block.blockActivated and returns
+	// false. Leave this unset so the held item's use/placement path still runs.
+	.onRightClick = NULL,
+	.onBlockClicked = onBlockClicked,
 	.transparent = false,
 	.renderBlock = render_block_full,
 	.renderBlockAlways = NULL,

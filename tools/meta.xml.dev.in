@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  DEV-ONLY template (rig/dev builds: gen_meta_xml.sh --template tools/meta.xml.dev.in). The release never uses it; see tools/meta.xml.in. Do NOT hand-edit the generated
+  meta.xml's <version>/<release_date> -- both come from a single source of
+  truth (the repo-root VERSION file + the packaged commit's date) via
+  tools/gen_meta_xml.sh, which tools/make_release.sh also calls at package
+  time. Edit THIS template (or VERSION) instead, then regenerate:
+
+      bash tools/gen_meta_xml.sh --out meta.xml
+
+  Two placeholders below are substituted by gen_meta_xml.sh (spelled out
+  here with a dash so this comment itself doesn't get rewritten): the
+  "CW VERSION" token becomes the VERSION file content (or --version
+  override); the "CW RELEASE DATE" token becomes the packaged commit's
+  author date in HBC release_date form, YYYYMMDDHHMMSS (or --date override).
+-->
+<app version="1">
+	<name>CavEX: Re-Crafted Edition</name>
+	<version>@CW_VERSION@</version>
+	<release_date>@CW_RELEASE_DATE@</release_date>
+	<coder>CaveWii_v2 contributors; upstream ByteBit/xtreme8000, yyy257, jilleb</coder>
+	<short_description>Beta 1.7.3 for the Wii</short_description>
+<long_description>CaveWii_v2 is a Wii-first port of Minecraft Beta 1.7.3.
+Forked from jilleb/fCavEX, which forks ByteBit/fCavEX, which forks
+yyy257's fCavEX, which forks CavEX by ByteBit/xtreme8000.
+Works with Wiimote + Nunchuk or a Classic Controller.
+
+See https://github.com/xtreme8000/CavEX for upstream history.
+Licensed under GPLv3 (inherited).
+Copyright (c) 2022-2026 ByteBit/xtreme8000, yyy257, jilleb, and
+CaveWii_v2 contributors.
+</long_description>
+	<ahb_access/>
+</app>

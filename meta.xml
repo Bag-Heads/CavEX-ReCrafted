@@ -1,17 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<app version="1">
-	<name>fCavEX</name>
-	<version>Alpha 0.3.0_f1</version>
-	<release_date>20240723000000</release_date>
-	<coder>ByteBit/xtreme8000</coder>
-	<short_description>Beta 1.7.3 for the Wii</short_description>
-<long_description>Your favourite block game on the Nintendo Wii.
-Implements Beta 1.7.3.
-Works with Wiimote + Nunchuk or a Classic Controller.
+<!--
+  Template for the Homebrew Channel meta.xml (RELEASE: public text only, no
+  dev notes). Do not hand-edit the generated meta.xml's version or
+  release_date: both come from the repo-root VERSION file and the packaged
+  commit's date via tools/gen_meta_xml.sh, which tools/make_release.sh also
+  calls at package time. Edit THIS template (or VERSION) instead, then
+  regenerate:
 
-See https://github.com/xtreme8000/CavEX for more information.
-Licensed under GPLv3.
-Copyright (c) 2022-2023 ByteBit/xtreme8000
+      bash tools/gen_meta_xml.sh --out meta.xml
+
+  Two placeholders below are substituted by gen_meta_xml.sh: the CW VERSION
+  token (VERSION file content, or --version) and the CW RELEASE DATE token
+  (commit author date as YYYYMMDDHHMMSS, or --date). Dev/rig notes live only
+  in tools/meta.xml.dev.in, which the release never uses.
+-->
+<app version="1">
+	<name>CavEX: Re-Crafted Edition</name>
+	<version>0.1.0</version>
+	<release_date>20260903093236</release_date>
+	<coder>BagHeads</coder>
+	<short_description>Blocky survival and building for the Wii</short_description>
+<long_description>Blocky survival and building for the Wii that plays like Beta 1.7.3.
+Fully playable with a Wii Remote + Nunchuk, a Classic Controller or a GameCube controller.
+Single player, local split-screen, and online play on Beta 1.7.3 servers.
+Built on CavEX by xtreme8000 and fCavEX.
+Not affiliated with Mojang or Nintendo.
+Full credits are in the NOTICE file.
 </long_description>
 	<ahb_access/>
 </app>

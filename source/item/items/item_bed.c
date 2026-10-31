@@ -17,68 +17,93 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <math.h>
+
+#include "../../block/bed_meta.h"
 #include "../../block/blocks_data.h"
 #include "../../cglm/types.h"
 #include "../../entity/entity.h"
 #include "../../graphics/render_item.h"
 #include "../../network/server_local.h"
+#include "../../network/server_local_state.h" // full server state (split from server_local.h)
 #include "../../network/server_world.h"
 #include "../items.h"
 #include "../tool.h"
 
-static bool onItemPlace(struct server_local* s, struct item_data* it,
+static bool onItemPlace(struct server_local* s, struct server_player* actor, struct item_data* it,
                         struct block_info* where, struct block_info* on,
                         enum side on_side) {
-    // Check directions: +Z, -Z, +X, -X
-    const int dir[4][3] = {
-        {0, 0, 1},   // +Z (metadata 0)
-        {0, 0, -1},  // -Z (metadata 2)
-        {1, 0, 0},   // +X (metadata 4)
-        {-1, 0, 0},  // -X (metadata 6)
-    };
+    // [decompile 740c583] ItemBed.onItemUse: `if (var7 != 1) return false;`
+    // -- a bed is only placeable via a TOP-face click (independently
+    // confirmed by mc173's use_bed_stack: `if face != Face::PosY { return
+    // false; }`).
+    if(on_side != SIDE_TOP)
+        return false;
 
-    struct block_data blk;
-    int metadata = -1;
-    int dx = 0, dz = 0;
+    // [decompile 740c583] var9 = floor(rotationYaw*4.0F/360.0F + 0.5D) & 3
+    // -- NO +180 here (unlike ItemDoor): the head lands in FRONT of the
+    // player. player.rx maps 1:1 onto rotationYaw (see item_repeater.c's
+    // sibling port of the identical inner formula).
+    int beta_dir = ((int)floorf(actor->rx * 4.0F / 360.0F + 0.5F)) & 3;
 
-    for (int i = 0; i < 4; i++) {
-        int tx = where->x + dir[i][0];
-        int ty = where->y + dir[i][1];
-        int tz = where->z + dir[i][2];
-        if (!server_world_get_block(&s->world, tx, ty, tz, &blk)) continue;
-        if (blk.type == 0) {
-            metadata = i * 2;
-            dx = dir[i][0];
-            dz = dir[i][2];
-            break;
-        }
-    }
+    // [decompile 740c583] BlockBed.headBlockToFootBlockMap per beta_dir:
+    // 0->(dx=0,dz=+1) +Z, 1->(dx=-1,dz=0) -X, 2->(dx=0,dz=-1) -Z,
+    // 3->(dx=+1,dz=0) +X. PAR-BED-META: the metadata IS var9 (foot) and
+    // var9 + 8 (head), Beta's own layout (block/bed_meta.h) -- the same
+    // bytes a real Beta save or server chunk carries.
+    int dx = bed_meta_dx((uint8_t)beta_dir), dz = bed_meta_dz((uint8_t)beta_dir);
 
-    if (metadata == -1) return false; // No space for bed head
+    int fx = where->x, fy = where->y, fz = where->z; // foot (== on + TOP offset)
+    int hx = fx + dx, hy = fy, hz = fz + dz;          // head
+
+    // [decompile 740c583]: both cells air, both supported by a normal cube
+    // below -- NO fallback search across directions like the old code;
+    // Beta tries exactly the yaw-derived direction and refuses outright if
+    // it doesn't fit (no drop, no partial placement).
+    struct block_data foot_cell, head_cell, foot_below, head_below;
+    if(!server_world_get_block(block_world(s), fx, fy, fz, &foot_cell)
+       || foot_cell.type != BLOCK_AIR)
+        return false;
+    if(!server_world_get_block(block_world(s), hx, hy, hz, &head_cell)
+       || head_cell.type != BLOCK_AIR)
+        return false;
+    if(!server_world_get_block(block_world(s), fx, fy - 1, fz, &foot_below)
+       || !block_is_normal_cube(foot_below.type))
+        return false;
+    if(!server_world_get_block(block_world(s), hx, hy - 1, hz, &head_below)
+       || !block_is_normal_cube(head_below.type))
+        return false;
 
     struct block_data foot = {
         .type = BLOCK_BED,
-        .metadata = metadata,
+        .metadata = bed_meta_from_yaw_index(beta_dir, false), // var9
         .sky_light = 0,
         .torch_light = 0,
     };
     struct block_data head = {
         .type = BLOCK_BED,
-        .metadata = metadata | 8, // Bit 3 = head flag
+        .metadata = bed_meta_from_yaw_index(beta_dir, true), // var9 + 8
         .sky_light = 0,
         .torch_light = 0,
     };
 
-    // Collision check with foot
-    struct block_info blk2_info = *where;
-    blk2_info.block = &foot;
-    if (entity_local_player_block_collide((vec3) {s->player.x, s->player.y, s->player.z}, &blk2_info))
+    // Collision check, BOTH bed cells vs player + all entities (Beta gate --
+    // the head cell was previously unchecked, so a bed head could embed a mob).
+    struct block_info foot_info = *where;
+    foot_info.block = &foot;
+    if (block_place_obstructed_for(s, actor, &foot_info))
+        return false;
+    struct block_info head_info = *where;
+    head_info.block = &head;
+    head_info.x = hx;
+    head_info.z = hz;
+    if (block_place_obstructed_for(s, actor, &head_info))
         return false;
 
     // Place foot
-    server_world_set_block(s, where->x, where->y, where->z, foot);
+    server_world_set_block(block_world(s), fx, fy, fz, foot);
     // Place head
-    server_world_set_block(s, where->x + dx, where->y, where->z + dz, head);
+    server_world_set_block(block_world(s), hx, hy, hz, head);
 
     return true;
 }

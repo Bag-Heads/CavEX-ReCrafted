@@ -1,0 +1,43 @@
+From: CaveWii_v2 S5.3 hunt
+Subject: [PATCH 4/4] tuxedo: clear the lazy-FPU owner (SPRG3) when its thread exits
+
+SPRG3 holds the lazy-FPU owner as a PPCContext* (PPCContext is KThread's
+first member, so the value equals the KThread*). It is written in exactly
+two places: boot (tuxedo/thread.c, &s_mainThread) and the FPU first-touch
+handler tail (tuxedo/exception_asm.S, mtsprg3 r11). Thread death never
+touches it.
+
+Consequence: when a thread that currently owns the FPU exits, SPRG3 keeps
+pointing at its KThread. Once that memory is freed and reused, the next FP
+first-touch by ANY thread runs the handler's save sequence -- 32 stfd + 32
+psq_st + FPSCR, 520 bytes -- straight into the reused allocation
+(exception_asm.S saves into the OWNER context before restoring the tou-
+cher's). That is a kernel-level use-after-free write with a wandering
+victim, observed on real hardware during the CaveWii_v2 S5.3 MP-connect
+hunt (PROJECT_MEMORY 2026-08-28 addendum 10).
+
+Fix: in KThreadExit, after the MSR fiddle that already masks EE and FP
+(so neither an interrupt nor an FP first-touch can slip in), compare
+SPRG3 with the dying thread and clear it to NULL on match. The FPU
+handler already handles a NULL owner (exception_asm.S "Skip FPU save if
+FPU owner is NULL"), so a cleared owner simply skips the save -- exactly
+the wanted semantics for a dead context.
+
+--- a/tuxedo/thread.c
++++ b/tuxedo/thread.c
+@@ -219,6 +219,15 @@ void KThreadExit(sptr rc)
+
+ 	u32 msr = PPCMfmsr();
+ 	PPCMtmsr(msr &~ (MSR_EE|MSR_FP|MSR_RI));
++
++	/* CaveWii sidecar 0004: SPRG3 is the lazy-FPU owner and nothing ever
++	 * cleared it on thread death, leaving it dangling at this thread's
++	 * soon-freed context; the next FP first-touch would then save 520
++	 * bytes into reused memory. The FPU handler skips the save on a NULL
++	 * owner, and EE|FP are masked just above, so this read-check-clear
++	 * cannot race the handler. */
++	if (PPCMfspr(SPRG3) == (u32)self)
++		PPCMtspr(SPRG3, 0);
+
+ 	KThreadDequeue(self);
+

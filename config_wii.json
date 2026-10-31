@@ -1,27 +1,177 @@
 {
-	"paths": {
-		"texturepack": "assets",
-		"worlds": "saves"
-	},
-	"input": {
-		"player_forward": [0, 200, 910],
-		"player_backward": [1, 201, 911],
-		"player_left": [2, 202, 912],
-		"player_right": [3, 203, 913],
-		"player_jump": [5, 210],
-		"player_sneak": [211],
-		"item_action_left": [100, 204],
-		"item_action_right": [101, 205],
-		"scroll_left": [9, 208, 213],
-		"scroll_right": [8, 209, 212],
-		"inventory": [6, 206],
-		"open_menu": [10, 214],
-		"gui_up": [0, 200, 900, 910, 920],
-		"gui_down": [1, 201, 901, 911, 921],
-		"gui_left": [2, 202, 902, 912, 922],
-		"gui_right": [3, 203, 903, 913, 923],
-		"gui_click": [4, 204],
-		"gui_click_alt": [5, 205],
-		"screenshot": [7],
-	}
+ "paths": {
+  "texturepack": "assets",
+  "worlds": "saves"
+ },
+ "input": {
+  "chat": [
+   7,
+   200,
+   400
+  ],
+  "gui_split": [
+   5,
+   205,
+   405
+  ],
+  "gui_drop": [
+   7,
+   213,
+   408
+  ],
+  "gui_page": [
+   8,
+   211,
+   410
+  ],
+  "player_forward": [
+   0,
+   910,
+   930
+  ],
+  "player_backward": [
+   1,
+   911,
+   931
+  ],
+  "player_left": [
+   2,
+   912,
+   932
+  ],
+  "player_right": [
+   3,
+   913,
+   933
+  ],
+  "player_jump": [
+   5,
+   204,
+   404
+  ],
+  "player_sneak": [
+   6,
+   207,
+   408
+  ],
+  "item_action_left": [
+   100,
+   209,
+   410
+  ],
+  "item_action_right": [
+   101,
+   208,
+   409
+  ],
+  "scroll_left": [
+   9,
+   210,
+   405
+  ],
+  "scroll_right": [
+   8,
+   211,
+   406
+  ],
+  "inventory": [
+   6,
+   206,
+   407
+  ],
+  "open_inventory": [
+   4,
+   206,
+   407
+  ],
+  "open_menu": [
+   10,
+   214,
+   411
+  ],
+  "gui_up": [
+   0,
+   200,
+   900,
+   910,
+   400,
+   930
+  ],
+  "gui_down": [
+   1,
+   201,
+   901,
+   911,
+   401,
+   931
+  ],
+  "gui_left": [
+   2,
+   202,
+   902,
+   912,
+   402,
+   932
+  ],
+  "gui_right": [
+   3,
+   203,
+   903,
+   913,
+   403,
+   933
+  ],
+  "gui_click": [
+   4,
+   204,
+   404
+  ],
+  "gui_click_alt": [
+   5,
+   205,
+   405
+  ],
+  "screenshot": [],
+  "debug_overlay": [],
+  "player_drop": [],
+  "gui_previous": [
+   9,
+   210,
+   409
+  ],
+  "gui_quick_move": [
+   100,
+   207,
+   406
+  ]
+ },
+ "debug": {
+  "overlay": "off"
+ },
+ "lod": {
+  "far_view_distance": 6,
+  "far_mode": "terrain",
+  "far_storage": "voxel"
+ },
+ "sim": {
+  "scheduled_tick_budget": 128
+ },
+ "audio": {
+  "enabled": "on",
+  "volume": 100
+ },
+ "controls": {
+  "wiimote_ir_look": 0,
+  "wiimote_sneak_toggle": 1,
+  "classic_sneak_toggle": 1,
+  "gamecube_sneak_toggle": 1
+ },
+ "ui": {
+  "sneak_toggle_indicator": true,
+  "show_coordinates": true,
+  "show_fps": true
+ },
+ "experimental": {
+  "g9_main_pacing_int": 1
+ }
 }

@@ -1,0 +1,5 @@
+# Header-hygiene DEBT baseline (step 7). Every line is
+# existing debt the gate tolerates; new debt fails the
+# build. Shrink this file, never grow it -- regenerate
+# with --baseline ONLY after removing debt, and diff the
+# result in the same commit.

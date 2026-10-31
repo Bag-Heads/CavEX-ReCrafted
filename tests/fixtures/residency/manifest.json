@@ -1,0 +1,342 @@
+{
+  "cc_f1_s12345": {
+    "sha256": "63a324926f3a68d2c3d3960e372f80171468f7c09e71e84f4a972fdf796c0d8c",
+    "bytes": 2776646,
+    "profile": "split_anchor_6m",
+    "build_id": "c3b2076_10.07",
+    "source": "<codex-worktrees>\\colcap-1006\\CaveWii_v2\\tmp\\wii_runs\\cc_f1_s12345",
+    "original_verdict_sha256": "8c3c846085ea32c2d23ae265a5e5c023cd42b6d2661c13c210038fae3d34cbf0",
+    "original_overall": "PASS",
+    "original_failure_class": null
+  },
+  "cc_f2_s12345": {
+    "sha256": "f78e7cab91373c23446620e761bbd4c01325cf94f36a37c042e1444babce730a",
+    "bytes": 2705859,
+    "profile": "split_dims_6m",
+    "build_id": "c3b2076_10.07",
+    "source": "<codex-worktrees>\\colcap-1006\\CaveWii_v2\\tmp\\wii_runs\\cc_f2_s12345",
+    "original_verdict_sha256": "7e04b78164883bb3d2a62a13d17fa1fac6821876faf1e1ea084e31ff6bea4676",
+    "original_overall": "PASS",
+    "original_failure_class": null
+  },
+  "cc_c1_s12345": {
+    "sha256": "9e17fdd4a5ba3b4743c7618479352576f0e71746a573295cd10c2d9495ecf567",
+    "bytes": 2545746,
+    "profile": "split_anchor_6m",
+    "build_id": "1b334e5+ec317c9b_10.07",
+    "source": "<codex-worktrees>\\colcap-1006\\CaveWii_v2\\tmp\\wii_runs\\cc_c1_s12345",
+    "original_verdict_sha256": "829f68f35598e1ae15b81b83b2873ec9971076b68e9a445bbab00da3cdaf2098",
+    "original_overall": "FAIL",
+    "original_failure_class": "anchor_feasibility_failed"
+  },
+  "cc_m1_s12345": {
+    "sha256": "7c5950d5156d6e88128a1688c7f90da45a552c690131065f0ae6f2a96ccc80f8",
+    "bytes": 2663133,
+    "profile": "split_anchor_6m",
+    "build_id": "1090e6f_10.07",
+    "source": "<codex-worktrees>\\colcap-meas\\CaveWii_v2\\tmp\\wii_runs\\cc_m1_s12345",
+    "original_verdict_sha256": "e9b078cfa66ae9319a62ac7796b26252befa0352cce9702fd62229da8db4de00",
+    "original_overall": "FAIL",
+    "original_failure_class": "anchor_feasibility_failed"
+  },
+  "i07_i01_s12345": {
+    "sha256": "e2d0c1017fdbf2d97fb8810f8302c7089d845410657150b7a3460bd27a4686d9",
+    "bytes": 495311,
+    "profile": "heartbeat_selftest",
+    "build_id": "a8383ad_10.06",
+    "source": "<codex-worktrees>\\i07-1006\\CaveWii_v2\\tmp\\wii_runs\\i07_i01_s12345",
+    "original_verdict_sha256": "eb0b97a8037d63b7a7d96fc54bdf5464f06de52dc3704ada161f5637b0e2d98e",
+    "original_overall": "PASS",
+    "original_failure_class": null
+  },
+  "i07_i02_s12345": {
+    "sha256": "ad27bb5ee6140669b5bc50abd443f0051bcb629a39f547c4f13a8cd8ef7cb5ac",
+    "bytes": 755433,
+    "profile": "redstone_clock_2m",
+    "build_id": "a8383ad_10.06",
+    "source": "<codex-worktrees>\\i07-1006\\CaveWii_v2\\tmp\\wii_runs\\i07_i02_s12345",
+    "original_verdict_sha256": "46bdb6b23865e91276164135a9c1bc77395c81c9663f0f2404498cfc058bfa76",
+    "original_overall": "PASS",
+    "original_failure_class": null
+  },
+  "i07_i03_s12345": {
+    "sha256": "aa6c4643b9ae981a8eb6a41d6cd5a1c84270fe5e01d4132dd8086a0625cb5275",
+    "bytes": 866200,
+    "profile": "far_idle_2m",
+    "build_id": "a8383ad_10.06",
+    "source": "<codex-worktrees>\\i07-1006\\CaveWii_v2\\tmp\\wii_runs\\i07_i03_s12345",
+    "original_verdict_sha256": "550390166dfee3d58047c8dc533dd45e35e0e404174ea1428ef6405c061f5b49",
+    "original_overall": "PASS",
+    "original_failure_class": null
+  },
+  "i07_i04_s12345": {
+    "sha256": "ca126272d05f175c6ad8b475447c492aeb6435627d64b73f2689bb4b933a0f86",
+    "bytes": 1887124,
+    "profile": "far_walk_6m",
+    "build_id": "a8383ad_10.06",
+    "source": "<codex-worktrees>\\i07-1006\\CaveWii_v2\\tmp\\wii_runs\\i07_i04_s12345",
+    "original_verdict_sha256": "47cb6259eeb919ebaeb99badc327fba33de81551bfb5f0799ce941b3e94dde78",
+    "original_overall": "PASS",
+    "original_failure_class": null
+  },
+  "i07_i05_s12345": {
+    "sha256": "58aa7bb9438122182c7303bf90da21fca5cdc665303f7b4bbb3302a7957d7d66",
+    "bytes": 1874670,
+    "profile": "keepup_walk_6m",
+    "build_id": "a8383ad_10.06",
+    "source": "<codex-worktrees>\\i07-1006\\CaveWii_v2\\tmp\\wii_runs\\i07_i05_s12345",
+    "original_verdict_sha256": "5f1a9e161e3ed3a7ce194099fcaf8bd22b6e4275fa4b597d91f561081a79553a",
+    "original_overall": "FAIL",
+    "original_failure_class": "scenario_not_engaged"
+  },
+  "i07_i05b_s12345": {
+    "sha256": "97ec530a4109627c93103c7624ff0a8e979e27b7adbdc584e62fc074ddf20a7f",
+    "bytes": 1894692,
+    "profile": "keepup_walk_6m",
+    "build_id": "a8383ad_10.06",
+    "source": "<codex-worktrees>\\i07-1006\\CaveWii_v2\\tmp\\wii_runs\\i07_i05b_s12345",
+    "original_verdict_sha256": "a3109dc1d4a375bd04678c73af9876a59b6be9e507086276973758d38b2fda30",
+    "original_overall": "PASS",
+    "original_failure_class": null
+  },
+  "i07_i06_s12345": {
+    "sha256": "254105bd7a7be8192a229622807277d83bdc75eda53fd992244dec6ac57e9349",
+    "bytes": 7095966,
+    "profile": "split_anchor_6m",
+    "build_id": "a8383ad_10.06",
+    "source": "<codex-worktrees>\\i07-1006\\CaveWii_v2\\tmp\\wii_runs\\i07_i06_s12345",
+    "original_verdict_sha256": "7b0fff2d2849cf01624ec3203ae85a70249e7d483a2dee373fe6db60f0aa0e65",
+    "original_overall": "FAIL",
+    "original_failure_class": "anchor_incomplete"
+  },
+  "i07_i06b_s12345": {
+    "sha256": "87fb57430515f237353fc3416ad1aff138523dcf846fbc0cf22a87e20e5669a0",
+    "bytes": 7090147,
+    "profile": "split_anchor_6m",
+    "build_id": "a8383ad_10.06",
+    "source": "<codex-worktrees>\\i07-1006\\CaveWii_v2\\tmp\\wii_runs\\i07_i06b_s12345",
+    "original_verdict_sha256": "7516a9a00c5f7320cea10ca6432e1582f11ae2819fe690bd846bac36c54619bc",
+    "original_overall": "FAIL",
+    "original_failure_class": "anchor_incomplete"
+  },
+  "i07_i07_s12345": {
+    "sha256": "9abb979c72e7401a8f4306d20b8f05ce16d404d2cbb337993050e4a3ceecc99b",
+    "bytes": 2469487,
+    "profile": "split_play_8m",
+    "build_id": "a8383ad_10.06",
+    "source": "<codex-worktrees>\\i07-1006\\CaveWii_v2\\tmp\\wii_runs\\i07_i07_s12345",
+    "original_verdict_sha256": "4c8cb03b03b2717c8d8f59c159f37ac1f919d1b4c883a4aa5cd03877a2fe447e",
+    "original_overall": "PASS",
+    "original_failure_class": null
+  },
+  "i07_i08_s12345": {
+    "sha256": "b51d8110ea0bf0089034cbf069f382ec46d5ab9752b6188cc2b632a7a22a00ba",
+    "bytes": 2664108,
+    "profile": "split_dims_6m",
+    "build_id": "a8383ad_10.06",
+    "source": "<codex-worktrees>\\i07-1006\\CaveWii_v2\\tmp\\wii_runs\\i07_i08_s12345",
+    "original_verdict_sha256": "ddf8aeb3b2801800810291885cfe433fd41d3bf35d8da55b7b1064eedcead40d",
+    "original_overall": "FAIL",
+    "original_failure_class": "dims_not_active"
+  },
+  "i07_i08b_s12345": {
+    "sha256": "79ef723fd149c47ead6e4085eff35a886dd97a1918bd6260d7bf9fcf73436673",
+    "bytes": 2660574,
+    "profile": "split_dims_6m",
+    "build_id": "a8383ad_10.06",
+    "source": "<codex-worktrees>\\i07-1006\\CaveWii_v2\\tmp\\wii_runs\\i07_i08b_s12345",
+    "original_verdict_sha256": "a46d6655de3417c0976454419d30501adea1922e400147165169632b31708640",
+    "original_overall": "PASS",
+    "original_failure_class": null
+  },
+  "i07_i09_s12345": {
+    "sha256": "af254eb8d59e6e30acd0b132f06349fd0309488a217f3a4b57887a2a1119ceb1",
+    "bytes": 166592,
+    "profile": "split_recovery_6m",
+    "build_id": "a8383ad_10.06",
+    "source": "<codex-worktrees>\\i07-1006\\CaveWii_v2\\tmp\\wii_runs\\i07_i09_s12345",
+    "original_verdict_sha256": "80926d49c30f34bc1dc7a3ea6b6fe784f6f9b9b829f87c90a6a6d94db7545fbe",
+    "original_overall": "PASS",
+    "original_failure_class": null
+  },
+  "i07_i14_s12345": {
+    "sha256": "7884ad1082f41246618c5a557fa4b54ffadfb0fd063e4b8141e34ad0696bc2c2",
+    "bytes": 1567963,
+    "profile": "perf_stress_5m",
+    "build_id": "a8383ad_10.06",
+    "source": "<codex-worktrees>\\i07-1006\\CaveWii_v2\\tmp\\wii_runs\\i07_i14_s12345",
+    "original_verdict_sha256": "55f71cc170cd60eca340c9e757141d6bd304bb4ab3561f1458f5aad5ae1d258d",
+    "original_overall": "FAIL",
+    "original_failure_class": "perf_server_budget_exceeded"
+  },
+  "i07_i14b_s12345": {
+    "sha256": "5a4ce903d60535f70ddbca381c1cf07d1c2c688d9e54aeba2b07faae05565c69",
+    "bytes": 1565636,
+    "profile": "perf_stress_5m",
+    "build_id": "a8383ad_10.06",
+    "source": "<codex-worktrees>\\i07-1006\\CaveWii_v2\\tmp\\wii_runs\\i07_i14b_s12345",
+    "original_verdict_sha256": "4163a21f82179be98fd78fa99852fcc3ba38fe42ad85c4af5c3b716132f26231",
+    "original_overall": "FAIL",
+    "original_failure_class": "perf_server_budget_exceeded"
+  },
+  "f7_p1_s12345": {
+    "sha256": "d89d67cda9a4006a5e8b788b979edd944c6cefe7f94da689eb306f100ee3b3ed",
+    "bytes": 187873,
+    "profile": "pool_selftest_3m",
+    "build_id": "d9d6e7c_10.07",
+    "source": "<codex-worktrees>\\colcap-1006\\CaveWii_v2\\tmp\\wii_runs\\f7_p1_s12345",
+    "original_verdict_sha256": "4ffd4d4500c0b583b1e03cc5f8fe585aec380508facf2162c0b8f2b3dd2f48ce",
+    "original_overall": "PASS",
+    "original_failure_class": null
+  },
+  "f7_p2_s12345": {
+    "sha256": "5272b528966d7148a0d7093ff5f2d22558e23bb88cf62f1bc833ea16e8415032",
+    "bytes": 183895,
+    "profile": "pool_selftest_3m",
+    "build_id": "d9d6e7c_10.07",
+    "source": "<codex-worktrees>\\colcap-1006\\CaveWii_v2\\tmp\\wii_runs\\f7_p2_s12345",
+    "original_verdict_sha256": "0337b87cf367855a1cf7dd16f4fc985154c5557e1a0d350e8d16a23a5458ef51",
+    "original_overall": "PASS",
+    "original_failure_class": null
+  },
+  "f7_a_s12345": {
+    "sha256": "ddefb4955e42de5d6b419dc4ac720d0ad90fefe66dc54bf9f3e2416a49a75fd3",
+    "bytes": 2790551,
+    "profile": "split_anchor_6m",
+    "build_id": "d9d6e7c_10.07",
+    "source": "<codex-worktrees>\\colcap-1006\\CaveWii_v2\\tmp\\wii_runs\\f7_a_s12345",
+    "original_verdict_sha256": "cf577a86a55dfba8aa21a0d80ff4842b3027d3cf21bf2ac86d44d13e793a51c1",
+    "original_overall": "PASS",
+    "original_failure_class": null
+  },
+  "f7_d_s12345": {
+    "sha256": "7107de567f754af6676f4b996293608b3cc8980eb682055a230879c20341b211",
+    "bytes": 2705378,
+    "profile": "split_dims_6m",
+    "build_id": "d9d6e7c_10.07",
+    "source": "<codex-worktrees>\\colcap-1006\\CaveWii_v2\\tmp\\wii_runs\\f7_d_s12345",
+    "original_verdict_sha256": "83e7a0aff52ac7058229d1b1dc731943d10e0a523b10c1ddb69137da3359ae00",
+    "original_overall": "FAIL",
+    "original_failure_class": "residency_gate_failed"
+  },
+  "f7_w_s12345": {
+    "sha256": "99619d577a89b7f2fc09a04b552590b4880c402edba9ea7edf6a4b720f1241c5",
+    "bytes": 1914029,
+    "profile": "far_walk_6m",
+    "build_id": "d9d6e7c_10.07",
+    "source": "<codex-worktrees>\\colcap-1006\\CaveWii_v2\\tmp\\wii_runs\\f7_w_s12345",
+    "original_verdict_sha256": "20796d41fd705438cdbcf0e683033833c4b8dc75c540ac8bd903deddcc6b0570",
+    "original_overall": "PASS",
+    "original_failure_class": null
+  },
+  "f7_r_s12345": {
+    "sha256": "d16a1a7384103417f99e289a920f6e41f3b42ed6e4d6be1278a960b600508c0a",
+    "bytes": 167468,
+    "profile": "split_recovery_6m",
+    "build_id": "d9d6e7c_10.07",
+    "source": "<codex-worktrees>\\colcap-1006\\CaveWii_v2\\tmp\\wii_runs\\f7_r_s12345",
+    "original_verdict_sha256": "aa9088778959b0bbd27ab0cc5ec4c724892f5c7010e25e042eebf63c358f603f",
+    "original_overall": "FAIL",
+    "original_failure_class": "residency_gate_failed"
+  },
+  "f7_h_s12345": {
+    "sha256": "2604d0bef1f739840938e728ea236fd603cb8a42a992830811501fcf460c5bab",
+    "bytes": 2585080,
+    "profile": "split_play_8m",
+    "build_id": "d9d6e7c_10.07",
+    "source": "<codex-worktrees>\\colcap-1006\\CaveWii_v2\\tmp\\wii_runs\\f7_h_s12345",
+    "original_verdict_sha256": "746f2ffa6da744e7bab8ef6ffe6cf061ef45ea4684db9e256cc5322b8035d566",
+    "original_overall": "FAIL",
+    "original_failure_class": "residency_gate_failed"
+  },
+  "f7_g_s12345": {
+    "sha256": "fea5e839774207b47f9c87253b365d55edaefdeea76677219201d8eda9fa1595",
+    "bytes": 2596868,
+    "profile": "split_play_8m",
+    "build_id": "d9d6e7c_10.07",
+    "source": "<codex-worktrees>\\colcap-1006\\CaveWii_v2\\tmp\\wii_runs\\f7_g_s12345",
+    "original_verdict_sha256": "7d59b8f4df1648408f0a1f311e3868cbe3805b39ddce8ebf839eec655f796db8",
+    "original_overall": "FAIL",
+    "original_failure_class": "residency_gate_failed"
+  },
+  "r7_dims_s12345": {
+    "sha256": "45cf2dd763d32d2da1023f3cf503adbd1df7062af00440d033455f7726198b0c",
+    "bytes": 2733071,
+    "profile": "split_dims_6m",
+    "build_id": "0443774_10.07",
+    "source": "<codex-worktrees>\\colcap-1006\\CaveWii_v2\\tmp\\wii_runs\\r7_dims_s12345",
+    "original_verdict_sha256": "e4e8b30d7a0dce70c671db68cd44cfb1bdbf5cb17a90b7466739c8c9b362fbd1",
+    "original_overall": "FAIL",
+    "original_failure_class": "dims_not_active"
+  },
+  "r7_recovery_s12345": {
+    "sha256": "8316ea0064ed33f402c2d70bf5a9bf838858b0d0db0d07666ed4743a29582f10",
+    "bytes": 570386,
+    "profile": "split_recovery_6m",
+    "build_id": "0443774_10.07",
+    "source": "<codex-worktrees>\\colcap-1006\\CaveWii_v2\\tmp\\wii_runs\\r7_recovery_s12345",
+    "original_verdict_sha256": "d0ce74c180975972ccbe764be8ddd692aab71705df1b80cbdba456062597e8a9",
+    "original_overall": "FAIL",
+    "original_failure_class": "profile_done_error"
+  },
+  "r7_host90_s12345": {
+    "sha256": "4c9e7cbb416983ab1b5318d54aa6592d917a1664fabb5140071148ca87213f4d",
+    "bytes": 2622913,
+    "profile": "split_play_8m",
+    "build_id": "0443774_10.07",
+    "source": "<codex-worktrees>\\colcap-1006\\CaveWii_v2\\tmp\\wii_runs\\r7_host90_s12345",
+    "original_verdict_sha256": "1032ea093ab5768ed2eca5d13d42d7a9018dbdbd43b0d954ef3ccb3987a124f3",
+    "original_overall": "PASS",
+    "original_failure_class": null
+  },
+  "r7_guest90_s12345": {
+    "sha256": "d7d64b14c6438ad3ea89e0ced7b826a93b3b9a5370ebf99f3f72fab9b0db9369",
+    "bytes": 2672648,
+    "profile": "split_play_8m",
+    "build_id": "0443774_10.07",
+    "source": "<codex-worktrees>\\colcap-1006\\CaveWii_v2\\tmp\\wii_runs\\r7_guest90_s12345",
+    "original_verdict_sha256": "cb8fabfdc51dbe24d84fb4cc35f4444aeb97366f126bf518761c81929b5ab30c",
+    "original_overall": "FAIL",
+    "original_failure_class": "residency_gate_failed"
+  },
+  "r8_dims_s12345": {
+    "sha256": "4981a0e919818956517f169ee560f7c9741a7ba43ba130a501abd5f5159eb0aa",
+    "bytes": 2736045,
+    "profile": "split_dims_6m",
+    "build_id": "f3f5349_10.07",
+    "source": "<codex-worktrees>/colcap-1006/CaveWii_v2/tmp/wii_runs/r8_dims_s12345",
+    "original_verdict_sha256": "6b87dffc81ab59929001604be77b5e79d337e00b8439fcf450581e5e72871073",
+    "original_overall": "FAIL",
+    "original_failure_class": "dims_not_active"
+  },
+  "r8_recovery_s12345": {
+    "sha256": "1e7a24174d4fa0a502b8b56c00cae59b7d77905e28bf764dfe948af2bd76277a",
+    "bytes": 745619,
+    "profile": "split_recovery_6m",
+    "build_id": "f3f5349_10.07",
+    "source": "<codex-worktrees>/colcap-1006/CaveWii_v2/tmp/wii_runs/r8_recovery_s12345",
+    "original_verdict_sha256": "2bc37a7b3320e4e286234d6c8dbcd3a85c7786e017a7d07288a8cd4496fc5ff4",
+    "original_overall": "FAIL",
+    "original_failure_class": "profile_done_error"
+  },
+  "r8_host90_s12345": {
+    "sha256": "4a2e7edf94b6445dae2f34498f2cf449a8161d9b213217d7a167229a27b7374b",
+    "bytes": 2618546,
+    "profile": "split_play_8m",
+    "build_id": "f3f5349_10.07",
+    "source": "<codex-worktrees>/colcap-1006/CaveWii_v2/tmp/wii_runs/r8_host90_s12345",
+    "original_verdict_sha256": "3ed314298d7f22fffc39e9a9b8c5cd6bf9ec89ba19d9b287d28fba612e899b60",
+    "original_overall": "PASS",
+    "original_failure_class": null
+  },
+  "r8_guest90_s12345": {
+    "sha256": "0c42ea69b9964b9c81c041c4fc2fed0ca6e8f12e4f13feb57c707cd83db7715d",
+    "bytes": 2568595,
+    "profile": "split_play_8m",
+    "build_id": "f3f5349_10.07",
+    "source": "<codex-worktrees>/colcap-1006/CaveWii_v2/tmp/wii_runs/r8_guest90_s12345",
+    "original_verdict_sha256": "ac53c4a1188380fd52b39d70a80ce2bd1cd12841aeb48b61e9552ae943c8d7d8",
+    "original_overall": "FAIL",
+    "original_failure_class": "residency_gate_failed"
+  }
+}

@@ -17,11 +17,20 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../graphics/render_block.h" // direct include (was transitive via blocks.h pre-split)
+#include "../graphics/render_item.h" // direct include (was transitive via blocks.h pre-split)
 #include "../network/server_local.h"
+#include "../network/server_local_state.h" // full server state (split from server_local.h)
 #include "blocks.h"
 
 static enum block_material getMaterial(struct block_info* this) {
-	return MATERIAL_WOOD;
+	// Beta BlockPumpkin is Material.pumpkin (NOT Material.wood) for both the pumpkin
+	// (id 86) and jack-o-lantern (id 91). getMaterial is read ONLY by the furnace fuel
+	// check (server_furnace.c), where Beta's `material == wood -> 300 ticks` must be
+	// FALSE for a pumpkin (TileEntityFurnace.getItemBurnTime returns 0). There is no
+	// MATERIAL_PUMPKIN here; MATERIAL_ORGANIC is the conventional non-wood value (rose,
+	// sapling, reed, ...), so the pumpkin is correctly NOT a furnace fuel.
+	return MATERIAL_ORGANIC;
 }
 
 static size_t getBoundingBox(struct block_info* this, bool entity,
@@ -88,12 +97,12 @@ static uint8_t getTextureIndex2(struct block_info* this, enum side side) {
 	}
 }
 
-static bool onItemPlace(struct server_local* s, struct item_data* it,
+static bool onItemPlace(struct server_local* s, struct server_player* actor, struct item_data* it,
 						struct block_info* where, struct block_info* on,
 						enum side on_side) {
 	int metadata = 0;
-	double dx = s->player.x - (where->x + 0.5);
-	double dz = s->player.z - (where->z + 0.5);
+	double dx = actor->x - (where->x + 0.5);
+	double dz = actor->z - (where->z + 0.5);
 
 	if(fabs(dx) > fabs(dz)) {
 		metadata = (dx >= 0) ? 3 : 1;
@@ -111,11 +120,10 @@ static bool onItemPlace(struct server_local* s, struct item_data* it,
 	struct block_info blk_info = *where;
 	blk_info.block = &blk;
 
-	if(entity_local_player_block_collide(
-		   (vec3) {s->player.x, s->player.y, s->player.z}, &blk_info))
+	if(block_place_obstructed_for(s, actor, &blk_info)) // player + all entities (Beta gate)
 		return false;
 
-	server_world_set_block(s, where->x, where->y, where->z, blk);
+	server_world_set_block(block_world(s), where->x, where->y, where->z, blk);
 	return true;
 }
 

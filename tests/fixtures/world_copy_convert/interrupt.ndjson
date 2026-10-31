@@ -1,0 +1,8 @@
+{"event":"hello","profile":"world_copy_convert"}
+{"event":"wcc_begin","variant":"interrupt","fixture":"cw_wcc_fixture"}
+{"event":"wcc_list_pre","rows":3,"fixture_row":1,"needs_convert":true,"backup_row":-1,"partial_visible":false}
+{"event":"wcc_ask","safe_default":true}
+{"event":"wcc_volume","free_bytes":7948206080,"cluster_bytes":32768,"required_bytes":393216}
+{"event":"wcc_copy","saw_copying":true,"saw_cleaning":false,"pct_max":30,"monotonic":true,"interrupted":true}
+{"event":"wcc_card","root_ok":true,"truncated":false,"names":["cw_wcc_fixture","cw_wcc_fixture (backup)","cw_wcc_fixture (backup)/.incomplete",".world-copy-1.owner"]}
+{"event":"wcc_end","variant":"interrupt","ok":true,"step":13,"failed_step":0}

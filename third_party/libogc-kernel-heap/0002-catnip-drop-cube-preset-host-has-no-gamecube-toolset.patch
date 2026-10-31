@@ -1,0 +1,17 @@
+diff --git a/Catnip.cmake b/Catnip.cmake
+index 82d4dc25..31c08c5 100644
+--- a/Catnip.cmake
++++ b/Catnip.cmake
+@@ -1,4 +1,4 @@
+-catnip_package(libogc DEFAULT cube wii)
++catnip_package(libogc DEFAULT wii)
+ 
+ if(DEFINED ENV{LIBOGC_VER})
+ 	set(LIBOGC_VER "$ENV{LIBOGC_VER}")
+@@ -27,5 +27,5 @@ endif()
+ 
+ configure_file(libversion.h.in "${CATNIP_BUILD_DIR}/libversion.h" @ONLY)
+ 
+-catnip_add_preset(cube TOOLSET GameCube BUILD_TYPE Release)
++# cube preset removed: GameCube toolset absent on this host, Wii-only build
+ catnip_add_preset(wii  TOOLSET Wii      BUILD_TYPE Release)

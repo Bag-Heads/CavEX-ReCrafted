@@ -1,37 +1,131 @@
-/source/cglm/
-/source/cNBT/
-/source/lodepng/
-/source/parson/
+# Vendored third-party sources are TRACKED (vendored by commit) so a fresh clone +
+# CI's actions/checkout build with NO fetch step. cglm, lodepng, parson (source/)
+# and m-lib, greatest (third_party/) all carry permissive licenses with their
+# LICENSE.* files. RECONCILED 2026-06-19: the earlier "Removed some unneeded files"
+# commit had dropped + ignored these build deps, silently breaking every fresh-clone
+# and CI fresh-checkout build (cglm.h not found) -- re-vendored to match the upstream
+# CavEX convention and the cNBT precedent above.
+# third_party: ignore the CONTENTS, then re-include the vendored libs explicitly
+# (git can't re-include a path whose parent dir is wholesale-excluded).
+/third_party/*
+!/third_party/greatest/
+!/third_party/m-lib/
+!/third_party/stb/
+!/third_party/miniaudio/
+!/third_party/libogc-kernel-heap/
+
+# Build outputs (devkitPro + CMake). Both dash and underscore build-directory
+# conventions exist in local verification scripts.
 /build/
-*.elf
-*.dol
-movedol.bat
-*.elf
-fCavEX.dol
-fCavEX.elf
-Makefile
-Makefile
-.project
-.cproject
-.settings/org.eclipse.cdt.core.prefs
-assets/default.png
-*.png
+/build-*/
+/build_*/
+/tools/wii_stage_server/build/
+/tools/pack_helper/resources/
+
+# Built artifacts (anywhere in the tree)
 *.dol
 *.elf
 *.zip
-fCavEX.elf
-Makefile
-fCavEX.dol
-fCavEX.elf
-Makefile
-.cproject
-.project
-.project
-fCavEX.dol
-fCavEX.elf
-Makefile
-.cproject
-.project
-fCavEX.dol
-fCavEX.elf
-Makefile
+*.tpl
+*.o
+*.d
+*.map
+
+# IDE and Codex local state
+.settings/org.eclipse.cdt.core.prefs
+/.codex-remote-attachments/
+
+# Legacy one-off scripts
+movedol.bat
+
+# Local run artifacts -- never commit
+/saves/
+/ss_*.png
+/.shots/
+/.vidwork/
+/.buildtmp/
+/cavewii_screenshots/
+*.log
+*.exe
+*.STALE
+hang_report.txt
+
+# Verification evidence: keep the written records, not the probe screenshots
+/docs/verification/**/*.png
+/docs/verification/*.png
+
+# Copyrighted Beta-extracted textures are USER-SUPPLIED only (legal-assets rule:
+# never commit Mojang IP; ship legal defaults + let users overlay their own pack)
+/assets/mob/*
+# Explicit original CC0 mob roster; keep unknown imported skins ignored.
+!/assets/mob/char.png
+!/assets/mob/zombie.png
+!/assets/mob/pigzombie.png
+!/assets/mob/skeleton.png
+!/assets/mob/pig.png
+!/assets/mob/cow.png
+!/assets/mob/sheep.png
+!/assets/mob/creeper.png
+!/assets/mob/sheep_fur.png
+!/assets/mob/chicken.png
+!/assets/mob/wolf.png
+!/assets/mob/wolf_tame.png
+!/assets/mob/wolf_angry.png
+!/assets/mob/spider.png
+!/assets/mob/spider_eyes.png
+!/assets/mob/squid.png
+!/assets/mob/slime.png
+!/assets/mob/ghast.png
+!/assets/mob/ghast_fire.png
+# Beta-derived oracle/pack scratch produced from a USER-OWNED b1.7.3.jar
+# (tools/make_beta_pack.ps1, tools/atlas_oracle.py, build_beta_oracle.ps1):
+# Mojang IP -- local only, never commit.
+/tmp/
+/local/
+/texturepacks/
+/beta_pack/
+
+# soak_stream harness output worlds
+/soak_saves/
+.claude/worktrees/
+
+# Headless test scratch worlds (region/archive/portal round-trip tests).
+/test_*_tmp*/
+
+# Python bytecode cache
+__pycache__/
+*.pyc
+
+# Death-drop journal test scratch worlds (binary saves; never commit)
+/test_death_drop_journal_*/
+
+# Stage-server auth shared secret (docs/stage_server_auth_2026-09-02.md) --
+# a local operator-chosen token, never committed.
+/tools/.stage_token
+
+# Built artifacts staged for the hardware card (copy manually, never commit)
+/tools/hw_card_package/*.dol
+/test_far_slot_deadlock_stderr.txt
+.handoff/
+
+# Local-only clutter (2026-10-11 main-folder cleanup)
+/test_*_[0-9]*/
+/output/
+/.token-saver/
+/world
+artwork/earth-and-ash-audio/recorded-sources/
+# Agent loop lane scratch (never commit; keeps the Wii build stamp clean)
+.claude/loop/state/
+/SPEC.md
+/backlog.yaml
+/PARKING_LOT.md
+/PROGRESS.md
+
+# Test litter until IN-012 fixes the tests that write it into the repo root.
+/.cw-client-maps-*/
+
+# Local secrets/paths (never committed)
+.env.local
+
+# PyInstaller build output (Pack Helper / CavEX Asset Importer)
+dist/

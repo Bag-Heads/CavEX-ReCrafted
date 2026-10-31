@@ -24,7 +24,123 @@
 #include "../platform/gfx.h"
 #include "gfx_util.h"
 
+// Beta 1.7.3 [740c583 RenderGlobal.renderStars / starGLCallList] bakes the
+// whole star field ONCE (Random(10842L), 1500 rejection-sampled candidates,
+// each quad given its own fixed random roll baked into an outward-facing
+// basis derived from the star's own direction) into a GL_COMPILE display
+// list; renderSky() just replays it every frame under a glColor4f brightness
+// multiply. There is no view-matrix/camera term anywhere in Beta's method.
+//
+// This port used to recompute a camera-facing BILLBOARD (view_matrix-derived
+// right/up) for all 1000 stars every single frame -- wrong per the decompile
+// above (an undocumented deviation, see docs/deviations.md) and expensive
+// (2000 rand() + ~4000 trig calls + 1000 separate GX_Begin/End draws each
+// frame the stars are visible). Fixed here: orientation now matches Beta
+// (fixed per-star roll, baked once, no camera dependency), which also makes
+// the geometry itself frame-invariant -- it is computed once on first use
+// and then only re-emitted through ONE gfx_draw_quads_flt call per frame.
+//
+// Scope note: this patch changes ORIENTATION DISCIPLINE only (billboard ->
+// fixed bake), matching Beta's structure. It deliberately keeps this port's
+// existing star VALUES unchanged (seed 42, count 1000, direct theta/phi
+// sampling, fixed size 0.2) rather than adopting Beta's 10842/1500 rejection-
+// sampling/0.25-0.5 varying size -- those are additional, separately flagged
+// deviations (see docs/deviations.md) that are P1LGR1M's faithfulness call,
+// not bundled into this fix.
+//
+// Mechanism note: Beta's baked list carries NO per-vertex color at all --
+// brightness is a GL global-color multiply applied outside the display list.
+// This port's shared `struct displaylist` GX abstraction (source/platform/
+// displaylist.h, used by chunks/entities/items) has no equivalent: its CLR0
+// slot is a block/sky LIGHT INDEX (0-15, no alpha channel at all -- see
+// displaylist_color(), wii/displaylist.c:189 and pc/displaylist.c:120), so it
+// cannot represent the day/night alpha fade. Reproducing Beta's exact
+// mechanism would mean a GX constant-color register path (GX_SetChanMatColor
+// + GX_SRC_REG) -- either extending that shared abstraction or writing
+// bespoke raw GX list code, both real Wii/GX platform changes needing
+// devkitPPC + real-hardware proof. Deferred as a documented follow-up (it
+// composes cleanly on top of this patch's baked geometry). This patch instead
+// keeps drawing through gfx_draw_quads_flt (VTXFMT1, F32 pos + RGBA8 color --
+// already alpha-capable, already proven on both platforms): with billboarding
+// gone the position/texcoord buffers are genuinely static forever after the
+// first bake, and the color buffer is only rewritten on the ticks alpha
+// actually changes (the ~2000-tick dawn/dusk windows), never during steady
+// day/night -- still a single draw call, zero redundant rand()/trig work.
+#define GUTIL_STAR_COUNT 1000
+static bool s_star_baked = false;
+static float s_star_verts[GUTIL_STAR_COUNT * 4 * 3];
+static float s_star_texcoords[GUTIL_STAR_COUNT * 4 * 2];
+static uint8_t s_star_colors[GUTIL_STAR_COUNT * 4 * 4];
+// Sentinel outside uint8_t's normal range semantics (any real alpha 0-255 is
+// valid) -- use a separate "have we baked a color buffer yet" flag instead of
+// overloading a byte value, so alpha==0 (a legitimately re-bakeable state)
+// never gets mistaken for "never baked".
+static bool s_star_color_baked = false;
+static uint8_t s_star_alpha_baked = 0;
+
+static void gutil_bake_star_geometry(void) {
+	if(s_star_baked)
+		return;
+
+	const float scale = 0.2f;  // star size -- unchanged from the port's existing value
+	const float radius = 90.0f;
+	static const float texcoords[8] = {0.0f, 0.0f, 1.0f, 0.0f,
+									   1.0f, 1.0f, 0.0f, 1.0f};
+
+	srand(42);
+
+	for(int i = 0; i < GUTIL_STAR_COUNT; i++) {
+		float theta = glm_rad(rand() % 360);
+		float phi = glm_rad(rand() % 180);
+
+		float x = cosf(theta) * sinf(phi) * radius;
+		float y = cosf(phi) * radius;
+		float z = sinf(theta) * sinf(phi) * radius;
+
+		// Outward-facing basis from the star's OWN (normalized) direction --
+		// Beta's var20 (yaw, atan2 of x,z) / var26 (pitch, atan2 of the
+		// horizontal magnitude and y) -- plus an independent per-star random
+		// roll (Beta's var32), all fixed here at bake time. [740c583
+		// RenderGlobal.renderStars]
+		float dirlen = sqrtf(x * x + y * y + z * z);
+		float ux = x / dirlen, uy = y / dirlen, uz = z / dirlen;
+		float yaw = atan2f(ux, uz);
+		float pitch = atan2f(sqrtf(ux * ux + uz * uz), uy);
+		float roll = (rand() / (float)RAND_MAX) * (2.0f * GLM_PIf);
+
+		float sy = sinf(yaw), cy = cosf(yaw);
+		float sp = sinf(pitch), cp = cosf(pitch);
+		float sr = sinf(roll), cr = cosf(roll);
+
+		for(int c = 0; c < 4; c++) {
+			// Corner local offsets before rotation -- Beta's (var41,var43)
+			// pattern: (-s,-s),(-s,+s),(+s,+s),(+s,-s).
+			float lx = ((c & 2) ? 1.0f : -1.0f) * scale;
+			float lz = (((c + 1) & 2) ? 1.0f : -1.0f) * scale;
+
+			float rx = lx * cr - lz * sr;  // Beta's rotated x
+			float rz = lz * cr + lx * sr;  // Beta's rotated z
+			float world_dy = rx * sp;      // Beta's world dy
+			float t = -rx * cp;            // Beta's t
+			float world_dx = t * sy - rz * cy;  // Beta's world dx
+			float world_dz = rz * sy + t * cy;  // Beta's world dz
+
+			int vi = (i * 4 + c) * 3;
+			s_star_verts[vi + 0] = x + world_dx;
+			s_star_verts[vi + 1] = y + world_dy;
+			s_star_verts[vi + 2] = z + world_dz;
+
+			int ti = (i * 4 + c) * 2;
+			s_star_texcoords[ti + 0] = texcoords[c * 2 + 0];
+			s_star_texcoords[ti + 1] = texcoords[c * 2 + 1];
+		}
+	}
+
+	s_star_baked = true;
+}
+
 static void gutil_render_stars(mat4 view_matrix, float time) {
+	(void)view_matrix;  // no longer billboard-facing; kept for call-site compat
 	float fade = 0.0f;
 	float day_ticks = fmodf(time, 24000.0f);
 
@@ -37,11 +153,25 @@ static void gutil_render_stars(mat4 view_matrix, float time) {
 	else
 	    fade = 0.0f;
 
-	float scale = 0.2f; // star size. 0.2 seems about right Bigger than this
-
 	uint8_t star_alpha = (uint8_t)(fade * 255.0f);
 	if (star_alpha == 0)
 		return;
+
+	gutil_bake_star_geometry();
+
+	if(!s_star_color_baked || s_star_alpha_baked != star_alpha) {
+		uint8_t star_r = 180;
+		uint8_t star_g = 190;
+		uint8_t star_b = 255;
+		for(int v = 0; v < GUTIL_STAR_COUNT * 4; v++) {
+			s_star_colors[v * 4 + 0] = star_r;
+			s_star_colors[v * 4 + 1] = star_g;
+			s_star_colors[v * 4 + 2] = star_b;
+			s_star_colors[v * 4 + 3] = star_alpha;
+		}
+		s_star_alpha_baked = star_alpha;
+		s_star_color_baked = true;
+	}
 
 	gfx_texture(false);
 	gfx_lighting(false);
@@ -49,65 +179,8 @@ static void gutil_render_stars(mat4 view_matrix, float time) {
 	gfx_alpha_test(false);
 	gfx_cull_func(MODE_NONE);
 
-	srand(42);
-
-	uint8_t star_r = 180;
-	uint8_t star_g = 190;
-	uint8_t star_b = 255;
-
-	for (int i = 0; i < 1000; i++) {
-	    float theta = glm_rad(rand() % 360);
-	    float phi = glm_rad(rand() % 180);
-	    float radius = 90.0f;
-
-	    float x = cosf(theta) * sinf(phi) * radius;
-	    float y = cosf(phi) * radius;
-	    float z = sinf(theta) * sinf(phi) * radius;
-
-	    vec3 pos = {x, y, z};
-
-	    // billboard-quads zoals bij particles
-	    float vertices[12];
-	    float texcoords[8] = {
-	        0.0f, 0.0f,
-	        1.0f, 0.0f,
-	        1.0f, 1.0f,
-	        0.0f, 1.0f
-	    };
-	    uint8_t colors[16] = {
-	        star_r, star_g, star_b, star_alpha,
-	        star_r, star_g, star_b, star_alpha,
-	        star_r, star_g, star_b, star_alpha,
-	        star_r, star_g, star_b, star_alpha
-	    };
-
-	    vec3 right = {
-	        view_matrix[0][0],
-	        view_matrix[1][0],
-	        view_matrix[2][0]
-	    };
-	    vec3 up = {
-	        view_matrix[0][1],
-	        view_matrix[1][1],
-	        view_matrix[2][1]
-	    };
-
-	    glm_vec3_scale(right, scale, right);
-	    glm_vec3_scale(up, scale, up);
-
-	    vec3 v0, v1, v2, v3;
-	    glm_vec3_sub(pos, right, v0); glm_vec3_add(v0, up, v0); // top-left
-	    glm_vec3_add(pos, right, v1); glm_vec3_add(v1, up, v1); // top-right
-	    glm_vec3_add(pos, right, v2); glm_vec3_sub(v2, up, v2); // bottom-right
-	    glm_vec3_sub(pos, right, v3); glm_vec3_sub(v3, up, v3); // bottom-left
-
-	    memcpy(vertices +  0, v0, sizeof(vec3));
-	    memcpy(vertices +  3, v1, sizeof(vec3));
-	    memcpy(vertices +  6, v2, sizeof(vec3));
-	    memcpy(vertices +  9, v3, sizeof(vec3));
-
-	    gfx_draw_quads_flt(4, vertices, colors, texcoords);
-	}
+	gfx_draw_quads_flt(GUTIL_STAR_COUNT * 4, s_star_verts, s_star_colors,
+					   s_star_texcoords);
 
 	gfx_alpha_test(true);
 	gfx_blending(MODE_OFF);
@@ -118,23 +191,27 @@ static void gutil_render_stars(mat4 view_matrix, float time) {
 
 
 void gutil_clouds(mat4 view_matrix, float brightness) {
+	gutil_clouds_owned(view_matrix, brightness, &gstate.players[0].camera, time_get());
+}
+
+void gutil_clouds_owned(mat4 view_matrix, float brightness, const struct camera* camera, ptime_t now) {
 	assert(view_matrix);
 
 	float cloud_pos = (gstate.world_time
-					   + time_diff_s(gstate.world_time_start, time_get())
+					   + time_diff_s(gstate.world_time_start, now)
 						   * 1000.0F / DAY_TICK_MS)
 		* 12.0F / 400.0F;
 
-	vec3 shift = {roundf(gstate.camera.x / 12.0F) * 12.0F
+	vec3 shift = {roundf(camera->x / 12.0F) * 12.0F
 					  - (cloud_pos - roundf(cloud_pos / 12.0F) * 12.0F),
-				  108.5F, roundf(gstate.camera.z / 12.0F) * 12.0F};
+				  108.5F, roundf(camera->z / 12.0F) * 12.0F};
 
 	mat4 model_view;
 	glm_translate_to(view_matrix, shift, model_view);
 	gfx_matrix_modelview(model_view);
 
 	gfx_fog(true);
-	gfx_fog_pos(shift[0] - gstate.camera.x, shift[2] - gstate.camera.z,
+	gfx_fog_pos(shift[0] - camera->x, shift[2] - camera->z,
 				gstate.config.fog_distance * 1.5F);
 	gfx_texture(false);
 	gfx_blending(MODE_BLEND);
@@ -142,13 +219,53 @@ void gutil_clouds(mat4 view_matrix, float brightness) {
 	gfx_cull_func(MODE_NONE);
 	gfx_write_buffers(false, true, true);
 
-	int ox = roundf(gstate.camera.x / 12.0F) + roundf(cloud_pos / 12.0F);
-	int oy = roundf(gstate.camera.z / 12.0F);
+	int ox = roundf(camera->x / 12.0F) + roundf(cloud_pos / 12.0F);
+	int oy = roundf(camera->z / 12.0F);
 
 	uint8_t shade[6] = {
 		roundf(brightness * 1.0F * 255),  roundf(brightness * 0.75F * 255),
 		roundf(brightness * 0.84F * 255), roundf(brightness * 0.84F * 255),
 		roundf(brightness * 0.92F * 255), roundf(brightness * 0.92F * 255),
+	};
+
+	// FACE-CULLING (2026-06-13 cloud reduction, wf_906f4fa3): the old code emitted
+	// an unconditional 24-vert 6-face solid cube for EVERY opaque cell of a 33x33
+	// grid, TWICE = up to ~52k immediate verts/frame (the GP-saturation freeze's
+	// dominant producer). Beta's own renderCloudsFancy culls per-face -- interior
+	// cells draw only top+bottom; side faces only at exposed edges. Match that:
+	// precompute the opacity grid ONCE (was a texture lookup per cell PER pass),
+	// then per cell emit top+bottom (always) + each side ONLY where the abutting
+	// cell is transparent. Removes the occluded interior side faces -- a faithful
+	// cut (the dropped faces were never visible), not a shortcut. ~2-3x fewer
+	// verts; the silhouette is identical (only shared interior faces vanish).
+	#define CLOUD_GRID 33 // x,y in [-16,16] inclusive
+	uint8_t op[CLOUD_GRID * CLOUD_GRID];
+	for(int y = -16; y <= 16; y++)
+		for(int x = -16; x <= 16; x++) {
+			uint8_t c[4];
+			tex_gfx_lookup(&texture_clouds, ox + x, oy + y, c);
+			op[(y + 16) * CLOUD_GRID + (x + 16)] = c[3] >= 128;
+		}
+	// Out-of-grid neighbours read NOT opaque, so the field perimeter keeps its
+	// side faces (an off-bitmap edge must never be culled).
+	#define CLOUD_OP(X, Y)                                                       \
+		((X) >= -16 && (X) <= 16 && (Y) >= -16 && (Y) <= 16                       \
+		 && op[((Y) + 16) * CLOUD_GRID + ((X) + 16)])
+
+	// Each face: 4 verts encoded (xb,yb,zb) selecting min/box per axis
+	// (X=min[0]/box[0], Y=min[2]/box[2] the 0..4 thickness, Z=min[1]/box[1]);
+	// shade index; (dx,dy) of the neighbour cell that occludes it (8,8 = never).
+	static const struct {
+		uint8_t v[4][3];
+		uint8_t shade;
+		int8_t dx, dy;
+	} FACES[6] = {
+		{{{0, 1, 0}, {1, 1, 0}, {1, 1, 1}, {0, 1, 1}}, 0, 8, 8},  // top
+		{{{0, 0, 0}, {0, 0, 1}, {1, 0, 1}, {1, 0, 0}}, 1, 8, 8},  // bottom
+		{{{0, 1, 0}, {0, 0, 0}, {1, 0, 0}, {1, 1, 0}}, 2, 0, -1}, // -Z (back)
+		{{{0, 1, 1}, {1, 1, 1}, {1, 0, 1}, {0, 0, 1}}, 3, 0, 1},  // +Z (front)
+		{{{1, 0, 0}, {1, 0, 1}, {1, 1, 1}, {1, 1, 0}}, 4, 1, 0},  // +X (right)
+		{{{0, 0, 0}, {0, 1, 0}, {0, 1, 1}, {0, 0, 1}}, 5, -1, 0}, // -X (left)
 	};
 
 	for(int k = 0; k < 2; k++) {
@@ -157,86 +274,83 @@ void gutil_clouds(mat4 view_matrix, float brightness) {
 
 		for(int y = -16; y <= 16; y++) {
 			for(int x = -16; x <= 16; x++) {
-				uint8_t color[4];
-				tex_gfx_lookup(&texture_clouds, ox + x, oy + y, color);
+				if(!CLOUD_OP(x, y))
+					continue;
 
-				if(color[3] >= 128) {
-					int16_t min[] = {x * 12, y * 12, 0};
-					int16_t box[] = {x * 12 + 12, y * 12 + 12, 4};
+				int16_t ax[2] = {x * 12, x * 12 + 12};   // min[0], box[0]
+				int16_t ay[2] = {0, 4};                  // min[2], box[2]
+				int16_t az[2] = {y * 12, y * 12 + 12};   // min[1], box[1]
 
-					// top, bottom, back, front, right, left
-					gfx_draw_quads(
-						24,
-						(int16_t[]) {
-							min[0], box[2], min[1], box[0], box[2], min[1],
-							box[0], box[2], box[1], min[0], box[2], box[1],
+				int16_t verts[6 * 4 * 3];
+				uint8_t cols[6 * 4 * 4];
+				uint16_t tex[6 * 4 * 2] = {0}; // texturing off; dead but VTXFMT2-shaped
+				int nv = 0;
 
-							min[0], min[2], min[1], min[0], min[2], box[1],
-							box[0], min[2], box[1], box[0], min[2], min[1],
-
-							min[0], box[2], min[1], min[0], min[2], min[1],
-							box[0], min[2], min[1], box[0], box[2], min[1],
-
-							min[0], box[2], box[1], box[0], box[2], box[1],
-							box[0], min[2], box[1], min[0], min[2], box[1],
-
-							box[0], min[2], min[1], box[0], min[2], box[1],
-							box[0], box[2], box[1], box[0], box[2], min[1],
-
-							min[0], min[2], min[1], min[0], box[2], min[1],
-							min[0], box[2], box[1], min[0], min[2], box[1],
-						},
-						(uint8_t[]) {
-							shade[0], shade[0], shade[0], 0xBF,
-							shade[0], shade[0], shade[0], 0xBF,
-							shade[0], shade[0], shade[0], 0xBF,
-							shade[0], shade[0], shade[0], 0xBF,
-
-							shade[1], shade[1], shade[1], 0xBF,
-							shade[1], shade[1], shade[1], 0xBF,
-							shade[1], shade[1], shade[1], 0xBF,
-							shade[1], shade[1], shade[1], 0xBF,
-
-							shade[2], shade[2], shade[2], 0xBF,
-							shade[2], shade[2], shade[2], 0xBF,
-							shade[2], shade[2], shade[2], 0xBF,
-							shade[2], shade[2], shade[2], 0xBF,
-
-							shade[3], shade[3], shade[3], 0xBF,
-							shade[3], shade[3], shade[3], 0xBF,
-							shade[3], shade[3], shade[3], 0xBF,
-							shade[3], shade[3], shade[3], 0xBF,
-
-							shade[4], shade[4], shade[4], 0xBF,
-							shade[4], shade[4], shade[4], 0xBF,
-							shade[4], shade[4], shade[4], 0xBF,
-							shade[4], shade[4], shade[4], 0xBF,
-
-							shade[5], shade[5], shade[5], 0xBF,
-							shade[5], shade[5], shade[5], 0xBF,
-							shade[5], shade[5], shade[5], 0xBF,
-							shade[5], shade[5], shade[5], 0xBF,
-						},
-						(uint16_t[]) {
-							0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-							0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-							0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-						});
+				for(int f = 0; f < 6; f++) {
+					if(FACES[f].dx != 8
+					   && CLOUD_OP(x + FACES[f].dx, y + FACES[f].dy))
+						continue; // shared interior face -- occluded, skip
+					uint8_t s = shade[FACES[f].shade];
+					for(int i = 0; i < 4; i++) {
+						verts[nv * 3 + 0] = ax[FACES[f].v[i][0]];
+						verts[nv * 3 + 1] = ay[FACES[f].v[i][1]];
+						verts[nv * 3 + 2] = az[FACES[f].v[i][2]];
+						cols[nv * 4 + 0] = s;
+						cols[nv * 4 + 1] = s;
+						cols[nv * 4 + 2] = s;
+						cols[nv * 4 + 3] = 0xBF;
+						nv++;
+					}
 				}
+
+				if(nv)
+					gfx_draw_quads(nv, verts, cols, tex);
 			}
 		}
 	}
+	#undef CLOUD_OP
+	#undef CLOUD_GRID
 
 	gfx_write_buffers(true, true, true);
 	gfx_blending(MODE_OFF);
 	gfx_texture(true);
 	gfx_cull_func(MODE_BACK);
 	gfx_fog(false);
+	// Mandatory restore (gutil_sky_box precedent, 95159f6, same file): the
+	// gfx_lighting(false) at this function's top was never paired with a
+	// restore, leaving CLR0 in DIRECT for whatever draws next. gutil_clouds
+	// is called exactly once per frame (main.c, overworld only) and is
+	// IMMEDIATELY followed by gfx_mode_gui(), which itself unconditionally
+	// re-asserts gfx_lighting(false) -- so this omission produces no
+	// observable symptom in the current call graph (verified: the only
+	// caller has no draw call between gutil_clouds and gfx_mode_gui). That is
+	// exactly the accidental-ordering dependency gutil_sky_box had before
+	// 95159f6 fixed it: correctness rode on what happens to run next, not on
+	// this function's own contract. Restore explicitly so a future caller
+	// (e.g. a debug/HUD draw inserted between clouds and gfx_mode_gui) can't
+	// silently reintroduce the CLR0-desync hang class. Restored last, matching
+	// the established idiom (gutil_sky_box's own tail, render_weather.c).
+	gfx_lighting(true);
 }
 
 void gutil_sky_box(mat4 view_matrix, float celestial_angle, vec3 color_top,
 				   vec3 color_bottom) {
+	gutil_sky_box_owned(view_matrix, celestial_angle, color_top, color_bottom,
+		&gstate.players[0].camera);
+}
+
+void gutil_sky_box_owned(mat4 view_matrix, float celestial_angle, vec3 color_top,
+	vec3 color_bottom, const struct camera* camera) {
 	assert(view_matrix && color_top && color_bottom);
+	/* Celestial quads reach 109 blocks from the eye. Split terrain can
+	 * clip at 96: using that projection clips a centred sun/moon while
+	 * leaving it visible off-axis. Sky writes no depth, so extend only
+	 * this pass and restore the owner's terrain projection below. */
+	mat4 sky_projection;
+	glm_mat4_copy((vec4*)camera->projection, sky_projection);
+	if(gstate.config.render_distance < 128.0F)
+		glm_persp_move_far(sky_projection, 128.0F - gstate.config.render_distance);
+	gfx_matrix_projection(sky_projection, true);
 
 	gfx_alpha_test(false);
 	gfx_write_buffers(true, false, false);
@@ -247,7 +361,7 @@ void gutil_sky_box(mat4 view_matrix, float celestial_angle, vec3 color_top,
 
 	mat4 model_view;
 	glm_translate_to(view_matrix,
-					 (vec3) {gstate.camera.x, gstate.camera.y, gstate.camera.z},
+					 (vec3) {camera->x, camera->y, camera->z},
 					 model_view);
 	gfx_matrix_modelview(model_view);
 	gfx_fog_pos(0, 0, gstate.config.fog_distance);
@@ -283,7 +397,7 @@ void gutil_sky_box(mat4 view_matrix, float celestial_angle, vec3 color_top,
 
 	mat4 tmp;
 	glm_translate_to(view_matrix,
-					 (vec3) {gstate.camera.x, gstate.camera.y, gstate.camera.z},
+					 (vec3) {camera->x, camera->y, camera->z},
 					 tmp);
 	glm_rotate_x(tmp, glm_rad(celestial_angle * 360.0F), model_view);
 	gfx_matrix_modelview(model_view);
@@ -307,6 +421,14 @@ void gutil_sky_box(mat4 view_matrix, float celestial_angle, vec3 color_top,
 	gfx_blending(MODE_OFF);
 	gfx_write_buffers(true, true, true);
 	gfx_alpha_test(true);
+	gfx_matrix_projection((vec4*)camera->projection, true);
+	// Mandatory restore (render_name_tag_draw_pass precedent): gfx_lighting(false)
+	// at the top of this function was NEVER paired with a restore, so every
+	// frame's sky box left CLR0 in DIRECT mode for whatever drew next
+	// (world_render only happened to survive it by setting its own state) --
+	// exactly the CLR0-desync class that has hung the Wii before (render_item.c,
+	// render_weather.c). Restore lighting last, matching that idiom.
+	gfx_lighting(true);
 }
 
 void gutil_block_selection(mat4 view_matrix, struct block_info* this) {
@@ -396,7 +518,21 @@ void gutil_block_selection(mat4 view_matrix, struct block_info* this) {
 
 void gutil_entity_selection(mat4 view_matrix, const struct entity *e) {
     assert(view_matrix && e);
-    assert(e->getBoundingBox != NULL);
+    // Fix (painting-slice capture, 2026-09-01): screen_ingame.c's render3D
+    // calls this for EVERY crosshair-hit entity with type != LOCAL_PLAYER/
+    // ITEM -- which includes ENTITY_PAINTING, the one entity kind in this
+    // engine whose e->getBoundingBox is intentionally NULL (Beta's own
+    // EntityPainting has no getEntityBoundingBox() override either -- see
+    // entity_painting.c's entity_painting() assignment and its long
+    // "findings #1/#2" comment). The old unconditional assert was compiled
+    // out under NDEBUG (release), which would have turned this into a raw
+    // e->getBoundingBox(...) call through a NULL function pointer the
+    // instant a player looked at a placed painting -- undefined behavior in
+    // exactly the release build real hardware ships. A painting genuinely
+    // has no bounding box to outline here (Beta shows no such highlight for
+    // it either); skip drawing one instead of crashing/UB-ing.
+    if(!e->getBoundingBox)
+        return;
 
     struct AABB box;
     size_t count = e->getBoundingBox(e, &box);

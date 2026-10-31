@@ -25,7 +25,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "items.h"
+#include "item_types.h"
 
 struct recipe {
 	struct item_data result;
@@ -40,10 +40,37 @@ ARRAY_DEF(array_recipe, struct recipe, M_POD_OPLIST)
 
 extern array_recipe_t recipes_crafting;
 
+// FH-09: Beta's ShapelessRecipes engine (CraftingManager.addShapelessRecipe /
+// ShapelessRecipes.matches). Unlike `struct recipe` above, a shapeless recipe
+// carries no width/height/position -- it is a bag of up to 9 required
+// ingredients that must each match exactly one non-empty grid slot (any
+// position, list-removal semantics), with no unmatched slots and no leftover
+// ingredients. `match_durability` mirrors the shaped engine's field: false is
+// Beta's ItemStack damage == -1 wildcard, true enforces the exact damage/meta
+// (dye colour, wool colour, ...). [740c583 ShapelessRecipes.java]
+struct recipe_shapeless {
+	struct item_data result;
+	size_t count;
+	struct recipe_shapeless_ingredient {
+		struct item_data item;
+		bool match_durability;
+	} ingredients[9];
+};
+
+ARRAY_DEF(array_recipe_shapeless, struct recipe_shapeless, M_POD_OPLIST)
+
+extern array_recipe_shapeless_t recipes_crafting_shapeless;
+
 void recipe_init(void);
 void recipe_add(array_recipe_t recipes, struct item_data result, size_t width,
 				size_t height, uint8_t* shape, ...);
 bool recipe_match(array_recipe_t recipes, struct item_data slots[9],
 				  bool slot_empty[9], struct item_data* result);
+
+void recipe_shapeless_add(array_recipe_shapeless_t recipes,
+						  struct item_data result, size_t count, ...);
+bool recipe_match_shapeless(array_recipe_shapeless_t recipes,
+							struct item_data slots[9], bool slot_empty[9],
+							struct item_data* result);
 
 #endif

@@ -20,6 +20,7 @@
 #include <assert.h>
 
 #include "render_model.h"
+#include "../item/items.h" // direct include (was transitive via render_model.h pre-split)
 
 void render_model_box(mat4 view, vec3 position, vec3 pivot, vec3 rotation,
 					  ivec2 origin, ivec3 box, float padding, bool mirror,
@@ -244,6 +245,17 @@ void render_model_player(mat4 mv, float head_pitch, float head_yaw,
 			// pumpkin etc.
 			helmet_it->renderItem(helmet_it, helmet, mv_item, true,
 								  R_ITEM_ENV_ENTITY);
+			// CRITICAL re-assert (GX-wedge audit 2026-06-11, the live sibling
+			// of the e3a277a6 CLR0 desync): render_item_* ends with
+			// gfx_lighting(env == R_ITEM_ENV_ENTITY) == TRUE, i.e. CLR0=INDEX8
+			// -- correct for the world entity pass that rule was written for,
+			// but THIS caller runs inside the GUI pass (gfx_mode_gui ->
+			// CLR0=DIRECT). The very next direct-colour draw (worn armor box,
+			// flat item slot, the slot highlight) would stream 14-byte
+			// vertices against an 11-byte descriptor: the GP parses the
+			// surplus bytes as opcodes and WEDGES (cmdIdle=0 at the next
+			// GX_WaitDrawDone -- the 2026-06-11 console hang signature).
+			gfx_lighting(false);
 		} else {
 			gfx_bind_texture(armor_texture[helmet_it->armor.tier][0]);
 

@@ -1,0 +1,114 @@
+# Retained regression-seed corpus (ASTRA-SEED-POLICY-0925). tools/test_seed_matrix.py
+# replays EVERY row on every run before exploring. Never delete a row: when the
+# engine defect is fixed or the fixture establishes its prerequisites, flip
+# `expect` to pass (and keep the row) so the seed stays a regression guard.
+#
+# Columns (tab-separated): test  var  seed  expect(pass|fail)  classification  note
+#   var: CW_TEST_SEED (clock-seeded default) or CW_TEST_SEED_FORCE (overrides a
+#        pinned scenario seed via rand_test_scenario_seed)
+#   classification: engine-defect | fixture-assumption | open  (+ status)
+#
+# test_lava_aabb_golden: 45/200 of odd seeds 1..399 failed "A side-overlap mob
+# fire: actual=600 expected=601" (8e93dc05). Identical per-seed outcome with
+# d2e471b6 reverted, so not a code change. The case's tick 1 runs before the
+# loop that re-pins the creeper's position/velocity, so the random draws decide
+# whether the burning-box +1 lands: the fixture assumes a tick-1 geometry it
+# does not establish. Instrumented (scratch, 2026-09-25): spawn_creeper's random
+# initial velocity is applied in tick 1; seeds whose x velocity is <= ~-0.136
+# (e.g. 5: -0.1498, 37: -0.2155) end tick 1 at x <= 8.70, box max <= 9.00, i.e.
+# no strict overlap with the lava cell at x=9 -> no burning-box +1; passing
+# seeds (3: -0.0985, 7: -0.1282) stay inside. Engine behaviour is consistent;
+# the fixture must zero the spawn velocity (or assert the overlap) before tick 1.
+#
+# test_giant_box_golden: case 6b "width lava x=2, west chunk resident, fire:
+# actual=600 expected=601" -- same class (24aca0d6: the clock seed moved the
+# giant off the lava side cell); found by --explore-scenarios, seed base
+# 20260925. Not separately instrumented.
+#
+# RESOLUTION 2026-09-25 (same day): the spawn helper's random initial velocity
+# is NOT Beta (Entity/EntityLiving constructors set no motion; SpawnerAnimals
+# / TileEntityMobSpawner / EntitySlime children set none either) -- CaveWii's
+# server_local_spawn_monster_at adds a random 0.05..0.25 vector and draws 4
+# World.rand values for it (engine parity question, reported separately, NOT
+# changed here). lava_aabb, giant_box and mob_lava_demo now zero it before
+# tick 1 and assert their contact prerequisite before AND after the tick: all
+# their rows flipped to expect=pass (fixture-assumption, fixed).
+#
+# test_mob_lava_aabb_golden (already spawned at rest): its 3 rows stay
+# expect=fail. Instrumented: the S0 control spider moves +0.0437 x on tick 1
+# (maxX 9.0 -> 9.04) -- Beta's EntityCreature.updatePlayerActionState can
+# start a wander path on the first tick (rand.nextInt(80) x2) and moveEntity
+# steps along it; CaveWii's port does the same. The control sat EXACTLY on
+# the face, so Beta itself would sometimes burn it. Lead decision (same day):
+# the control's purpose is "out of reach" -> moved to x 7.8 (maxX 8.5, 0.5
+# block off the face), prerequisite asserted before/after tick 1, expected
+# 20 / -1 unchanged; its 4 rows flipped to expect=pass.
+# G1 review F1 (same day): moving the control lost the only exact-face
+# "no contact" coverage (the burning box's 0.001 contraction). It is back at
+# x 8.3 (maxX exactly 9.0), held still by boxing it in so no wander PATH
+# exists (not by a seed); the contraction mutation now fails the test.
+#
+# (original note) test_mob_lava_aabb_golden: "S0 spider control (lava out of reach) health:
+# actual=19 expected=20" (3/100, seed base 0925b) -- the control spider's
+# random wander reaches the lava (90795096's diagnosis): the control fixture
+# does not hold the spider out of reach. Not separately instrumented.
+# test_mob_lava_demo: contact creeper fire_time != 601 (4/100, seed base
+# 0925b) -- the tick-1 wander/spawn velocity leaves the contact geometry, as in
+# test_lava_aabb_golden. Not separately instrumented.
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	5	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	37	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	41	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	43	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	53	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	57	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	59	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	85	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	89	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	101	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	103	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	105	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	107	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	117	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	123	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	135	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	137	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	149	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	151	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	153	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	155	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	169	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	199	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	201	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	203	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	215	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	217	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	219	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	249	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	277	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	293	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	295	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	297	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	299	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	311	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	343	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	347	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	357	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	359	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	361	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	373	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	375	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	377	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	389	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	395	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 geometry not established: fire 600 vs 601
+test_lava_aabb_golden	CW_TEST_SEED_FORCE	0xA93A7AE2	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case A tick-1 spawn velocity -0.185 leaves the lava overlap: fire 600 vs 601
+test_giant_box_golden	CW_TEST_SEED_FORCE	0xADDAFB56	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case 6b tick-1 wander leaves the lava side cell: fire 600 vs 601
+test_giant_box_golden	CW_TEST_SEED_FORCE	0x3FB27D23	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case 6b tick-1 wander leaves the lava side cell: fire 600 vs 601
+test_giant_box_golden	CW_TEST_SEED_FORCE	0x9BAE3E5A	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	case 6b tick-1 wander leaves the lava side cell: fire 600 vs 601
+test_mob_lava_aabb_golden	CW_TEST_SEED_FORCE	0x9B531C01	pass	fixture-assumption (fixed: S0 control kept ON the face, wander path removed by an enclosure, prerequisite asserted; G1 review F1)	S0 control maxX exactly 9.0; wander +0.044 x -> burning-box contact: health 19 vs 20 (PREREQ-FAIL S0 after tick 1)
+test_mob_lava_aabb_golden	CW_TEST_SEED_FORCE	0x5B286280	pass	fixture-assumption (fixed: S0 control kept ON the face, wander path removed by an enclosure, prerequisite asserted; G1 review F1)	S0 control maxX exactly 9.0; wander +0.044 x -> burning-box contact: health 19 vs 20 (PREREQ-FAIL S0 after tick 1)
+test_mob_lava_aabb_golden	CW_TEST_SEED_FORCE	0xD573D094	pass	fixture-assumption (fixed: S0 control kept ON the face, wander path removed by an enclosure, prerequisite asserted; G1 review F1)	S0 control maxX exactly 9.0; wander +0.044 x -> burning-box contact: health 19 vs 20 (PREREQ-FAIL S0 after tick 1)
+test_mob_lava_demo	CW_TEST_SEED_FORCE	0xE26C0CAF	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	contact creeper leaves the lava contact: fire_time != 601
+test_mob_lava_demo	CW_TEST_SEED_FORCE	0x4782B2AF	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	contact creeper leaves the lava contact: fire_time != 601
+test_mob_lava_demo	CW_TEST_SEED_FORCE	0xC5A5B1C3	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	contact creeper leaves the lava contact: fire_time != 601
+test_mob_lava_demo	CW_TEST_SEED_FORCE	0xDE5FBC3F	pass	fixture-assumption (fixed: spawn velocity zeroed + contact prerequisite asserted)	contact creeper leaves the lava contact: fire_time != 601
+test_mob_lava_aabb_golden	CW_TEST_SEED_FORCE	0xAD123FEA	pass	fixture-assumption (fixed: S0 control kept ON the face, wander path removed by an enclosure, prerequisite asserted; G1 review F1)	S0 control maxX 9.0 -> 9.0281 after tick 1 (PREREQ-FAIL S0 after tick 1)

@@ -1,0 +1,431 @@
+# test_mesher_nongrass_equiv golden: non-grass chunk display lists, atlas slots/cells, lod grass skirts
+# provenance: tests/fixtures/grass/mesher_nongrass_equiv.provenance.txt
+# recorder note: base export of faeed2b58 (git archive), see provenance
+# 2026-10-30 spruce-leaf-1030: 48 mesh lines of leaf-bearing chunks re-pinned for Beta fast leaves (opaque tile 53/133, culled as an opaque cube); nothing else re-recorded
+# 2026-10-30 leaf-colour-1030: 36 mesh lines re-pinned -- spruce/birch leaf faces move from the biome-tinted list to the untinted list (BlockLeaves.colorMultiplier fixed pine/birch colour); nothing else re-recorded
+# 2026-10-31 oak-colour-1031: 49 lines re-pinned -- oak leaf faces in tinted columns sample the raw oak cell x biome foliage (tinted list), meta 3 = pine on the oak tile, baked oak cells 0x48B518 (ColorizerFoliage.func_31073_c); nothing else re-recorded
+texat_max 209
+atlas 0 slot 0 fnv 0cc5c119a8df3eb7
+atlas 1 slot 1 fnv 207217b26c760c5f
+atlas 2 slot 2 fnv 92eb2a3fb00cf28f
+atlas 3 slot 3 fnv 1589f706ff99b27e
+atlas 4 slot 4 fnv 748fdef254d16c7f
+atlas 5 slot 5 fnv f609ff3682ada0aa
+atlas 6 slot 6 fnv cd1ad393205944df
+atlas 7 slot 7 fnv 45cda43e12f0a7ef
+atlas 8 slot 8 fnv c3f45681bae88367
+atlas 9 slot 9 fnv 3d6d6b538d63189f
+atlas 10 slot 10 fnv 1fc7aa43f69abbd6
+atlas 11 slot 11 fnv 9f12ffcdd65d9043
+atlas 12 slot 12 fnv 68dc2e58c6d3d173
+atlas 13 slot 13 fnv 14964b9b3be8e70f
+atlas 14 slot 14 fnv 7323479b20163b7a
+atlas 15 slot 15 fnv 0d5b5c833cdd93ef
+atlas 16 slot 16 fnv 04a9d0a787f767af
+atlas 17 slot 17 fnv 3df3e1d00db82a27
+atlas 18 slot 18 fnv 23566e3e42b0f31f
+atlas 19 slot 19 fnv 5f556faabeb6b9b6
+atlas 20 slot 20 fnv 5056c626a2ac8fc3
+atlas 21 slot 21 fnv 0adcffe5ce1e9cf2
+atlas 22 slot 22 fnv fbddbd79092f2b1f
+atlas 23 slot 23 fnv c51ee1be199cf4c7
+atlas 24 slot 24 fnv 8ddccff7748cc2af
+atlas 25 slot 25 fnv 9f3cd1044c093b4f
+atlas 26 slot 26 fnv 2833b1d9e438e786
+atlas 27 slot 27 fnv 57a8f57629dcb01b
+atlas 28 slot 28 fnv 1d4a1844d8375ee2
+atlas 29 slot 29 fnv 1eac987abb7f450f
+atlas 30 slot 30 fnv 3eaa86602b0e40d7
+atlas 31 slot 31 fnv 5bee1d51a00f7b8f
+atlas 32 slot 32 fnv b8f45289c902262f
+atlas 33 slot 33 fnv 8efa8227da96d786
+atlas 34 slot 34 fnv cc8696b8a0d95d6f
+atlas 35 slot 35 fnv 61bc9926d7e0428f
+atlas 36 slot 36 fnv 40090155e630a797
+atlas 37 slot 37 fnv c6f94d376db152ee
+atlas 38 slot 38 fnv 4156914a5dc0f85f
+atlas 39 slot 39 fnv 19fea5f910a555ce
+atlas 40 slot 40 fnv 1c930fbd3bba0c0e
+atlas 41 slot 41 fnv 7e6f0201db648e37
+atlas 42 slot 42 fnv b35d600abd950b1f
+atlas 43 slot 43 fnv 0c518c9e301338bf
+atlas 44 slot 44 fnv eb37e75a653b504a
+atlas 45 slot 45 fnv dda575e40b3729fe
+atlas 46 slot 46 fnv 2d9e29c4d3a667c7
+atlas 47 slot 47 fnv 6816c394a6acbbcf
+atlas 48 slot 48 fnv 422d210c8d7351b7
+atlas 49 slot 49 fnv 040fab08236e4bd6
+atlas 50 slot 50 fnv 269f659053bf6fef
+atlas 51 slot 51 fnv 75b5c5234354091a
+atlas 52 slot 52 fnv 1258145706c73257
+atlas 53 slot 53 fnv 121da3c8f8fefbdf
+atlas 54 slot 54 fnv fd793c972ef448b7
+atlas 55 slot 55 fnv f10f1b64caa447e7
+atlas 56 slot 56 fnv b7c1de12a3c99276
+atlas 57 slot 57 fnv 0aa5559b2e47e8af
+atlas 58 slot 58 fnv 28748d615638004a
+atlas 59 slot 59 fnv 1f2c698c0e3d36f7
+atlas 60 slot 60 fnv 681e5c92bd960f2f
+atlas 61 slot 61 fnv 1698397b7eb7306f
+atlas 62 slot 62 fnv 208e434be815675f
+atlas 63 slot 63 fnv f6c301665c2e1117
+atlas 64 slot 64 fnv a4183cef37b6fa7a
+atlas 65 slot 79 fnv a03c2d8b9549fe8a
+atlas 66 slot 65 fnv 3ba518bb48967757
+atlas 67 slot 66 fnv a197730414df4f2f
+atlas 68 slot 67 fnv 079a2bd42d6d341f
+atlas 69 slot 68 fnv fb750c1141241a9f
+atlas 70 slot 69 fnv 78232931405749b3
+atlas 71 slot 70 fnv b570fd555972d80a
+atlas 72 slot 71 fnv cc018173c5a38817
+atlas 73 slot 72 fnv 0fe96290079977ff
+atlas 74 slot 73 fnv db588fa70df050a7
+atlas 75 slot 74 fnv 610d9c2ea3dc41b7
+atlas 76 slot 75 fnv b700d9c41ba70f4e
+atlas 77 slot 76 fnv 1d30bcc265151b03
+atlas 78 slot 77 fnv 9aa6a2eb9652bf06
+atlas 79 slot 78 fnv d5ccd34da02a936f
+atlas 80 slot 80 fnv 3481b947b6fdd997
+atlas 81 slot 81 fnv 3ae36a40f125337f
+atlas 82 slot 82 fnv b04ca4afcf1aa617
+atlas 83 slot 83 fnv 14bfd2c40b72b363
+atlas 84 slot 84 fnv e4cbc1eb7e572186
+atlas 85 slot 85 fnv c015c392ee74462f
+atlas 86 slot 86 fnv 651b3fd91856b45f
+atlas 87 slot 87 fnv e8684590527f8966
+atlas 88 slot 88 fnv 3be56276992a45a7
+atlas 89 slot 89 fnv 841665ae78a69f07
+atlas 90 slot 90 fnv d9f9496c8846f6e7
+atlas 91 slot 91 fnv 273cc4f8188985c7
+atlas 92 slot 92 fnv b00dae68e5525b57
+atlas 93 slot 93 fnv ec7df6e0b9e2b796
+atlas 94 slot 94 fnv c592dc5415a54027
+atlas 95 slot 95 fnv fabdadaa8975846e
+atlas 96 slot 96 fnv 211bb39bd99c3c87
+atlas 97 slot 97 fnv dbd7aed102d71236
+atlas 98 slot 98 fnv 121130d08a0ccc67
+atlas 99 slot 99 fnv 3dbcdd80272cafbe
+atlas 100 slot 100 fnv 2ffa60508b891d97
+atlas 101 slot 101 fnv 74a4de0917dac1df
+atlas 102 slot 102 fnv e21cc1c9d33138b7
+atlas 103 slot 103 fnv a0fad4c44fa0d0cf
+atlas 104 slot 104 fnv c0823864fb07a09e
+atlas 105 slot 105 fnv 2db611cca97a6dae
+atlas 106 slot 106 fnv a4f108d10666e24d
+atlas 107 slot 107 fnv b81758a5d8271bff
+atlas 108 slot 108 fnv 6538071983d01dba
+atlas 109 slot 109 fnv 7d380c624c1ad72a
+atlas 110 slot 110 fnv 366e8c49ce7a5516
+atlas 111 slot 111 fnv 259341ab4af8cfe3
+atlas 112 slot 112 fnv ddde33d61ece2d02
+atlas 113 slot 113 fnv 367004fd8ade34af
+atlas 114 slot 114 fnv c77e9c07c2e4dcd2
+atlas 115 slot 115 fnv dca3b797e16aa86f
+atlas 116 slot 116 fnv 58a5ead116875cb2
+atlas 117 slot 118 fnv cca262e7c78e631e
+atlas 118 slot 120 fnv 25157d7417a91a22
+atlas 119 slot 122 fnv 0db3ed9c2daf1e32
+atlas 120 slot 124 fnv 173c6f97c26aedf6
+atlas 121 slot 126 fnv 494c1843420322d2
+atlas 122 slot 128 fnv ee3a4c12fa39cd1e
+atlas 123 slot 130 fnv 4b0056bc7301d996
+atlas 124 slot 132 fnv 8704a2a8606991fa
+atlas 125 slot 134 fnv 1bc3d755c6367bf6
+atlas 126 slot 136 fnv 5eeb3159b1909daa
+atlas 127 slot 138 fnv b596594021977256
+atlas 128 slot 140 fnv 9696745e07316f96
+atlas 129 slot 142 fnv 12019edf7b200f4e
+atlas 130 slot 144 fnv 2e6b088f561a999a
+atlas 131 slot 146 fnv cb7745034bb48782
+atlas 132 slot 117 fnv fe069318cdabe7cb
+atlas 133 slot 119 fnv c962a88af720e4fb
+atlas 134 slot 121 fnv 71620c258e42dcc7
+atlas 135 slot 123 fnv d77a76ea41e964b3
+atlas 136 slot 125 fnv d7e3278e6bfa5733
+atlas 137 slot 127 fnv 7a49649d8b456fd3
+atlas 138 slot 129 fnv 2e97d44c67aec107
+atlas 139 slot 131 fnv 3015add3ed29d743
+atlas 140 slot 133 fnv 4b3ef13dcf18de83
+atlas 141 slot 135 fnv dc0848202d2c7377
+atlas 142 slot 137 fnv 0ed6b36b6c0c241f
+atlas 143 slot 139 fnv a534e431c6ac9023
+atlas 144 slot 141 fnv 51752c7f29ab4dc7
+atlas 145 slot 143 fnv 696b088231d312ef
+atlas 146 slot 145 fnv 0d913a30f84205e3
+atlas 147 slot 147 fnv 3375e8032ab5d54f
+atlas 148 slot 148 fnv 97c6bc7f2cf4b49e
+atlas 149 slot 149 fnv 98d5483245207cef
+atlas 150 slot 150 fnv 8fd202310c7f45be
+atlas 151 slot 151 fnv 46027fbf938a2eef
+atlas 152 slot 152 fnv 9c1b2b27c6eed70a
+atlas 153 slot 153 fnv 9bee80990adfc94e
+atlas 154 slot 154 fnv 2f2a35bc04d450af
+atlas 155 slot 155 fnv e3c47272fba7e827
+atlas 156 slot 156 fnv 94fc4f496bcaf4af
+atlas 157 slot 157 fnv 1d5c839b666f6ec7
+atlas 158 slot 158 fnv 7229a153e1b6976f
+atlas 159 slot 159 fnv 4df1714617ced9ff
+atlas 160 slot 160 fnv 73a4e62f5b6d10cf
+atlas 161 slot 161 fnv fcbd0a7f7ce99a17
+atlas 162 slot 162 fnv 4b3bf745a523d057
+atlas 163 slot 163 fnv c36eb44d39a69c9f
+atlas 164 slot 164 fnv 0fa75036ecc615e7
+atlas 165 slot 165 fnv 5e1b17cc886fc43f
+atlas 166 slot 166 fnv 3aad1a7b9e38445f
+atlas 167 slot 167 fnv c309e5ef07e20b27
+atlas 168 slot 168 fnv 78ea69c3d55b260f
+atlas 169 slot 170 fnv 0000000000000000
+atlas 170 slot 171 fnv 0000000000000000
+atlas 171 slot 172 fnv e8996bbaee1d1abe
+atlas 172 slot 173 fnv 0d59b14e2e9d93f7
+atlas 173 slot 174 fnv 94dc51f8e9c3f21f
+atlas 174 slot 169 fnv 0094ba069bb09147
+atlas 175 slot 175 fnv 66946e16d22cd366
+atlas 176 slot 176 fnv 222d42b5cf34edcf
+atlas 177 slot 177 fnv f0db50c79dd9cbff
+atlas 178 slot 178 fnv ed20312ae83e75a7
+atlas 179 slot 179 fnv ef2b8a2cd195f877
+atlas 180 slot 180 fnv 3cad236977384bd6
+atlas 181 slot 181 fnv 4848ecfabbf8d967
+atlas 182 slot 182 fnv 5a86bcdb7a8e212e
+atlas 183 slot 183 fnv 2696f00ba02b1be7
+atlas 184 slot 184 fnv acd6c0fe20a4c1ff
+atlas 185 slot 0 fnv 0cc5c119a8df3eb7
+atlas 186 slot 0 fnv 0cc5c119a8df3eb7
+atlas 187 slot 0 fnv 0cc5c119a8df3eb7
+atlas 188 slot 0 fnv 0cc5c119a8df3eb7
+atlas 189 slot 0 fnv 0cc5c119a8df3eb7
+atlas 190 slot 0 fnv 0cc5c119a8df3eb7
+atlas 191 slot 0 fnv 0cc5c119a8df3eb7
+atlas 192 slot 0 fnv 0cc5c119a8df3eb7
+atlas 193 slot 0 fnv 0cc5c119a8df3eb7
+atlas 194 slot 0 fnv 0cc5c119a8df3eb7
+atlas 195 slot 0 fnv 0cc5c119a8df3eb7
+atlas 196 slot 0 fnv 0cc5c119a8df3eb7
+atlas 197 slot 0 fnv 0cc5c119a8df3eb7
+atlas 198 slot 0 fnv 0cc5c119a8df3eb7
+atlas 199 slot 0 fnv 0cc5c119a8df3eb7
+atlas 200 slot 0 fnv 0cc5c119a8df3eb7
+atlas 201 slot 0 fnv 0cc5c119a8df3eb7
+atlas 202 slot 0 fnv 0cc5c119a8df3eb7
+atlas 203 slot 0 fnv 0cc5c119a8df3eb7
+atlas 204 slot 0 fnv 0cc5c119a8df3eb7
+atlas 205 slot 0 fnv 0cc5c119a8df3eb7
+atlas 206 slot 0 fnv 0cc5c119a8df3eb7
+atlas 207 slot 0 fnv 0cc5c119a8df3eb7
+atlas 208 slot 0 fnv 0cc5c119a8df3eb7
+mesh sparse 0 64 0 list 0 verts 1376 fnv b795c31670d55e9f
+mesh sparse 0 64 0 list 1 verts 1120 fnv 4b69756fb0fd3e17
+mesh sparse 0 64 0 list 2 verts 1232 fnv 4e9a25b67793b4d7
+mesh sparse 0 64 0 list 3 verts 1376 fnv c3eaf259b3ac74f3
+mesh sparse 0 64 0 list 4 verts 1232 fnv abf902259f6bd647
+mesh sparse 0 64 0 list 5 verts 1376 fnv 0e7c9cea37e4816b
+mesh sparse 0 64 0 list 6 verts 256 fnv b0b002693eadf80d
+mesh sparse 0 64 0 list 7 verts 256 fnv 41e6293cb2415e03
+mesh sparse 0 64 0 list 8 verts 224 fnv 7e7c37674707936e
+mesh sparse 0 64 0 list 9 verts 256 fnv eb8c849ab1bb8721
+mesh sparse 0 64 0 list 10 verts 224 fnv b60123921622d7f0
+mesh sparse 0 64 0 list 11 verts 256 fnv 23cfc06ba5601feb
+mesh sparse 0 64 0 list 12 verts 640 fnv dd41bd7b41caadd7
+mesh sparse 0 64 0 list 13 verts 32 fnv deda514447d33153
+mesh sparse 0 64 0 list 14 verts 32 fnv 1b0e23a3ff52adb3
+mesh sparse 0 64 0 list 15 verts 24 fnv 2c07cbffc9489a95
+mesh sparse 0 64 0 list 16 verts 32 fnv b17787d3a7bd12ef
+mesh sparse 0 64 0 list 17 verts 16 fnv 4c434134ad7fe769
+mesh sparse 0 64 0 list 18 verts 32 fnv 4f45471816b8d6d7
+mesh sparse 0 64 0 list 19 verts 0 fnv 0000000000000000
+mesh sparse 0 64 0 list 20 verts 0 fnv 0000000000000000
+mesh sparse 0 64 0 list 21 verts 0 fnv 0000000000000000
+mesh sparse 0 64 0 list 22 verts 0 fnv 0000000000000000
+mesh sparse 0 64 0 list 23 verts 0 fnv 0000000000000000
+mesh sparse 0 64 0 list 24 verts 0 fnv 0000000000000000
+mesh sparse 0 64 0 list 25 verts 0 fnv 0000000000000000
+mesh sparse 0 64 0 total 9992
+mesh sparse 16 64 0 list 0 verts 1680 fnv b0a4c963e6aab423
+mesh sparse 16 64 0 list 1 verts 1488 fnv 7faf92dea012732f
+mesh sparse 16 64 0 list 2 verts 1668 fnv 1e21e84cb208b573
+mesh sparse 16 64 0 list 3 verts 1668 fnv 4c69d29c174d91a7
+mesh sparse 16 64 0 list 4 verts 1508 fnv cd123df888a12b89
+mesh sparse 16 64 0 list 5 verts 1668 fnv b0d52e815aec08d5
+mesh sparse 16 64 0 list 6 verts 0 fnv 0000000000000000
+mesh sparse 16 64 0 list 7 verts 0 fnv 0000000000000000
+mesh sparse 16 64 0 list 8 verts 0 fnv 0000000000000000
+mesh sparse 16 64 0 list 9 verts 0 fnv 0000000000000000
+mesh sparse 16 64 0 list 10 verts 0 fnv 0000000000000000
+mesh sparse 16 64 0 list 11 verts 0 fnv 0000000000000000
+mesh sparse 16 64 0 list 12 verts 832 fnv b95dd44525d74fbf
+mesh sparse 16 64 0 list 13 verts 0 fnv 0000000000000000
+mesh sparse 16 64 0 list 14 verts 0 fnv 0000000000000000
+mesh sparse 16 64 0 list 15 verts 0 fnv 0000000000000000
+mesh sparse 16 64 0 list 16 verts 0 fnv 0000000000000000
+mesh sparse 16 64 0 list 17 verts 0 fnv 0000000000000000
+mesh sparse 16 64 0 list 18 verts 0 fnv 0000000000000000
+mesh sparse 16 64 0 list 19 verts 0 fnv 0000000000000000
+mesh sparse 16 64 0 list 20 verts 0 fnv 0000000000000000
+mesh sparse 16 64 0 list 21 verts 0 fnv 0000000000000000
+mesh sparse 16 64 0 list 22 verts 0 fnv 0000000000000000
+mesh sparse 16 64 0 list 23 verts 0 fnv 0000000000000000
+mesh sparse 16 64 0 list 24 verts 0 fnv 0000000000000000
+mesh sparse 16 64 0 list 25 verts 0 fnv 0000000000000000
+mesh sparse 16 64 0 total 10512
+mesh sparse 32 64 0 list 0 verts 1600 fnv 66f052f0f4679c67
+mesh sparse 32 64 0 list 1 verts 1472 fnv 427532f5d9911743
+mesh sparse 32 64 0 list 2 verts 1584 fnv 9d71aa606baa7cdf
+mesh sparse 32 64 0 list 3 verts 1584 fnv 0761b7e5aecb6077
+mesh sparse 32 64 0 list 4 verts 1456 fnv 08fff529893ad2b3
+mesh sparse 32 64 0 list 5 verts 1584 fnv 28c3e9f9e2890cbf
+mesh sparse 32 64 0 list 6 verts 64 fnv 5099d24d345e259b
+mesh sparse 32 64 0 list 7 verts 64 fnv 34ba6c6e7584683b
+mesh sparse 32 64 0 list 8 verts 128 fnv 3a0704efb1169ee3
+mesh sparse 32 64 0 list 9 verts 128 fnv 6948f58c57e54d13
+mesh sparse 32 64 0 list 10 verts 128 fnv 67bf67537a5aabbb
+mesh sparse 32 64 0 list 11 verts 128 fnv 93ccc10ace0558db
+mesh sparse 32 64 0 list 12 verts 1728 fnv e4d6b5305775b6af
+mesh sparse 32 64 0 list 13 verts 0 fnv 0000000000000000
+mesh sparse 32 64 0 list 14 verts 0 fnv 0000000000000000
+mesh sparse 32 64 0 list 15 verts 0 fnv 0000000000000000
+mesh sparse 32 64 0 list 16 verts 0 fnv 0000000000000000
+mesh sparse 32 64 0 list 17 verts 0 fnv 0000000000000000
+mesh sparse 32 64 0 list 18 verts 0 fnv 0000000000000000
+mesh sparse 32 64 0 list 19 verts 0 fnv 0000000000000000
+mesh sparse 32 64 0 list 20 verts 0 fnv 0000000000000000
+mesh sparse 32 64 0 list 21 verts 0 fnv 0000000000000000
+mesh sparse 32 64 0 list 22 verts 0 fnv 0000000000000000
+mesh sparse 32 64 0 list 23 verts 0 fnv 0000000000000000
+mesh sparse 32 64 0 list 24 verts 0 fnv 0000000000000000
+mesh sparse 32 64 0 list 25 verts 0 fnv 0000000000000000
+mesh sparse 32 64 0 total 11648
+mesh sparse 48 64 0 list 0 verts 64 fnv b02e0d8465a5f43b
+mesh sparse 48 64 0 list 1 verts 0 fnv 0000000000000000
+mesh sparse 48 64 0 list 2 verts 64 fnv ca577e27064546b7
+mesh sparse 48 64 0 list 3 verts 64 fnv 440c537e012fbb1f
+mesh sparse 48 64 0 list 4 verts 32 fnv 609a1186d471ad8f
+mesh sparse 48 64 0 list 5 verts 64 fnv 7b7fac28d6b859bb
+mesh sparse 48 64 0 list 6 verts 0 fnv 0000000000000000
+mesh sparse 48 64 0 list 7 verts 0 fnv 0000000000000000
+mesh sparse 48 64 0 list 8 verts 0 fnv 0000000000000000
+mesh sparse 48 64 0 list 9 verts 0 fnv 0000000000000000
+mesh sparse 48 64 0 list 10 verts 0 fnv 0000000000000000
+mesh sparse 48 64 0 list 11 verts 0 fnv 0000000000000000
+mesh sparse 48 64 0 list 12 verts 0 fnv 0000000000000000
+mesh sparse 48 64 0 list 13 verts 0 fnv 0000000000000000
+mesh sparse 48 64 0 list 14 verts 0 fnv 0000000000000000
+mesh sparse 48 64 0 list 15 verts 0 fnv 0000000000000000
+mesh sparse 48 64 0 list 16 verts 0 fnv 0000000000000000
+mesh sparse 48 64 0 list 17 verts 0 fnv 0000000000000000
+mesh sparse 48 64 0 list 18 verts 0 fnv 0000000000000000
+mesh sparse 48 64 0 list 19 verts 0 fnv 0000000000000000
+mesh sparse 48 64 0 list 20 verts 0 fnv 0000000000000000
+mesh sparse 48 64 0 list 21 verts 0 fnv 0000000000000000
+mesh sparse 48 64 0 list 22 verts 0 fnv 0000000000000000
+mesh sparse 48 64 0 list 23 verts 0 fnv 0000000000000000
+mesh sparse 48 64 0 list 24 verts 0 fnv 0000000000000000
+mesh sparse 48 64 0 list 25 verts 0 fnv 0000000000000000
+mesh sparse 48 64 0 total 288
+mesh dense-tinted 0 32 0 list 0 verts 5408 fnv 3a0cd72670a99d1e
+mesh dense-tinted 0 32 0 list 1 verts 5004 fnv a9b86d5626933748
+mesh dense-tinted 0 32 0 list 2 verts 5388 fnv 3033b76db88fe2a8
+mesh dense-tinted 0 32 0 list 3 verts 5376 fnv 234872b4c756765f
+mesh dense-tinted 0 32 0 list 4 verts 5252 fnv dace24a9a7fded5e
+mesh dense-tinted 0 32 0 list 5 verts 5260 fnv 80099f8d9c510bf4
+mesh dense-tinted 0 32 0 list 6 verts 492 fnv 0a1dd7242b4d4924
+mesh dense-tinted 0 32 0 list 7 verts 380 fnv ff6028686262e6a3
+mesh dense-tinted 0 32 0 list 8 verts 568 fnv 4ea47c278f213890
+mesh dense-tinted 0 32 0 list 9 verts 580 fnv ec820d4fb1128759
+mesh dense-tinted 0 32 0 list 10 verts 544 fnv 51e557661ea0d5bb
+mesh dense-tinted 0 32 0 list 11 verts 572 fnv 6bb6806a547c3772
+mesh dense-tinted 0 32 0 list 12 verts 4360 fnv 562d49b8558cabb7
+mesh dense-tinted 0 32 0 list 13 verts 24 fnv 8148b56d8d9e9fae
+mesh dense-tinted 0 32 0 list 14 verts 24 fnv 92a33fb7f75ac0b7
+mesh dense-tinted 0 32 0 list 15 verts 36 fnv 55a7172bf3ff7984
+mesh dense-tinted 0 32 0 list 16 verts 28 fnv e544e21ea0854f97
+mesh dense-tinted 0 32 0 list 17 verts 36 fnv 1a1f0172c80881ed
+mesh dense-tinted 0 32 0 list 18 verts 20 fnv 94535743694a16fa
+mesh dense-tinted 0 32 0 list 19 verts 0 fnv 0000000000000000
+mesh dense-tinted 0 32 0 list 20 verts 0 fnv 0000000000000000
+mesh dense-tinted 0 32 0 list 21 verts 0 fnv 0000000000000000
+mesh dense-tinted 0 32 0 list 22 verts 0 fnv 0000000000000000
+mesh dense-tinted 0 32 0 list 23 verts 0 fnv 0000000000000000
+mesh dense-tinted 0 32 0 list 24 verts 0 fnv 0000000000000000
+mesh dense-tinted 0 32 0 list 25 verts 0 fnv 0000000000000000
+mesh dense-tinted 0 32 0 total 39352
+mesh dense-untinted 96 32 0 list 0 verts 5128 fnv 1139d94ed5214227
+mesh dense-untinted 96 32 0 list 1 verts 4788 fnv ddd6c8e820a4388d
+mesh dense-untinted 96 32 0 list 2 verts 5252 fnv e9cfd5e8e7a55792
+mesh dense-untinted 96 32 0 list 3 verts 5220 fnv ed7a5a53aabcff34
+mesh dense-untinted 96 32 0 list 4 verts 5084 fnv c0a6b69f1574d2e8
+mesh dense-untinted 96 32 0 list 5 verts 5032 fnv d05924a0f5204da2
+mesh dense-untinted 96 32 0 list 6 verts 464 fnv 4e46ebb7e00ecdc4
+mesh dense-untinted 96 32 0 list 7 verts 368 fnv 79b05e7d1f03416b
+mesh dense-untinted 96 32 0 list 8 verts 520 fnv 831beadf239e1586
+mesh dense-untinted 96 32 0 list 9 verts 480 fnv 0e786b405aee8df0
+mesh dense-untinted 96 32 0 list 10 verts 464 fnv 6f1107243e813969
+mesh dense-untinted 96 32 0 list 11 verts 484 fnv 228ffba1fca23b3b
+mesh dense-untinted 96 32 0 list 12 verts 4412 fnv 59e299f5b2a50253
+mesh dense-untinted 96 32 0 list 13 verts 48 fnv 01398627457d3415
+mesh dense-untinted 96 32 0 list 14 verts 36 fnv df1cca0c3c2c32af
+mesh dense-untinted 96 32 0 list 15 verts 48 fnv 8ed3da2db531e6fb
+mesh dense-untinted 96 32 0 list 16 verts 40 fnv c833590bd8b3a3c9
+mesh dense-untinted 96 32 0 list 17 verts 36 fnv b8b15f647cb3f114
+mesh dense-untinted 96 32 0 list 18 verts 44 fnv 03921a86c6866d7f
+mesh dense-untinted 96 32 0 list 19 verts 0 fnv 0000000000000000
+mesh dense-untinted 96 32 0 list 20 verts 0 fnv 0000000000000000
+mesh dense-untinted 96 32 0 list 21 verts 0 fnv 0000000000000000
+mesh dense-untinted 96 32 0 list 22 verts 0 fnv 0000000000000000
+mesh dense-untinted 96 32 0 list 23 verts 0 fnv 0000000000000000
+mesh dense-untinted 96 32 0 list 24 verts 0 fnv 0000000000000000
+mesh dense-untinted 96 32 0 list 25 verts 0 fnv 0000000000000000
+mesh dense-untinted 96 32 0 total 37948
+mesh dense-no-colormap 0 32 0 list 0 verts 5416 fnv 539bf1f31c57ebde
+mesh dense-no-colormap 0 32 0 list 1 verts 5016 fnv 5dbb418f28c60959
+mesh dense-no-colormap 0 32 0 list 2 verts 5404 fnv f6b27f02c1d59d4b
+mesh dense-no-colormap 0 32 0 list 3 verts 5392 fnv e4861f759e0b3629
+mesh dense-no-colormap 0 32 0 list 4 verts 5272 fnv 0ad88754c08d55df
+mesh dense-no-colormap 0 32 0 list 5 verts 5268 fnv ebd991a9a9ecd6f5
+mesh dense-no-colormap 0 32 0 list 6 verts 492 fnv 0a1dd7242b4d4924
+mesh dense-no-colormap 0 32 0 list 7 verts 380 fnv ff6028686262e6a3
+mesh dense-no-colormap 0 32 0 list 8 verts 568 fnv 4ea47c278f213890
+mesh dense-no-colormap 0 32 0 list 9 verts 580 fnv ec820d4fb1128759
+mesh dense-no-colormap 0 32 0 list 10 verts 544 fnv 51e557661ea0d5bb
+mesh dense-no-colormap 0 32 0 list 11 verts 572 fnv 6bb6806a547c3772
+mesh dense-no-colormap 0 32 0 list 12 verts 4360 fnv 562d49b8558cabb7
+mesh dense-no-colormap 0 32 0 list 13 verts 16 fnv c04aae5c799c176c
+mesh dense-no-colormap 0 32 0 list 14 verts 12 fnv d0d837138161f21a
+mesh dense-no-colormap 0 32 0 list 15 verts 20 fnv aa990682c1c55bdf
+mesh dense-no-colormap 0 32 0 list 16 verts 12 fnv 698d708cf5223aad
+mesh dense-no-colormap 0 32 0 list 17 verts 16 fnv e63e7e306e482660
+mesh dense-no-colormap 0 32 0 list 18 verts 12 fnv a0ffbcdf341bd3d9
+mesh dense-no-colormap 0 32 0 list 19 verts 0 fnv 0000000000000000
+mesh dense-no-colormap 0 32 0 list 20 verts 0 fnv 0000000000000000
+mesh dense-no-colormap 0 32 0 list 21 verts 0 fnv 0000000000000000
+mesh dense-no-colormap 0 32 0 list 22 verts 0 fnv 0000000000000000
+mesh dense-no-colormap 0 32 0 list 23 verts 0 fnv 0000000000000000
+mesh dense-no-colormap 0 32 0 list 24 verts 0 fnv 0000000000000000
+mesh dense-no-colormap 0 32 0 list 25 verts 0 fnv 0000000000000000
+mesh dense-no-colormap 0 32 0 total 39352
+lod grass-skirts list 0 verts 0 geom 0000000000000000 cells 0000000000000000
+lod grass-skirts list 1 verts 0 geom 0000000000000000 cells 0000000000000000
+lod grass-skirts list 2 verts 640 geom 3fe37f4d54955453 cells 115ae760cb008703
+lod grass-skirts list 3 verts 320 geom b4bfc0c8b05f83cb cells 94a5c6170d0e5dc3
+lod grass-skirts list 4 verts 428 geom 181d788bf485ebe3 cells 0e1ccffac6145cd2
+lod grass-skirts list 5 verts 532 geom 5d8e41a6b5c9c83b cells c488d45d8f943c9a
+lod grass-skirts list 6 verts 0 geom 0000000000000000 cells 0000000000000000
+lod grass-skirts list 7 verts 0 geom 0000000000000000 cells 0000000000000000
+lod grass-skirts list 8 verts 0 geom 0000000000000000 cells 0000000000000000
+lod grass-skirts list 9 verts 0 geom 0000000000000000 cells 0000000000000000
+lod grass-skirts list 10 verts 0 geom 0000000000000000 cells 0000000000000000
+lod grass-skirts list 11 verts 0 geom 0000000000000000 cells 0000000000000000
+lod grass-skirts list 12 verts 0 geom 0000000000000000 cells 0000000000000000
+lod grass-skirts list 13 verts 1024 geom 1d014f2ce26c8457 cells 0000000000000000
+lod grass-skirts list 14 verts 0 geom 0000000000000000 cells 0000000000000000
+lod grass-skirts list 15 verts 0 geom 0000000000000000 cells 0000000000000000
+lod grass-skirts list 16 verts 0 geom 0000000000000000 cells 0000000000000000
+lod grass-skirts list 17 verts 0 geom 0000000000000000 cells 0000000000000000
+lod grass-skirts list 18 verts 0 geom 0000000000000000 cells 0000000000000000
+lod grass-skirts list 19 verts 0 geom 0000000000000000 cells 0000000000000000
+lod grass-skirts list 20 verts 0 geom 0000000000000000 cells 0000000000000000
+lod grass-skirts list 21 verts 0 geom 0000000000000000 cells 0000000000000000
+lod grass-skirts list 22 verts 0 geom 0000000000000000 cells 0000000000000000
+lod grass-skirts list 23 verts 0 geom 0000000000000000 cells 0000000000000000
+lod grass-skirts list 24 verts 0 geom 0000000000000000 cells 0000000000000000
+lod grass-skirts list 25 verts 0 geom 0000000000000000 cells 0000000000000000

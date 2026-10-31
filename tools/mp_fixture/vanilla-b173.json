@@ -1,0 +1,84 @@
+{
+  "schema": "cavewii.mp_fixture.v1",
+  "id": "vanilla-b173",
+  "task": "REL-14a",
+  "status": "unproven",
+  "status_note": "Server JAR, Java runtime and properties are pinned and a protocol-14 harness probe (login, /login no-reply, chat, quit, reconnect) PASSED against them on 2026-10-18. The owned real Beta 1.7.3 client validation (play, menu dwell, reconnect) is PENDING-lead, so this fixture stays unproven until that receipt is added (tmp/jobs/release-plan/REL-14a/DIAG.md section 2).",
+  "server": {
+    "kind": "vanilla Mojang Minecraft Beta 1.7.3 multiplayer server (no Bukkit/Poseidon, no plugins, no mc173)",
+    "version_banner": "Starting minecraft server version Beta 1.7.3",
+    "protocol_version": 14,
+    "jar_file_name": "minecraft_server.jar",
+    "jar_sha256": "033a127e4a25a60b038f15369c89305a3d53752242a1cff11ae964954e79ba4d",
+    "jar_sha1": "2f90dc1cb5ca7e9d71786801b307390a67fcf954",
+    "jar_size_bytes": 503100,
+    "provenance": {
+      "owned_copy_path": "<repo-analysis>/mcb173-retromcp/jars/minecraft_server.jar",
+      "sha1_reference": "RetroMCP version manifest mcb173-retromcp/conf/version.json downloads.server (sha1 2f90dc1cb5ca7e9d71786801b307390a67fcf954, size 503100)",
+      "upstream_url_recorded_by_retromcp": "https://vault.omniarchive.uk/archive/java/server-beta/b1.7/b1.7.3.jar",
+      "not_this_jar": [
+        {"path": "C:/tmp/mcb173-server-decompile/minecraft_server.jar", "sha256": "ebb4ba06f6288c147865ff2d3a76bf9034f07dc3f2792335fe22dd41d3c8d7b7", "size_bytes": 771370, "why": "MCP-remapped decompile input (1.7.3-LTS); used ONLY for file:line citations, never run as the fixture"},
+        {"path": "tmp/poseidon/poseidon-craftbukkit-1.1.12.jar", "sha256": "e30b2f7b738ce8704d322e442d9de032cb64386d375e6b031f76bf858f4dfd65", "why": "Project Poseidon (CraftBukkit lineage), the server behind every 10-14..10-18 MP Wii run; NOT vanilla"}
+      ],
+      "export_rule": "The JAR is owned, Mojang-copyrighted material: it is referenced by hash only and must never be copied into the repo, the public export, a release package or the :8099 gallery."
+    },
+    "launch": {
+      "cwd": "a fresh per-run directory containing ONLY tools/mp_fixture/server.properties (plus the pinned settled world, see world)",
+      "argv": ["<java.exe>", "-Xmx1024M", "-Xms1024M", "-jar", "<owned_copy_path>", "nogui"],
+      "stdin": "must stay OPEN (e.g. `tail -f cmds.txt | java ...`); commands are appended to cmds.txt. A closed stdin is the known Beta-server EOF spin trap.",
+      "graceful_stop": "append `save-all` then `stop` to cmds.txt; never kill by image name, only the PID this run started",
+      "note": "REL-14a's own probe used -Xmx512M and got the vanilla '**** NOT ENOUGH RAM!' warning; the pinned argv uses the size the server itself asks for."
+    }
+  },
+  "java_runtime": {
+    "vendor": "Oracle Corporation",
+    "runtime_version": "1.8.0_491-b10",
+    "java_home": "C:/Program Files/Java/jre1.8.0_491",
+    "java_exe_sha256": "322259da8ea26907fa230cbe210c060ea9b641e4c3ec4aebaca971302bbba141"
+  },
+  "properties": {
+    "file": "tools/mp_fixture/server.properties",
+    "file_sha256": "3eba2c84ad69faec85a96ae3586d62b26c7d65a80db2a8cbec676303cbea31cc",
+    "rewritten_by_server": false,
+    "rewritten_check": "sha256 identical before and after the 2026-10-18 probe run (every key the server reads is present, so PropertyManager never re-saves it)",
+    "keys_read_by_server": "MinecraftServer.java:120-185, ServerConfigurationManager.java:79-83 (CFR, /c/tmp/mcb173-server-decompile/out/net/minecraft/src/)",
+    "online_mode": false,
+    "server_port": 25570,
+    "server_port_reason": "25565 is held by the Poseidon host (PID-owned by the lead's rig); the vanilla fixture listens on 25570 so both can coexist. MP endpoint for runs: 192.0.2.27:25570.",
+    "level_seed": 9999,
+    "level_seed_reason": "same seed as the mc173-diag fixture the mp_play route was scouted on (mp_play_core.h:93); vanilla's spawn search lands elsewhere (probe: spawn 3,64,-39; player 1.5,65.62,-32.5), so the route is NOT pre-scouted on this fixture",
+    "difficulty": "spawn-monsters=true -> difficultySetting 1 (Easy). Vanilla Beta 1.7.3 can only express 0 or 1 (MinecraftServer.java:177); difficulty 2 cannot be pinned on a vanilla server",
+    "view_distance": 8,
+    "view_distance_reason": "matches the Poseidon fixture the Wii LAN walk was proven against (vanilla default is 10)",
+    "ops": "none (ops.txt absent/empty): the device is a normal non-op player"
+  },
+  "world": {
+    "status": "not yet pinned",
+    "rule": "REL-14b must pin a pre-generated, SETTLED world directory (tree sha256) and start every run from a fresh copy. A fresh seed-9999 world streamed 18288 Packet53 + 6578 Packet52 + 2352 Packet23 in the first 41 s of the probe (spawn-area population settling), which is exactly the burst class that ends a Wii session via the 1024-entry deferred-edit cap (server_remote_chunks.c:1532)."
+  },
+  "client_reference": {
+    "kind": "owned Mojang Beta 1.7.3 client",
+    "path": "<USERPROFILE>/AppData/Roaming/.minecraft/versions/b1.7.3/b1.7.3.jar",
+    "sha1": "43db9b498cb67058d2e12d394e6507722e71bb45",
+    "sha256": "af1fa04b8006d3ef78c7e24f8de4aa56f439a74d7f314827529062d5bab6db4c",
+    "size_bytes": 1465375,
+    "sha1_matches": "Mojang launcher object 43db9b498cb67058d2e12d394e6507722e71bb45 (RetroMCP version.json downloads.client)"
+  },
+  "receipts": {
+    "harness_probe_2026-10-18": {
+      "kind": "protocol-14 raw client (tmp/jobs/release-plan/REL-14a/probe_vanilla.py over tools/kb_oracle/protocol14.py); NOT a real-client receipt",
+      "result": "pass",
+      "run_dir": "tmp/jobs/release-plan/REL-14a/run1",
+      "server_log_sha256": "7b99d2901264b0c2859f08391aa56ebfad9b607ad2bace609b430cfec7d07c29",
+      "probe_tape_sha256": "8632ac825816d81572ed24cc1579ae346bfb6162ccf68bd509eb01a05efda0a8",
+      "observed": [
+        "handshake reply '-' (offline, NetLoginHandler.java:93); Packet1Login accepted with protocol 14",
+        "'/login hunter22' -> server.log 'cwrel14a tried command: login hunter22' (NetServerHandler.java:473) and ZERO Packet3Chat back to the client in 30 s",
+        "plain chat echoed as '<cwrel14a> ...' (NetServerHandler.java:442-444)",
+        "Packet255 'Quitting' -> 'lost connection: disconnect.quitting'; reconnect of the same name accepted, chat works after reconnect",
+        "no kick, no moved-wrongly/floating warnings"
+      ]
+    },
+    "real_client": "PENDING-lead (DIAG.md section 2 has the exact steps and the receipt fields to record)"
+  }
+}

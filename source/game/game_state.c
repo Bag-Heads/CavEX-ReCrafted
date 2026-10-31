@@ -18,5 +18,20 @@
 */
 
 #include "game_state.h"
+#include "../platform/cw_canary.h"
 
+/* S5.3 hunt PROBE (temporary, ROUND 6): leading/trailing guard canaries
+ * around gstate itself -- the ONE structure every suspect stage in the
+ * round-5 frame remainder touches (tick loop, render pipeline, MP dispatch).
+ * Adjacency is a same-TU, declaration-order best-effort (no linker script
+ * guarantee), which is why BOTH sides are guarded rather than relying on one;
+ * a leading-only or trailing-only clobber still narrows which neighbour an
+ * overrun spilled from. See cw_canary.h for the scan-on-clobber-only design
+ * (zero I/O on the clean path). */
+#ifdef PLATFORM_WII
+struct cw_canary gstate_canary_lead;
+#endif
 struct game_state gstate;
+#ifdef PLATFORM_WII
+struct cw_canary gstate_canary_trail;
+#endif

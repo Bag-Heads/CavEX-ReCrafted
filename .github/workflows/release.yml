@@ -1,0 +1,186 @@
+name: Release
+
+# This workflow does NOT build a CaveWii_v2 release .dol, and it never
+# publishes anything on its own. The sidecar libogc KERNEL_HEAP fix
+# (third_party/libogc-kernel-heap/, docs/wii_libogc_kernel_heap_sidecar.md)
+# is fundamentally MSYS2/Windows-specific and cannot be built in a Linux
+# container -- see ci.yml's wii-build job for the long-form explanation of
+# why ITS .dol is stock libogc and explicitly labeled NOT-FOR-HARDWARE. A
+# hardware-certified CaveWii_v2 release can therefore only ever be produced
+# by a maintainer running tools/make_release.sh locally (Windows/MSYS2,
+# with the sidecar toolchain and a real-Wii PASS.json), who then creates the
+# GitHub Release by hand and uploads the resulting zip as its asset.
+#
+# What THIS workflow does: validate a zip a maintainer has already built and
+# attached to a GitHub Release, so a broken, incomplete, stock-libogc, or
+# silently-uncertified zip is caught rather than trusted on sight. It is
+# manual (workflow_dispatch, naming the release tag to check) because there
+# is nothing to validate the instant a tag is pushed -- the zip does not
+# exist yet. A bare tag push instead prints (and fails on) the actual
+# release procedure, so pushing a tag can never be mistaken for "shipped".
+#
+# This workflow never runs `gh release upload`, `git push`, or any other
+# publishing step -- it only downloads and inspects an asset a human already
+# published.
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: >-
+          Tag of the GitHub Release whose attached CaveWii_v2-*.zip asset
+          should be validated (e.g. v0.1.0). This workflow never builds a
+          release itself -- see the header comment in this file.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  # Runs only on a bare tag push: there is no zip to validate yet (this
+  # workflow never builds one), so explain the real procedure and fail
+  # loudly rather than exiting green with nothing having happened.
+  explain-no-build-policy:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: This workflow does not build a release -- here is the real procedure
+        run: |
+          cat <<'EOF'
+          Pushing a tag does NOT produce a CaveWii_v2 release. This CI
+          container cannot build a hardware-certified .dol: the libogc
+          KERNEL_HEAP sidecar (docs/wii_libogc_kernel_heap_sidecar.md) is
+          MSYS2/Windows-only tooling with no Linux build path today.
+
+          To cut a real release for this tag:
+            1. On a Windows machine with devkitPPC + the sidecar libogc
+               staged (see docs/wii_libogc_kernel_heap_sidecar.md and the
+               build-wii skill), build the release .dol:
+                 cwbuild wii-release   (or the equivalent `make` invocation
+                 in CLAUDE.md's "Wii release build" section)
+            2. Get a real-Wii PASS.json for it (docs/run-wii-hardware.md /
+               CLAUDE.md's "Definition of done for FIX COMMITS").
+            3. Package it locally:
+                 bash tools/make_release.sh --dol CaveWii_v2.dol \
+                     --pass tmp/wii_runs/<run>/PASS.json
+               (add --allow-uncertified only for a deliberately-labeled
+               pre-release build; the packaging script marks it
+               UNCERTIFIED in the zip name and provenance.json either way)
+            4. Create the GitHub Release for this tag by hand and upload
+               the resulting dist/CaveWii_v2-*.zip as its asset. This
+               workflow never does this step for you -- publishing is a
+               human decision, on purpose.
+            5. Re-run THIS workflow via "Run workflow" (workflow_dispatch),
+               with release_tag set to this tag, to validate the uploaded
+               zip before pointing anyone at the release.
+          EOF
+          exit 1
+
+  validate-release-zip:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download the release's zip asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          mkdir -p dl
+          gh release download "${{ inputs.release_tag }}" \
+            --repo "${{ github.repository }}" \
+            --pattern 'CaveWii_v2-*.zip' \
+            --dir dl
+          ls -la dl
+
+      - name: Unzip + verify SHA256SUMS
+        run: |
+          set -euo pipefail
+          ZIP="$(ls dl/CaveWii_v2-*.zip | head -1)"
+          echo "validating: $ZIP"
+          mkdir -p extracted
+          python3 -m zipfile -e "$ZIP" extracted
+          cd extracted
+          test -f SHA256SUMS || { echo "::error::SHA256SUMS missing from the zip"; exit 1; }
+          sha256sum -c SHA256SUMS
+
+      - name: Check the SD-card-shaped layout
+        run: |
+          set -euo pipefail
+          ZIP_BASENAME="$(basename "$(ls dl/CaveWii_v2-*.zip | head -1)")"
+          # A stock (non-sidecar) .dol must never ship as a release asset --
+          # belt (filename), in addition to the suspenders (gates check,
+          # next step) that inspect the zip's own provenance.json.
+          case "$ZIP_BASENAME" in
+            *-stock*|*-STOCK*)
+              echo "::error::release zip name contains -stock -- refusing: $ZIP_BASENAME"; exit 1 ;;
+          esac
+          cd extracted
+          for f in \
+            apps/CavEX/boot.dol \
+            apps/CavEX/meta.xml \
+            apps/CavEX/icon.png \
+            apps/CavEX/config.json \
+            config.json \
+            texturepacks/README.txt \
+            LICENSE \
+            NOTICE \
+            README-RELEASE.txt \
+            provenance.json \
+          ; do
+            test -f "$f" || { echo "::error::expected file missing from release zip: $f"; exit 1; }
+          done
+
+      - name: Check provenance.json (gates PASSED, certification status)
+        run: |
+          set -euo pipefail
+          python3 - extracted/provenance.json <<'PYEOF'
+          import json, sys
+
+          with open(sys.argv[1], encoding="utf-8") as f:
+              data = json.load(f)
+
+          status = data.get("certification_status")
+          print(f"certification_status={status}")
+          if status not in ("CERTIFIED", "UNCERTIFIED"):
+              print(f"::error::unexpected certification_status: {status!r}")
+              sys.exit(1)
+
+          # -- (belt-and-suspenders, in addition to the filename check in the
+          # previous step): the gates recorded in provenance.json must show
+          # the REAL objdump/readelf checks passed, never the test-only skip
+          # path. tools/make_release.sh structurally cannot produce
+          # "PASSED" here for a stock-libogc .dol (see its test suite) --
+          # this only re-checks that the packaging tool wasn't run with its
+          # test-only escape hatch for a real release.
+          gates = data.get("gates", {})
+          ok = True
+          for name, result in gates.items():
+              print(f"gate {name} = {result}")
+              if result != "PASSED":
+                  print(f"::error::gate '{name}' is '{result}', not PASSED")
+                  ok = False
+          if not ok:
+              sys.exit(1)
+
+          if status == "UNCERTIFIED":
+              print("::warning::This release zip is UNCERTIFIED -- no real-Wii PASS.json backed it "
+                    "(tools/make_release.sh --allow-uncertified). That may be intentional for a "
+                    "labeled pre-release, but should not be true of a release meant to represent "
+                    "'fixed' or 'done' per CLAUDE.md's Definition of Done.")
+          else:
+              hp = data.get("hardware_pass") or {}
+              print(f"hardware_pass: run_id={hp.get('run_id')} profile={hp.get('profile')} "
+                    f"build_id={hp.get('build_id')}")
+
+          excluded = (data.get("assets") or {}).get("excluded") or []
+          print(f"assets excluded: {len(excluded)}")
+          for e in excluded:
+              print(f"  - {e.get('path')}: {e.get('reason')}")
+          PYEOF
+
+      - name: Result
+        run: echo "release_tag=${{ inputs.release_tag }} zip validated OK"

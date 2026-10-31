@@ -1,0 +1,1388 @@
+{
+ "schema": 1,
+ "status": "inventory-not-legal-clearance",
+ "generated_from": "HEAD",
+ "hash_basis": "sha256 of git blob bytes (what tools/clean_export.py exports)",
+ "r18_blocked": false,
+ "dependencies": [
+  {
+   "name": "CavEX / fCavEX (upstream base project)",
+   "version": "fCavEX 0.3.0_f1 lineage (FORK_NOTES.md)",
+   "origin": "https://github.com/xtreme8000/CavEX -> yyy257/ByteBit fCavEX -> https://github.com/jilleb/fCavEX",
+   "licence": "GPL-3.0-or-later",
+   "licence_file": "LICENSE",
+   "kind": "upstream-base",
+   "redistributed": [
+    "source",
+    "binary:boot.dol"
+   ],
+   "package_paths": [
+    "apps/CavEX/boot.dol"
+   ],
+   "modifications": "CaveWii_v2 is a modified fork; files keep their ByteBit/xtreme8000 GPL-3.0-or-later headers.",
+   "evidence": "source/block/aabb.c header (GPL v3 or later); root LICENSE is GPL v3 text.",
+   "blocks_r18": false,
+   "files": []
+  },
+  {
+   "name": "cglm",
+   "version": "0.9.6 (commit 490d0bb9a136cff36ba64dc67badc3b0e505b6b3)",
+   "origin": "https://github.com/recp/cglm",
+   "licence": "MIT",
+   "licence_file": "LICENSES/cglm.txt",
+   "licence_files": [
+    "LICENSES/cglm.txt",
+    "source/cglm/LICENSE.cglm"
+   ],
+   "kind": "vendored-source",
+   "redistributed": [
+    "source",
+    "binary:boot.dol"
+   ],
+   "package_paths": [
+    "apps/CavEX/boot.dol"
+   ],
+   "modifications": "none recorded in-tree (source/cglm/README.md); not byte-compared to upstream in this task",
+   "blocks_r18": false,
+   "files": [
+    {
+     "path": "source/cglm/LICENSE.cglm",
+     "sha256": "431610a1607c117bc161f37d99a321da977deb27e4f1df367365a9ca422d9c1e"
+    },
+    {
+     "path": "source/cglm/README.md",
+     "sha256": "56f54d370333e4a43a63ade775f9cc5c590f0a4049df13e078c3ac9e5a151150"
+    },
+    {
+     "path": "source/cglm/aabb2d.h",
+     "sha256": "190ed31ab97d3aedb760a81191d67b0b97a59cbadf9d09a685a7c516ec9bc8ff"
+    },
+    {
+     "path": "source/cglm/affine-mat.h",
+     "sha256": "d165bde6d8fe08398ef5f5a6342c990ed90cf3fee4fa404c57538c9d0a831bc3"
+    },
+    {
+     "path": "source/cglm/affine-post.h",
+     "sha256": "c75df251f7a3c93a1a034d100d2572c076e242b9d90a8d4574a83abf7716253b"
+    },
+    {
+     "path": "source/cglm/affine-pre.h",
+     "sha256": "a349cb4b365dfaaa6c8a3857ed13b70ada1b318307a0e363d2ffaddb6d4a3c6c"
+    },
+    {
+     "path": "source/cglm/affine.h",
+     "sha256": "f83e121a2865d32cd53ab5a9a5b99da3f638593b24872d49a87ec71d45a151f9"
+    },
+    {
+     "path": "source/cglm/affine2d-post.h",
+     "sha256": "c31235b477a31ed207dcfb84cb030833e1765f7c9b65ecbf3320701eb5a10f43"
+    },
+    {
+     "path": "source/cglm/affine2d.h",
+     "sha256": "1d5fb4c2493842682a46f1e7ae621a853de1ca139d836834f100287916aa8618"
+    },
+    {
+     "path": "source/cglm/applesimd.h",
+     "sha256": "fc87e0820347fe895f95e95b6fad623d168101e089eb43e3b780a99d0247ceea"
+    },
+    {
+     "path": "source/cglm/bezier.h",
+     "sha256": "aeb89bc80f5f8c31042d2172beab055e756bd1d7e69cc67e9de37ba81d35f6a5"
+    },
+    {
+     "path": "source/cglm/box.h",
+     "sha256": "f1814fc3bfd8b5f3f70de9802b16d8961cdbb7b21bd77040a899118a51162bd6"
+    },
+    {
+     "path": "source/cglm/call.h",
+     "sha256": "a7d4b193516087a99abf534b5eef96351dc7c86d028a4905d575261c0f100a23"
+    },
+    {
+     "path": "source/cglm/call/aabb2d.h",
+     "sha256": "6fe7bba2394ca0d14d5f07d1f1f9ec5f50228a51eb6a78e0df30068a9714cfa7"
+    },
+    {
+     "path": "source/cglm/call/affine.h",
+     "sha256": "28785d89887ec70a7578416ebbb3d7fec3f4fde90ef54b3944c38b16336ff0dd"
+    },
+    {
+     "path": "source/cglm/call/affine2d.h",
+     "sha256": "4e7ddce9a286548baa78983792a03d2b559b591f80545f8f135c08480d7c1a52"
+    },
+    {
+     "path": "source/cglm/call/bezier.h",
+     "sha256": "1543a0a23411426a02bf14b359ea387ff5e4c4f7556148bf28b8cc1b7c60b254"
+    },
+    {
+     "path": "source/cglm/call/box.h",
+     "sha256": "5845f89b9c8c4511a684ed417e5dd79bff9acb96734e8dffdc600a81f3404e2e"
+    },
+    {
+     "path": "source/cglm/call/cam.h",
+     "sha256": "0c711fe4533d13ec2a5b7358244229327d0658479a11eb02c00fa8daeb1a4441"
+    },
+    {
+     "path": "source/cglm/call/clipspace/ortho_lh_no.h",
+     "sha256": "8d3fe82b7c7f15bbec3a57ea3610fac3a318e0a7c7fde6f229234f1d9d5c7c77"
+    },
+    {
+     "path": "source/cglm/call/clipspace/ortho_lh_zo.h",
+     "sha256": "9d6cd5c4ceefd1d82994bab40bafb5287f23d4ef56e7656243bf0ba8f9b91a1c"
+    },
+    {
+     "path": "source/cglm/call/clipspace/ortho_rh_no.h",
+     "sha256": "00bf65e87e0b43f2541f38613584db0decb42a3fc0d1d2da820667faac3d0e99"
+    },
+    {
+     "path": "source/cglm/call/clipspace/ortho_rh_zo.h",
+     "sha256": "fdc59f36698f872b38d6b8bdd1e6803fa541d3e039bb86b6e81ca68981344738"
+    },
+    {
+     "path": "source/cglm/call/clipspace/persp_lh_no.h",
+     "sha256": "0a8a3a32d287baf48c84a7d4fc0a93b83d11977dfa4bb0fe442a0efd49480a89"
+    },
+    {
+     "path": "source/cglm/call/clipspace/persp_lh_zo.h",
+     "sha256": "5db6ef1c7bb8134b7a90ac81365365874980b3c5d99ab7cb71b012adc9446d69"
+    },
+    {
+     "path": "source/cglm/call/clipspace/persp_rh_no.h",
+     "sha256": "e2796ab1781c89d9822287d93668bf104adda6b6c917d542686e5cf1be4cfd23"
+    },
+    {
+     "path": "source/cglm/call/clipspace/persp_rh_zo.h",
+     "sha256": "8dab83742e7cf198b0e842944914fb4d78cd4a0026de20a190b2405ec4906174"
+    },
+    {
+     "path": "source/cglm/call/clipspace/project_no.h",
+     "sha256": "3ebf963273a7ec0ad8487c1587564845dac3c87a99b9e76adf6a66cde5631ef2"
+    },
+    {
+     "path": "source/cglm/call/clipspace/project_zo.h",
+     "sha256": "8b491d03183ce5dad5c3f7b2f67f83803647005afabdf2267cb3c85b976977cd"
+    },
+    {
+     "path": "source/cglm/call/clipspace/view_lh_no.h",
+     "sha256": "ebb9dc995dbda019c3cfa4364be6839ca9814e4a7e25f755a9bdc009ad180d2f"
+    },
+    {
+     "path": "source/cglm/call/clipspace/view_lh_zo.h",
+     "sha256": "4aba842a45940e8446fdff78706713e53266c38f1dbc6f2981d076442e574153"
+    },
+    {
+     "path": "source/cglm/call/clipspace/view_rh_no.h",
+     "sha256": "cb4bbd455a11c7de677f902de895892f721b8953145857a52ab57798401de6c4"
+    },
+    {
+     "path": "source/cglm/call/clipspace/view_rh_zo.h",
+     "sha256": "e98fdb649eff92fb9233c9f9ddd45a7baa5f6b9f864e33b8cbd36900f4a24e07"
+    },
+    {
+     "path": "source/cglm/call/curve.h",
+     "sha256": "f0ee1e9279fc88a5a3722105e53d09724dbf30310588027620ac68d8a1dfbc9c"
+    },
+    {
+     "path": "source/cglm/call/ease.h",
+     "sha256": "31432db5f404b3d76984ba609024689b4ad159c07fe41473d4d8a7e6e060dfba"
+    },
+    {
+     "path": "source/cglm/call/euler.h",
+     "sha256": "2eac51d9efa2f91d7dbc1617f50201e678264fc01798bc28588203e578b97968"
+    },
+    {
+     "path": "source/cglm/call/frustum.h",
+     "sha256": "723933f0251d8af3335f557adf4df63df64d03fe728c3a1a1672e71b84570667"
+    },
+    {
+     "path": "source/cglm/call/io.h",
+     "sha256": "e22916995b7032eaaa4c6c8e1a399f70924b971e5cd3da74cfe8da2ffd1bf228"
+    },
+    {
+     "path": "source/cglm/call/ivec2.h",
+     "sha256": "5b29c272387f897e008a48cce43166fba787d9edcca578219ca4507e1e32df71"
+    },
+    {
+     "path": "source/cglm/call/ivec3.h",
+     "sha256": "6f38680c8563a764d23cdd4dc85bd021c52d8b701ea14b3fe08e6e8eccce54f1"
+    },
+    {
+     "path": "source/cglm/call/ivec4.h",
+     "sha256": "e0611e172027a7628d7549f4a48e469b02171e323c683d165cabbda74a8adbf3"
+    },
+    {
+     "path": "source/cglm/call/mat2.h",
+     "sha256": "682ed49399beaf7147630546074513a4ce40c72a5b6abb50439853f48484643a"
+    },
+    {
+     "path": "source/cglm/call/mat2x3.h",
+     "sha256": "f329941769069d9da286c5b4b9fdd5ffb51e4f5731fc75a13470621b4891c45e"
+    },
+    {
+     "path": "source/cglm/call/mat2x4.h",
+     "sha256": "7ba9dc16004c1c9c3dc59cdfdb4d42cb6c22fca6c366100b3dfb577e06306456"
+    },
+    {
+     "path": "source/cglm/call/mat3.h",
+     "sha256": "f253c14752f0168c586935d88105262b35c36f79e9f72616f6842b06a85046ad"
+    },
+    {
+     "path": "source/cglm/call/mat3x2.h",
+     "sha256": "f80f16535c688907c23ee5bbbf8d04305e3ad52342680ac2601ea451dd85290f"
+    },
+    {
+     "path": "source/cglm/call/mat3x4.h",
+     "sha256": "d924201dd82ab849aec487a265f009ba3fc30c65ee2c17773385b0e3e9616606"
+    },
+    {
+     "path": "source/cglm/call/mat4.h",
+     "sha256": "bb2badf5f6ac7ddd908db8c92d45f21542254618cb6252e949d342ed6ee1919e"
+    },
+    {
+     "path": "source/cglm/call/mat4x2.h",
+     "sha256": "a36dfd998f223068132b4ed8b2df58ccbbbb013cd3b909446c14bcb7b57b7142"
+    },
+    {
+     "path": "source/cglm/call/mat4x3.h",
+     "sha256": "257d5821cfaaf3643fc19cd261ecbbe0daeda3cf4d06027f37979f79daa64dc0"
+    },
+    {
+     "path": "source/cglm/call/noise.h",
+     "sha256": "05e404635ec70f5efaf94449ce171da84f60e89a10cd6905f62a62dc3f9f0360"
+    },
+    {
+     "path": "source/cglm/call/plane.h",
+     "sha256": "a16ba5eb551b784d22094764923313edbd951e57fcce0e0604a86bf08378c583"
+    },
+    {
+     "path": "source/cglm/call/project.h",
+     "sha256": "1e3f9b3f40afe6010838e299a6dd576491e0e6a200c3b996fa8c1d0f163b07cd"
+    },
+    {
+     "path": "source/cglm/call/quat.h",
+     "sha256": "ad35a07e61f9328790792832d92e45ee871d47eaad6f94ba13eb28fba2704115"
+    },
+    {
+     "path": "source/cglm/call/ray.h",
+     "sha256": "91a8cf05a9d03ed3689c106fafbf9642d9dce37adfa202f5ef2b16f9d55ec3f4"
+    },
+    {
+     "path": "source/cglm/call/sphere.h",
+     "sha256": "9bdcc5537e1e302eda26017374da2b47d4333f273baba75858daff96aa5ad39e"
+    },
+    {
+     "path": "source/cglm/call/vec2.h",
+     "sha256": "0bf60cfedc6d11d11c0adbe8da516f3af58abe2b61e05fefe7d6fd6aff99a95c"
+    },
+    {
+     "path": "source/cglm/call/vec3.h",
+     "sha256": "482e3565a9c515bcfc812843b1eb1e4bc847b09093a46041c2180b0afca5cd99"
+    },
+    {
+     "path": "source/cglm/call/vec4.h",
+     "sha256": "03bced042435d470dbc8260b9674348140520f2298b9d0bc5811ef2b3308e23c"
+    },
+    {
+     "path": "source/cglm/cam.h",
+     "sha256": "8f677ef4555a7ddf6fda35ee6e5b8d0de2b1e2cbcda8dca2707561588621314b"
+    },
+    {
+     "path": "source/cglm/cglm.h",
+     "sha256": "868a8009486aebc9ff168e931f6d6197322d75b46db5c3d151fab2d889eeb358"
+    },
+    {
+     "path": "source/cglm/clipspace/ortho_lh_no.h",
+     "sha256": "fa49659caca549efe45c6be95a3cfeac0dbc89ad5c3a774af2b292eb6b700d73"
+    },
+    {
+     "path": "source/cglm/clipspace/ortho_lh_zo.h",
+     "sha256": "0dd0c4bc30cac67215bfa2f967a40d504fffef7f363b126ed73ba59168e62040"
+    },
+    {
+     "path": "source/cglm/clipspace/ortho_rh_no.h",
+     "sha256": "c6657f507cbeba4b580578715f98a6dcec28ea979d480b8ceacda5f19fe533b7"
+    },
+    {
+     "path": "source/cglm/clipspace/ortho_rh_zo.h",
+     "sha256": "261ba7fb7cf75933cab53b886fc0122e42c2b90211133f42d4fdb8d2fac37bb7"
+    },
+    {
+     "path": "source/cglm/clipspace/persp.h",
+     "sha256": "91200a1515ae0c86002cc5cda4b9173ba672625a22d3ab3cbfde54f6c84fb2a0"
+    },
+    {
+     "path": "source/cglm/clipspace/persp_lh_no.h",
+     "sha256": "9a80c2cff778be18cd66780f44a0d7652bd790daaf1a1e257f0c9f5ce602e3cf"
+    },
+    {
+     "path": "source/cglm/clipspace/persp_lh_zo.h",
+     "sha256": "cbf2851849e7c6ee0423305b539c521c841925a33ff39c3e8d9a7bbe2f249bbf"
+    },
+    {
+     "path": "source/cglm/clipspace/persp_rh_no.h",
+     "sha256": "955e5f47ea1716272120a3792dd38070f99fb9edead93991aa61f5e457289654"
+    },
+    {
+     "path": "source/cglm/clipspace/persp_rh_zo.h",
+     "sha256": "85622bf6348f08a4e5e89751bab74bbc672e3bda0f58f3d193b583dabd0ad922"
+    },
+    {
+     "path": "source/cglm/clipspace/project_no.h",
+     "sha256": "7e6a2cb118afead065b84ab2204e7acc79b802d959509075d56c468c755788b7"
+    },
+    {
+     "path": "source/cglm/clipspace/project_zo.h",
+     "sha256": "4bd9425eff3e77a6f13c1089a671a38f5ee8b3c4b3cd620cb62654b0a9d919ef"
+    },
+    {
+     "path": "source/cglm/clipspace/view_lh.h",
+     "sha256": "3b80431b8a385fd94fabb9a887e7c1993e1bb4a12aa4c49408e3b918039f3aa5"
+    },
+    {
+     "path": "source/cglm/clipspace/view_lh_no.h",
+     "sha256": "40389797779dc9e1726c6ab95f6723029859de0a667e0bdb73d6f00339d6ca34"
+    },
+    {
+     "path": "source/cglm/clipspace/view_lh_zo.h",
+     "sha256": "7777926af9677190ee4338510a9e0cf6c2ae2d1fab75c851ce266e262e545af6"
+    },
+    {
+     "path": "source/cglm/clipspace/view_rh.h",
+     "sha256": "722fe54ffb28eb51e4eb3c54ff1f74f5c928beefa956cc874385170dfc9ea577"
+    },
+    {
+     "path": "source/cglm/clipspace/view_rh_no.h",
+     "sha256": "709f46728123c1e68e3a981ff52ebc6bd288fcd38761da0c744bffa3281af2ce"
+    },
+    {
+     "path": "source/cglm/clipspace/view_rh_zo.h",
+     "sha256": "139b843d9e2d0c7ab4a6206db483fce3bfb4b7a2b51373e3c7cd9753a0e3f90b"
+    },
+    {
+     "path": "source/cglm/color.h",
+     "sha256": "b68e4690a707f4df39623c018b32af024349609487b48ae9a2487d4bdeab0577"
+    },
+    {
+     "path": "source/cglm/common.h",
+     "sha256": "fc64dac6d4e31ff48a1d9b5bfec34548df2c2053ce7edb2b45ada85df68f3af7"
+    },
+    {
+     "path": "source/cglm/curve.h",
+     "sha256": "e5ff8b9dba75681eadb4ac51624b4931528483458c177eeb239bfff020f18a9d"
+    },
+    {
+     "path": "source/cglm/ease.h",
+     "sha256": "b9c510cd26d068b5ae7cf78665fbe359a6f7cfff36893360ba84c7662668bc55"
+    },
+    {
+     "path": "source/cglm/euler.h",
+     "sha256": "4865c8a09b515e07a1d3356bce1dba697fd40c305c0e6c538e3d81ecc1979750"
+    },
+    {
+     "path": "source/cglm/frustum.h",
+     "sha256": "d44e11948d70318dad39ae884ad023c3c189d0d2425800fb5cffe6af691440f1"
+    },
+    {
+     "path": "source/cglm/handed/euler_to_quat_lh.h",
+     "sha256": "568f5d521b184df98c85bae954928bcbbba75ab941d9ee2422349ad60cb6ec50"
+    },
+    {
+     "path": "source/cglm/handed/euler_to_quat_rh.h",
+     "sha256": "a194fb7f4fd051f85fb31591d9fd5414804e0e7f3c7c70fcd45aabd8a7706003"
+    },
+    {
+     "path": "source/cglm/io.h",
+     "sha256": "501ff03af6327b3b2c9902a6796c5bdef1d5d167d53b1a60c0348df4b6542af7"
+    },
+    {
+     "path": "source/cglm/ivec2.h",
+     "sha256": "16e731d46635ebe516a98893ca83b43be3caa6ad5f6f3bbfd20b925599706d80"
+    },
+    {
+     "path": "source/cglm/ivec3.h",
+     "sha256": "7118d37f4d0e8edeae06fbb2cc608510d26759b1ad4c1d92964f5370ea12ab29"
+    },
+    {
+     "path": "source/cglm/ivec4.h",
+     "sha256": "9c63337a267565a9b00c6a67ecc9287e93bac39e9b4c4a125a2e4585141b0db3"
+    },
+    {
+     "path": "source/cglm/mat2.h",
+     "sha256": "cb04c64b37ac8496956f148511919c3fb3f301211e9b3bfd8a9b376d00eea155"
+    },
+    {
+     "path": "source/cglm/mat2x3.h",
+     "sha256": "49ff6c5fbea36f3802efa114dde86a161536b684add420699443feb19d0660e8"
+    },
+    {
+     "path": "source/cglm/mat2x4.h",
+     "sha256": "5854fce4a6e23d13ccb22256a1752b043378c8a993dd5eac2ad841cb9fffab3a"
+    },
+    {
+     "path": "source/cglm/mat3.h",
+     "sha256": "15c099277a49fc1e73797811d4b09c73833b7e2334e0764111c12c78b9b3bfe1"
+    },
+    {
+     "path": "source/cglm/mat3x2.h",
+     "sha256": "841657c00b1b7647609d329164e188d5157d71e01ccf378308468464341eb9f1"
+    },
+    {
+     "path": "source/cglm/mat3x4.h",
+     "sha256": "c3d8db3ddce387e111e337babad12b50a79dc78b2c12ef4498f6ba0f3f8a7451"
+    },
+    {
+     "path": "source/cglm/mat4.h",
+     "sha256": "a11818fea2a514b28cbec198325168465fadb7a1c44eed632cb593602fa79d27"
+    },
+    {
+     "path": "source/cglm/mat4x2.h",
+     "sha256": "b45b507c1586ac346361c3b7a8c7faa58981452b39f324ca4a14dd2018ca2c5b"
+    },
+    {
+     "path": "source/cglm/mat4x3.h",
+     "sha256": "cf1b7b9e6ce4a3ec77d60c2043710e5e697e2356a27f325620492d7f7b26386b"
+    },
+    {
+     "path": "source/cglm/noise.h",
+     "sha256": "251f5d8888350389a856a8e39a86deabe12b36eca296623ffff30b05ca0b0e29"
+    },
+    {
+     "path": "source/cglm/plane.h",
+     "sha256": "c1b9e2758e03560bf5ab790bfacca105c3b7daedeeaa30e22111828c10597779"
+    },
+    {
+     "path": "source/cglm/project.h",
+     "sha256": "459263467bb6c39ab037644f2d296d66746d1cfc8ef17c6eb26b6379af3c9108"
+    },
+    {
+     "path": "source/cglm/quat.h",
+     "sha256": "2f2a775cd3a7428486c8602ed10e56f7a8a72460f4dfc5a9a0fbece7f9505e6f"
+    },
+    {
+     "path": "source/cglm/ray.h",
+     "sha256": "4cd00f080d3db6dd03c2967f48ce69b288449942fbbf1c3f557246d75cef4a68"
+    },
+    {
+     "path": "source/cglm/simd/arm.h",
+     "sha256": "9b625cf8a00abdd799dd5760a9d777c20f917cf74f3d3ad60b745c9217f9867b"
+    },
+    {
+     "path": "source/cglm/simd/avx/affine.h",
+     "sha256": "d24b23e61a36d351ca53c752900202daa28f4e9d666c34345dcfe303409c1a1b"
+    },
+    {
+     "path": "source/cglm/simd/avx/mat4.h",
+     "sha256": "a9fba0a5d8b81b30c72dc9d68c3038ec94d385ab36ea6e6386fe9c347413a021"
+    },
+    {
+     "path": "source/cglm/simd/intrin.h",
+     "sha256": "6b81197052a63251719575ca7bb17997ec9a7d158f89b20cfede182cc93bb4dd"
+    },
+    {
+     "path": "source/cglm/simd/neon/affine.h",
+     "sha256": "266f8323c151c0184541e8fdea6dc85335c51435d5d0d0523f17859ceff79798"
+    },
+    {
+     "path": "source/cglm/simd/neon/mat2.h",
+     "sha256": "e144b2472e9d2abaab58af7b27211e48399d5acb720f9533d7fa4a92bcaab473"
+    },
+    {
+     "path": "source/cglm/simd/neon/mat4.h",
+     "sha256": "dc6c281313a0cdf250adb33fb22645b9e81d23db9f3480fa1680458a6fb8b293"
+    },
+    {
+     "path": "source/cglm/simd/neon/quat.h",
+     "sha256": "3494e2e03b5064ff022669ff3a114642b8c0f7aa8c7fbefc07101baf9f929f19"
+    },
+    {
+     "path": "source/cglm/simd/sse2/affine.h",
+     "sha256": "f896165ee2bef5e8ba8bce567e8d5afda73403cdcea505aa6680185565a013bc"
+    },
+    {
+     "path": "source/cglm/simd/sse2/mat2.h",
+     "sha256": "57d8c1d41449b4bc10d409fd0cbe3584142914e5b9c07edb4b89f02d991d8f31"
+    },
+    {
+     "path": "source/cglm/simd/sse2/mat3.h",
+     "sha256": "35ef6668eb830fa68b4d8d78735eef501540561068634bed48fbd4662f628fdc"
+    },
+    {
+     "path": "source/cglm/simd/sse2/mat4.h",
+     "sha256": "93ee75dc44fbe3c116b316e7e4d88c298d71b3d262323b8da939dc7e5e3ea286"
+    },
+    {
+     "path": "source/cglm/simd/sse2/quat.h",
+     "sha256": "ab9474873d0d09e50b3a54c4b9c038f877194aff7d67942fcc9b9480e1867a80"
+    },
+    {
+     "path": "source/cglm/simd/wasm.h",
+     "sha256": "762c3185f08535cf3d328186f7a8ca940355aab0f761034af4e5920801e8f741"
+    },
+    {
+     "path": "source/cglm/simd/wasm/affine.h",
+     "sha256": "2dcae90a5cbfafe36979082ae9a5205120a2b4560b0a89c15b08c1042fe21f3c"
+    },
+    {
+     "path": "source/cglm/simd/wasm/mat2.h",
+     "sha256": "1698f7c3bb61069fc2b3ee62bd134c2861aa49ce809831d2e302948e1686da1e"
+    },
+    {
+     "path": "source/cglm/simd/wasm/mat3.h",
+     "sha256": "89a56889e5019e9b3d352a4176dc7f2fa0acadef103e7fffe5157bb916fda4ff"
+    },
+    {
+     "path": "source/cglm/simd/wasm/mat4.h",
+     "sha256": "d301c060c73f1413da22724cbfacd6e04a559ea2dcdc858c014e20363fcef15a"
+    },
+    {
+     "path": "source/cglm/simd/wasm/quat.h",
+     "sha256": "6b6ec5bffba26631c2c20b7ea028283be2f1e6ea8a513ca23c9403a8fbc1bbd9"
+    },
+    {
+     "path": "source/cglm/simd/x86.h",
+     "sha256": "a8eec2f4b00f625760a9abcd66c5b3aead61145d184d439eda5fde579e9eb15a"
+    },
+    {
+     "path": "source/cglm/sphere.h",
+     "sha256": "bc76162f1a610d813cf1f65e6d561d4b5e230b87a06299391a582158af6e4fce"
+    },
+    {
+     "path": "source/cglm/struct.h",
+     "sha256": "9588335d82ef6b9e055957781e59e1df667919f837bda776e80df6a62baf87e7"
+    },
+    {
+     "path": "source/cglm/struct/aabb2d.h",
+     "sha256": "4533a873e29a2f329f95e6bac88fefb9570cc26ad242bd663d6ad60b6b9ab970"
+    },
+    {
+     "path": "source/cglm/struct/affine-mat.h",
+     "sha256": "2cfb06eff550e21f7b7071195a7a956251b2003271bb158c7fa5d31dbf8eb27d"
+    },
+    {
+     "path": "source/cglm/struct/affine-post.h",
+     "sha256": "b0eead541a7247b1be81f0a3fcbb202b1e1dd6e2d5d18e4baad3d99a6369cbae"
+    },
+    {
+     "path": "source/cglm/struct/affine-pre.h",
+     "sha256": "963325acd585cfb2475663f8d92fd8b3aceeabc72f52fedcaab05953ce01e456"
+    },
+    {
+     "path": "source/cglm/struct/affine.h",
+     "sha256": "fe4045fd07c131cf733b058a1a23db68433ca5b6d7fbc656a6ec364c1c1ceb9c"
+    },
+    {
+     "path": "source/cglm/struct/affine2d.h",
+     "sha256": "5248b29aa7f15d377741e819a45a376944a98e6cdc0f29b980a93e84f0c040e8"
+    },
+    {
+     "path": "source/cglm/struct/box.h",
+     "sha256": "6598c3299051fb664b05e16d8fc2faa3c9e8acbe6255dffa78abb65d05483945"
+    },
+    {
+     "path": "source/cglm/struct/cam.h",
+     "sha256": "c03eda285b82f00ca608b7a86a838e23e8bfd365a998c29b69f556c930c9b3d5"
+    },
+    {
+     "path": "source/cglm/struct/clipspace/ortho_lh_no.h",
+     "sha256": "1d841d64813add6ff2bdbd0ec8455bbf727f82d2dd93ee5cdb42a1136611a9a3"
+    },
+    {
+     "path": "source/cglm/struct/clipspace/ortho_lh_zo.h",
+     "sha256": "944a06468cdc3bc11facf410daf80ec112876412d4b4e08ba3af0726f8be83fc"
+    },
+    {
+     "path": "source/cglm/struct/clipspace/ortho_rh_no.h",
+     "sha256": "242a7da4f3b90248b26a60f76ddcf986c96ca125e048a5b145c6413435127365"
+    },
+    {
+     "path": "source/cglm/struct/clipspace/ortho_rh_zo.h",
+     "sha256": "00ec2673e64ad9b29a112634f9afb2b3d948f6444f5d25bc6571ad1708dc597c"
+    },
+    {
+     "path": "source/cglm/struct/clipspace/persp_lh_no.h",
+     "sha256": "cd7cb2059e50a311bfedb44966b56bb2eb6c5ac212b9e1cc4e45a0eb59bb8963"
+    },
+    {
+     "path": "source/cglm/struct/clipspace/persp_lh_zo.h",
+     "sha256": "01c05b713813b09e55be9e86da6a0b54ce28a90aba60c02e3ae26d11263714b6"
+    },
+    {
+     "path": "source/cglm/struct/clipspace/persp_rh_no.h",
+     "sha256": "22d4b9dc35e84fa4c55c1508df2e2e0eb5123bc3d43d302b9523cb4048828806"
+    },
+    {
+     "path": "source/cglm/struct/clipspace/persp_rh_zo.h",
+     "sha256": "6234cdfd91dcf57c25e04975c7bb57b7bbed7e6054ddf1277d1c7a2dae5e5159"
+    },
+    {
+     "path": "source/cglm/struct/clipspace/project_no.h",
+     "sha256": "1918b6894a281db0512ba57c21a154c14dc8ac3bd36b730c54d90cfca15a9588"
+    },
+    {
+     "path": "source/cglm/struct/clipspace/project_zo.h",
+     "sha256": "4992184452fd2ff0035f34f822bff8008bf0fbe9ff3204340d9c7fd2e344aaff"
+    },
+    {
+     "path": "source/cglm/struct/clipspace/view_lh_no.h",
+     "sha256": "877bebaff712b2c91700ad3e92aeba2dc5cc592c061c6e0b97f079c4b9f8fc7a"
+    },
+    {
+     "path": "source/cglm/struct/clipspace/view_lh_zo.h",
+     "sha256": "8921aedb6c5b209e5d1df656963badaab1f1fcc2ad982e4b7422b3f76e366a9e"
+    },
+    {
+     "path": "source/cglm/struct/clipspace/view_rh_no.h",
+     "sha256": "140fcfdd2503c95e58d554e9e5d1bad4c365956d10480b3c8bb2d1287bb63337"
+    },
+    {
+     "path": "source/cglm/struct/clipspace/view_rh_zo.h",
+     "sha256": "d3b4efc56ea82f71dfcf64abe3add216cb48cfdfc1b605c512d5d6a8e4cb510a"
+    },
+    {
+     "path": "source/cglm/struct/color.h",
+     "sha256": "209a7f7edf7c823d1fed93cd3026b9b0bc7d7219dd13abf72258dce923a48e31"
+    },
+    {
+     "path": "source/cglm/struct/curve.h",
+     "sha256": "933d828960bdc0bace8346881589d2e03386bb35de3d9cc841b4d6e4719c66c6"
+    },
+    {
+     "path": "source/cglm/struct/euler.h",
+     "sha256": "b02aed4b4c1a4f1472f0e4508180293f82b9a643edecb8344c8635cabb52616d"
+    },
+    {
+     "path": "source/cglm/struct/frustum.h",
+     "sha256": "d66ad1b91cd4959308bc092f6901f6961f02455cceb70e8aba27527409b5fdff"
+    },
+    {
+     "path": "source/cglm/struct/handed/euler_to_quat_lh.h",
+     "sha256": "40bb98f84d1c268bd768fdff93a1e31d4b752f7e8726202c62b234161e903613"
+    },
+    {
+     "path": "source/cglm/struct/handed/euler_to_quat_rh.h",
+     "sha256": "52239e7409a849769f8c409cfda1b43923255274468f777351134c7088b2e7b8"
+    },
+    {
+     "path": "source/cglm/struct/io.h",
+     "sha256": "84646afdd47ec5c5b74ae944ecd526adecc4ed0abab645549d779218d55ee964"
+    },
+    {
+     "path": "source/cglm/struct/ivec2.h",
+     "sha256": "70bed28b106c2023ea00587ba5e8e7f6969d941331d52f320630cf64ccb89b87"
+    },
+    {
+     "path": "source/cglm/struct/ivec3.h",
+     "sha256": "f362b9c69fe07212a6bc459bd7ed8d30adafc3e5ee56bcc7007812e7dc9741e4"
+    },
+    {
+     "path": "source/cglm/struct/ivec4.h",
+     "sha256": "efb0863e34c1c006c6a5f8d744d0c76c21b38ededfa3a1ab6b92b9d9904866ee"
+    },
+    {
+     "path": "source/cglm/struct/mat2.h",
+     "sha256": "6feb3ca2de4c652874ed6e09168271a90e8755d15e30f9530df4ecad5706806d"
+    },
+    {
+     "path": "source/cglm/struct/mat2x3.h",
+     "sha256": "c55b3494031f8c33be759e80605376461e93fd4e0bd7d099712d226eea078d89"
+    },
+    {
+     "path": "source/cglm/struct/mat2x4.h",
+     "sha256": "566271736611c3b977a14204a37f5bdec27fa460f4ad2a9a024a79ff0914da5e"
+    },
+    {
+     "path": "source/cglm/struct/mat3.h",
+     "sha256": "c58be71e61b2f55685787c70f11c61ee2f863ebfa1f1eb5dc4b83cf7fa041731"
+    },
+    {
+     "path": "source/cglm/struct/mat3x2.h",
+     "sha256": "2363688d00267e61a504aaf60dbca3a25149c8280afddd3dab0c810ad5e3c7d4"
+    },
+    {
+     "path": "source/cglm/struct/mat3x4.h",
+     "sha256": "4435257f1b839d31ff0e03e6746f1f0c756109394d8721992e1c06c488a18fc3"
+    },
+    {
+     "path": "source/cglm/struct/mat4.h",
+     "sha256": "f02dc41aac68381dba76f3f97a160a35316b67afaa34c759f82cc62282b6e7a9"
+    },
+    {
+     "path": "source/cglm/struct/mat4x2.h",
+     "sha256": "7480014b468c34bef79b72557b1f54310a6d5951a735ee6c365f3290800e2081"
+    },
+    {
+     "path": "source/cglm/struct/mat4x3.h",
+     "sha256": "373c47ffdc70e023819257b1ac916fd8d4d17d18fc789425ab0f6c21aa0a4760"
+    },
+    {
+     "path": "source/cglm/struct/noise.h",
+     "sha256": "82d31b2ff3b4cd5592b4ac2d64d648994e90f686af9b1e8459199db10e7545c5"
+    },
+    {
+     "path": "source/cglm/struct/plane.h",
+     "sha256": "f3fd1f4499a4442f96f355130ce0f3baa7098122444ce1b1774404df881a0a4a"
+    },
+    {
+     "path": "source/cglm/struct/project.h",
+     "sha256": "dc5829ac3ead32fc922d313c9f3b5ce5d28a3468fcc916c805c6a7f7a00fa0f5"
+    },
+    {
+     "path": "source/cglm/struct/quat.h",
+     "sha256": "666904ba21e2ee0f87deb6aee28df26fd5d5d6925e14654a492aeacddef3963b"
+    },
+    {
+     "path": "source/cglm/struct/ray.h",
+     "sha256": "2b2c5875b99fe6c9808e50471fd27621d68d6ad5f673fcaee401966fafc05865"
+    },
+    {
+     "path": "source/cglm/struct/sphere.h",
+     "sha256": "c6331f33b316be535690fec4a02ca7577b5b1df5a9bec41ea42ac521f6f1d916"
+    },
+    {
+     "path": "source/cglm/struct/vec2-ext.h",
+     "sha256": "b93d85884168d5d71eee2a44008b4fcbc441f6fef95666d12c7aee6cf030d9ae"
+    },
+    {
+     "path": "source/cglm/struct/vec2.h",
+     "sha256": "0022f7ad02e21c7758cb445548958915aca449a5abc5e9a453d6d7616d8d85e2"
+    },
+    {
+     "path": "source/cglm/struct/vec3-ext.h",
+     "sha256": "f5812ff99519c88ab2b5f28510ee36909699ad28ce2134d26f178366ac8ed2de"
+    },
+    {
+     "path": "source/cglm/struct/vec3.h",
+     "sha256": "429e2ea4fad1d8df9652917a17b2616f5182ebc4634108f5f49f4d1af960dfa8"
+    },
+    {
+     "path": "source/cglm/struct/vec4-ext.h",
+     "sha256": "04fa8f0c62ec8f6375e722e1c5112a29aa8869f425b1055f78d81dbc1754be5d"
+    },
+    {
+     "path": "source/cglm/struct/vec4.h",
+     "sha256": "b088fcbd5f29103a997d5ef3063817d783467df638b2dbd41f0d6d9582ff4bb7"
+    },
+    {
+     "path": "source/cglm/types-struct.h",
+     "sha256": "9d1740b33cfecf77a9cce03ab109d55c5a74c9dcecc51bb1e469ebe56049d2a3"
+    },
+    {
+     "path": "source/cglm/types.h",
+     "sha256": "4876ec8d1a10d1509358a596ccc68f55b8521068a955543e5347641bcacbde9e"
+    },
+    {
+     "path": "source/cglm/util.h",
+     "sha256": "c325e6f2137bbe82a843844bee102cd41ae81ca902ce9b9107d5d0cf25db4c3f"
+    },
+    {
+     "path": "source/cglm/vec2-ext.h",
+     "sha256": "41d6a8458b65c7b1175adfff1d757fb3deed3d65af8a2626dfc015be52178b4a"
+    },
+    {
+     "path": "source/cglm/vec2.h",
+     "sha256": "597e4d89770ecf1b07b26d769d150878c3b32ef3f5c644c6c5eebb087cca2cf4"
+    },
+    {
+     "path": "source/cglm/vec3-ext.h",
+     "sha256": "9df44f6dcb5a9106f957b32343e693d33aabf8341fbed7c9627d26a8d11c6b0e"
+    },
+    {
+     "path": "source/cglm/vec3.h",
+     "sha256": "54bc1204c9af3996638291812e3162e14ad29bce1477266455f808266d805dcc"
+    },
+    {
+     "path": "source/cglm/vec4-ext.h",
+     "sha256": "17abc72ba05bd9eecc9d66921d887fa55b76e260e299774dc63a1f2d0da5b860"
+    },
+    {
+     "path": "source/cglm/vec4.h",
+     "sha256": "56d5fb39f9b7891f3b2317d204e049eb0b51b702a25cdd904c131d3ab276d75e"
+    },
+    {
+     "path": "source/cglm/version.h",
+     "sha256": "e79d67d5c99f43d774eb66102ba56b4abdb70f1d40a2ab0f3e3bd97206bd67da"
+    }
+   ]
+  },
+  {
+   "name": "cNBT (subset)",
+   "version": "commit 3ff982eff62b01f7a67079a365b8fbf8a4b47423",
+   "origin": "https://github.com/chmod222/cNBT",
+   "licence": "Beerware (Revision 42)",
+   "licence_file": "LICENSES/cNBT.txt",
+   "kind": "vendored-source",
+   "redistributed": [
+    "source",
+    "binary:boot.dol"
+   ],
+   "package_paths": [
+    "apps/CavEX/boot.dol"
+   ],
+   "modifications": "subset only (files used by the NBT archive code), per source/cNBT/README.md",
+   "blocks_r18": false,
+   "files": [
+    {
+     "path": "source/cNBT/README",
+     "sha256": "449706615fe683ce18e2e96acf4a93c1eec5eb3e67b01f604c97326a7437167d"
+    },
+    {
+     "path": "source/cNBT/README.md",
+     "sha256": "6e4d5390eea929c9f29289c3bfaded952137ce88fe6749385eab3db2bc6e9ccc"
+    },
+    {
+     "path": "source/cNBT/buffer.c",
+     "sha256": "2c905559a759101ab96e32e696d08aff038d981d79b379057f5d6002e866838f"
+    },
+    {
+     "path": "source/cNBT/buffer.h",
+     "sha256": "67cc29a372c6f82f2fa202ca3d391a6fde80123d0d0695c832ad8051678b9c7c"
+    },
+    {
+     "path": "source/cNBT/list.h",
+     "sha256": "0add2147fb7d607312644531011f5834e22647002c127666f0ed7ce1e81c8cfa"
+    },
+    {
+     "path": "source/cNBT/nbt.h",
+     "sha256": "e04991b4566ffc56cd53a6e589c2c1de9df9ee3cffce318f576bf43f0a48376b"
+    },
+    {
+     "path": "source/cNBT/nbt_loading.c",
+     "sha256": "3c7cea86f0ad28189e73bd537508a2b33ff46b0f0bf7e6a0f3242e5a55deab59"
+    },
+    {
+     "path": "source/cNBT/nbt_parsing.c",
+     "sha256": "5b5a6388cf6751d86b6aff0afae69cfe40ddc7adfba2cb790ad38c04d87759ac"
+    },
+    {
+     "path": "source/cNBT/nbt_treeops.c",
+     "sha256": "e5e3735cabcb7c63f209a4b9bfaf82a8257908e723a563fa446675b78c2959b9"
+    },
+    {
+     "path": "source/cNBT/nbt_util.c",
+     "sha256": "302e72d8f061fd18a21dfdc27d16d96c3a2021decf4e5331d0d74c1202f71ac3"
+    }
+   ]
+  },
+  {
+   "name": "lodepng",
+   "version": "20260119 (commit 22561883dd63fd1850f18e1f6adac321e4f609b0)",
+   "origin": "https://github.com/lvandeve/lodepng",
+   "licence": "Zlib",
+   "licence_file": "LICENSES/lodepng.txt",
+   "licence_files": [
+    "LICENSES/lodepng.txt",
+    "source/lodepng/LICENSE.lodepng"
+   ],
+   "kind": "vendored-source",
+   "redistributed": [
+    "source",
+    "binary:boot.dol"
+   ],
+   "package_paths": [
+    "apps/CavEX/boot.dol"
+   ],
+   "modifications": "upstream lodepng.cpp renamed to lodepng.c (source/lodepng/README.md)",
+   "blocks_r18": false,
+   "files": [
+    {
+     "path": "source/lodepng/LICENSE.lodepng",
+     "sha256": "bdafa318b8e637d600ca1b60545e894881977a16a16b74809c95e805701621e3"
+    },
+    {
+     "path": "source/lodepng/README.md",
+     "sha256": "b493eb8c61c89e39bd7da8654fc0b7f6667231142268ff5fab98ccbf921bd4d3"
+    },
+    {
+     "path": "source/lodepng/lodepng.c",
+     "sha256": "41cd5226b9765395d09913deb4b8c39b13ad2a5e31af6a6ac0f99afef3bdc579"
+    },
+    {
+     "path": "source/lodepng/lodepng.h",
+     "sha256": "23c27abb06883ed98184d16d0b20771b526dca1e8e13236c2397316769c0dc8b"
+    }
+   ]
+  },
+  {
+   "name": "parson",
+   "version": "1.5.3 (commit ba29f4eda9ea7703a9f6a9cf2b0532a2605723c3)",
+   "origin": "https://github.com/kgabis/parson",
+   "licence": "MIT",
+   "licence_file": "LICENSES/parson.txt",
+   "licence_files": [
+    "LICENSES/parson.txt",
+    "source/parson/LICENSE.parson"
+   ],
+   "kind": "vendored-source",
+   "redistributed": [
+    "source",
+    "binary:boot.dol"
+   ],
+   "package_paths": [
+    "apps/CavEX/boot.dol"
+   ],
+   "modifications": "none recorded in-tree",
+   "blocks_r18": false,
+   "files": [
+    {
+     "path": "source/parson/LICENSE.parson",
+     "sha256": "1654be3a1c88c6ae90f1c25ec880ef80076d05910199688dd9853f27d1e894cf"
+    },
+    {
+     "path": "source/parson/README.md",
+     "sha256": "9298a1b75d17979aa30995cb1e5d3ca7d55ba46385be49fd1efdb983076a705a"
+    },
+    {
+     "path": "source/parson/parson.c",
+     "sha256": "57fbbb83f4d3240adf2c3950ee12b6ca71fec412040566a8986c2889b41a9220"
+    },
+    {
+     "path": "source/parson/parson.h",
+     "sha256": "3eeb8e83f595d559175d50e1544ef22801044bec700d7502070a949e136b330c"
+    }
+   ]
+  },
+  {
+   "name": "M*LIB (m-lib)",
+   "version": "0.8.1 (commit d0fd65a8695218ffabf2aa543ce51ca3af69536f)",
+   "origin": "https://github.com/P-p-H-d/mlib",
+   "licence": "BSD-2-Clause",
+   "licence_file": "LICENSES/m-lib.txt",
+   "licence_files": [
+    "LICENSES/m-lib.txt",
+    "third_party/m-lib/LICENSE.mlib"
+   ],
+   "kind": "vendored-source",
+   "redistributed": [
+    "source",
+    "binary:boot.dol"
+   ],
+   "package_paths": [
+    "apps/CavEX/boot.dol"
+   ],
+   "modifications": "m-dict.h carries two CAVEWII PATCH OOM-transaction patches (third_party/m-lib/PATCHES.md, tests/test_vendor_patches.c)",
+   "blocks_r18": false,
+   "files": [
+    {
+     "path": "third_party/m-lib/LICENSE.mlib",
+     "sha256": "267856fe9ad2c7167733a598f93cbb2d230880864182cf600ac4bfbd3fd6ada0"
+    },
+    {
+     "path": "third_party/m-lib/PATCHES.md",
+     "sha256": "87e4db27ce0bce6d166e74d8aed970f13e34df21eabf9fb0a0f061e9dbb833b3"
+    },
+    {
+     "path": "third_party/m-lib/README.md",
+     "sha256": "9dbec767dc919580574e1f3f25d2bf1efd5184fdc11e5bb3665cbb407ddd3045"
+    },
+    {
+     "path": "third_party/m-lib/m-algo.h",
+     "sha256": "b595f4441b714b331c0e7145115f3e33dc2f58a46d891a5d9c24c99e12c1a3b5"
+    },
+    {
+     "path": "third_party/m-lib/m-array.h",
+     "sha256": "9a720ab2074185d83745717ff0f310768dc7c074440c6c540cc20c98ab25f0d1"
+    },
+    {
+     "path": "third_party/m-lib/m-atomic.h",
+     "sha256": "d0923ae499904515450343c244eb43f0cb6032d3ad10f12d0b10dc04f0b089e2"
+    },
+    {
+     "path": "third_party/m-lib/m-bitset.h",
+     "sha256": "3827d9f160db66701da43e26dcb522b96fcb9fb765d0cb814c90a0ac196bdc4a"
+    },
+    {
+     "path": "third_party/m-lib/m-bptree.h",
+     "sha256": "99799099dd4a3dfe4d5c1f84a83c4a2f98def14774b84a457227f3dad0a9e740"
+    },
+    {
+     "path": "third_party/m-lib/m-bstring.h",
+     "sha256": "09080df71c17130b788076795475fa9cdabae36bd2badf691647a7693e535670"
+    },
+    {
+     "path": "third_party/m-lib/m-buffer.h",
+     "sha256": "92184aeb07cb5425966d5aa4d45215433fdad54cb753c4486d56fc98fa558a95"
+    },
+    {
+     "path": "third_party/m-lib/m-core.h",
+     "sha256": "eaa60a4bac02712f1773f6f8691ce7e24121b5ff957339a032be50fe6fb537e6"
+    },
+    {
+     "path": "third_party/m-lib/m-deque.h",
+     "sha256": "945fbd38ecf8ec525416b24b4fb4127d611875972cb01ffb96a9e6266c52302d"
+    },
+    {
+     "path": "third_party/m-lib/m-dict.h",
+     "sha256": "4699349c2758f50567792aae9dc66df1108d6ea4c20ab79034125fb97da55af1"
+    },
+    {
+     "path": "third_party/m-lib/m-funcobj.h",
+     "sha256": "0cd9e75d31f1a4e31adba1af00d47ecef1178911b4445cef9aad87f31ed4e40a"
+    },
+    {
+     "path": "third_party/m-lib/m-generic.h",
+     "sha256": "773835f457595256e97a9d324967932522c8d8d24d4a1400117a6c95889c86ca"
+    },
+    {
+     "path": "third_party/m-lib/m-genint.h",
+     "sha256": "b4fb5bd342e93a3eb465cae8fdbaf9e9f262cc515917eeb38f9e879cbba34039"
+    },
+    {
+     "path": "third_party/m-lib/m-i-list.h",
+     "sha256": "ff6bd4c60dbed512aff96ccab6ffe9f92082db1cb58c9405ae467c5ff3311ab7"
+    },
+    {
+     "path": "third_party/m-lib/m-list.h",
+     "sha256": "93bedaf92d07c4df3078666697a7e1c81626cf5989126a4d71a53d070778b3c9"
+    },
+    {
+     "path": "third_party/m-lib/m-prioqueue.h",
+     "sha256": "f399acee9d5ab60ac8a580573861a17050178070f6b8451a00d6da4914a5e96d"
+    },
+    {
+     "path": "third_party/m-lib/m-queue.h",
+     "sha256": "6247d3ce8f77e606cfbcdcbe16aa4676d9144cc90235870096f98393a1aa3fd9"
+    },
+    {
+     "path": "third_party/m-lib/m-rbtree.h",
+     "sha256": "345c260f0e6f8375b15225e512d5c018315af00564027aa66fe26de1a4eb124c"
+    },
+    {
+     "path": "third_party/m-lib/m-serial-bin.h",
+     "sha256": "b272b0733213ebe8fd0793f52b72b2d04eab70d0c8b83669a60714006336b281"
+    },
+    {
+     "path": "third_party/m-lib/m-serial-json.h",
+     "sha256": "62c9851443f2abc23975662efd2c6481b6dc50f8d18c9fd6f07389e658aa06e5"
+    },
+    {
+     "path": "third_party/m-lib/m-shared-ptr.h",
+     "sha256": "154aaf6f19f096b36499d69c1dbfdea8a7322936b0785622250fc100f63db634"
+    },
+    {
+     "path": "third_party/m-lib/m-snapshot.h",
+     "sha256": "239afb7b1081e6bbb8a7dffd07581e180dd6e632d968ee6693274f605cdb269b"
+    },
+    {
+     "path": "third_party/m-lib/m-string.h",
+     "sha256": "81eba0ab0a0dbdab75b6cec00f10c5b837f99858dc02e42292e6552af3a4e874"
+    },
+    {
+     "path": "third_party/m-lib/m-thread.h",
+     "sha256": "0c3f80c0f8368dfd246630f723aa8bb0f0f8e42e9eb8d0cade3317a94bc24a99"
+    },
+    {
+     "path": "third_party/m-lib/m-tree.h",
+     "sha256": "b9d745e48ad9afe05a08721874f18c5529a4420381c3db38b6a754da46c54376"
+    },
+    {
+     "path": "third_party/m-lib/m-try.h",
+     "sha256": "fd8d13051ae2e9bac4ed99724142021f204d778d82364f8ca5fe8fa1e649927c"
+    },
+    {
+     "path": "third_party/m-lib/m-tuple.h",
+     "sha256": "b1f7b8ad28dfca75b00df4e54236a1310e6d96de6506f118a12a50bd78d99025"
+    },
+    {
+     "path": "third_party/m-lib/m-variant.h",
+     "sha256": "62127c9dad2b49f879dccc3b6c17257ff2e966b4af846ce962f39d56bef21596"
+    },
+    {
+     "path": "third_party/m-lib/m-worker.h",
+     "sha256": "348b553dfbd738f7207599645e5cce65edd81c2c626ae358e9fa6505d2447f88"
+    }
+   ]
+  },
+  {
+   "name": "stb_vorbis",
+   "version": "1.22",
+   "origin": "https://github.com/nothings/stb",
+   "licence": "Unlicense (chosen; dual-licensed with MIT)",
+   "licence_file": "LICENSES/stb-vorbis.txt",
+   "kind": "vendored-source",
+   "redistributed": [
+    "source",
+    "binary:boot.dol"
+   ],
+   "package_paths": [
+    "apps/CavEX/boot.dol"
+   ],
+   "modifications": "none (pristine upstream, third_party/stb/PATCHES.md); compiled via #include in source/platform/audio_registry.c",
+   "blocks_r18": false,
+   "files": [
+    {
+     "path": "third_party/stb/PATCHES.md",
+     "sha256": "ee575f5acdf182e2ee5e22e2f96f55db978de74178ab3371953b23a7a4a05626"
+    },
+    {
+     "path": "third_party/stb/stb_vorbis.c",
+     "sha256": "4c7cb2ff1f7011e9d67950446b7eb9ca044f2e464d76bfbb0b84dd2e23e65636"
+    }
+   ]
+  },
+  {
+   "name": "miniaudio",
+   "version": "0.11.25 (2026-03-04)",
+   "origin": "https://github.com/mackron/miniaudio",
+   "licence": "Unlicense (chosen; dual-licensed with MIT-0)",
+   "licence_file": "LICENSES/miniaudio.txt",
+   "kind": "vendored-source",
+   "redistributed": [
+    "source"
+   ],
+   "package_paths": [],
+   "modifications": "none (pristine upstream, third_party/miniaudio/PATCHES.md); PC backend only, not in boot.dol",
+   "blocks_r18": false,
+   "files": [
+    {
+     "path": "third_party/miniaudio/PATCHES.md",
+     "sha256": "324ac8f23ce3a5bfabd31d59b79003de625325aba44dd21da16852aa97260ccd"
+    },
+    {
+     "path": "third_party/miniaudio/miniaudio.h",
+     "sha256": "ac7af4de748b7e26b777f37e01cee313a308a7296a3eb080e2906b320cc55c89"
+    }
+   ]
+  },
+  {
+   "name": "greatest",
+   "version": "1.5.0",
+   "origin": "https://github.com/silentbicycle/greatest",
+   "licence": "ISC",
+   "licence_file": "LICENSES/greatest.txt",
+   "licence_files": [
+    "LICENSES/greatest.txt",
+    "third_party/greatest/LICENSE"
+   ],
+   "kind": "vendored-source-test-only",
+   "redistributed": [
+    "source"
+   ],
+   "package_paths": [],
+   "modifications": "none recorded; test binaries only, never in boot.dol or the PC app",
+   "blocks_r18": false,
+   "files": [
+    {
+     "path": "third_party/greatest/LICENSE",
+     "sha256": "98a91cee50890ad55ea369d00932a0aecf31610ad6ae07468d451508e54f3553"
+    },
+    {
+     "path": "third_party/greatest/greatest.h",
+     "sha256": "1292593d95c35eeccc89ffa1c91d6fe53b49f81cbf2c2b7758842b7f3186fcc2"
+    }
+   ]
+  },
+  {
+   "name": "libogc sidecar patch set (CaveWii-authored diffs)",
+   "version": "0001-0005 against libogc v3.1.0",
+   "origin": "CaveWii_v2 contributors (third_party/libogc-kernel-heap/README.md)",
+   "licence": "GPL-3.0-or-later (diff text, per NOTICE) applied to Zlib AND BSD-2-Clause libogc code",
+   "licence_file": "LICENSE",
+   "licence_files": [
+    "LICENSE",
+    "LICENSES/libogc.txt"
+   ],
+   "kind": "patch-set",
+   "redistributed": [
+    "source"
+   ],
+   "package_paths": [],
+   "modifications": "is itself the modification record for the libogc linked into boot.dol",
+   "blocks_r18": false,
+   "files": [
+    {
+     "path": "third_party/libogc-kernel-heap/0001-lwp-kernel-heap-64k-to-256k.patch",
+     "sha256": "f731fd74f8bb67a65d58e9882244070d67154c15ffda77ca7bd83afb202a6fef"
+    },
+    {
+     "path": "third_party/libogc-kernel-heap/0002-catnip-drop-cube-preset-host-has-no-gamecube-toolset.patch",
+     "sha256": "87b5e24f912a29b669561efcc7e51106456db1b6a406c5db1e27214c49ff70b4"
+    },
+    {
+     "path": "third_party/libogc-kernel-heap/0003-wiisd-sd0-initio-cold-boot-retry.patch",
+     "sha256": "87ffce3d61196410c4ce53dc955ddd9623eeb92814bf4abf5ba494ad6f168219"
+    },
+    {
+     "path": "third_party/libogc-kernel-heap/0004-tuxedo-clear-lazy-fpu-owner-on-thread-exit.patch",
+     "sha256": "209b27fd0fa188342bb93c17da2328bd39eb2fff6acfa9c7033eefb05dcc6bb8"
+    },
+    {
+     "path": "third_party/libogc-kernel-heap/0005-wiisd-sd0-functions-align64.patch",
+     "sha256": "183f3667efc01e7bd86fedebc35d9a101d1f5bc4ce6ea87e0b786c9c6d8d53b4"
+    },
+    {
+     "path": "third_party/libogc-kernel-heap/README.md",
+     "sha256": "c95ac30de33e406a9645fc01fb81151ecb107472eac6faf096e223c9f736824e"
+    }
+   ]
+  },
+  {
+   "name": "libogc (sidecar-patched: libogc, libaesnd)",
+   "version": "3.1.0 (commit c70bdf2fc36bf6c6c12d946ae3ad70d604366d1b) + patches 0001-0005",
+   "origin": "https://github.com/devkitPro/libogc",
+   "licence": "Zlib AND BSD-2-Clause",
+   "licence_file": "LICENSES/libogc.txt",
+   "kind": "linked-binary",
+   "redistributed": [
+    "binary:boot.dol"
+   ],
+   "package_paths": [
+    "apps/CavEX/boot.dol"
+   ],
+   "modifications": "rebuilt with third_party/libogc-kernel-heap patches (altered version, marked there)",
+   "evidence": "LICENSES/libogc.txt byte-identical (CRLF-normalised) to /opt/devkitpro/libogc/LICENSE of pacman libogc-3.1.0-1 on 2026-10-20",
+   "blocks_r18": false,
+   "files": []
+  },
+  {
+   "name": "libogc: libbte (lwBT-derived Bluetooth stack)",
+   "version": "libogc 3.1.0",
+   "origin": "https://github.com/devkitPro/libogc (lwBT, EISLAB Lulea University of Technology)",
+   "licence": "BSD-3-Clause",
+   "licence_file": "LICENSES/libbte.txt",
+   "kind": "linked-binary",
+   "redistributed": [
+    "binary:boot.dol"
+   ],
+   "package_paths": [
+    "apps/CavEX/boot.dol"
+   ],
+   "modifications": "none by CaveWii",
+   "evidence": "libogc v3.1.0 sources (devkitPro/libogc @ c70bdf2f, local clone ../_libogc_audit used by tools/build_libogc_sidecar.sh): lwbt/hci.c, hci.h EISLAB BSD-3 notice (same as installed libogc/include/bte/bd_addr.h); lwbt/bt.h, btarch.h, btopt.h Adam Dunkels BSD-3 notice. Both copied to LICENSES/libbte.txt 2026-10-30.",
+   "blocks_r18": false,
+   "files": []
+  },
+  {
+   "name": "libogc: libwiiuse",
+   "version": "libogc 3.1.0",
+   "origin": "https://github.com/devkitPro/libogc (wiiuse fork)",
+   "licence": "GPL-3.0-or-later WITH libogc linking exception (license_libogc.txt section 18); libogc-written files Zlib-style (LICENSES/libogc.txt)",
+   "licence_file": "LICENSES/wiiuse.txt",
+   "kind": "linked-binary",
+   "redistributed": [
+    "binary:boot.dol"
+   ],
+   "package_paths": [
+    "apps/CavEX/boot.dol"
+   ],
+   "modifications": "none by CaveWii",
+   "evidence": "libogc v3.1.0 sources (devkitPro/libogc @ c70bdf2f): wiiuse/*.c headers 'GNU General Public License ... version 3 ... or (at your option) any later version', Copyright 2006-2007 Michael Laforest; wiiuse/license_libogc.txt (GPLv3 + section 18 linking exception) copied unchanged to LICENSES/wiiuse.txt 2026-10-30; wpad.c is libogc's zlib-style licence.",
+   "blocks_r18": false,
+   "files": []
+  },
+  {
+   "name": "libfat (libfat-ogc)",
+   "version": "2.1.0 (pacman libfat-ogc-2.1.0-4)",
+   "origin": "https://github.com/devkitPro/libdvm (tag v2.1.0) + https://github.com/devkitPro/fatfs-mod (dkp-mods @ 6d3e8f89)",
+   "licence": "ZPL-2.1 (libdvm) AND FatFs licence (ChaN)",
+   "licence_file": "LICENSES/libfat.txt",
+   "kind": "linked-binary",
+   "redistributed": [
+    "binary:boot.dol"
+   ],
+   "package_paths": [
+    "apps/CavEX/boot.dol"
+   ],
+   "modifications": "none",
+   "evidence": "pacman libfat-ogc-2.1.0-4 desc \"libdvm\"; installed fat.h byte-identical to libdvm v2.1.0 include/fat.h; COPYING (ZPL 2.1) fetched from https://raw.githubusercontent.com/devkitPro/libdvm/v2.1.0/COPYING and the FatFs notice from fatfs-mod source/ff.c on 2026-10-30",
+   "blocks_r18": false,
+   "files": []
+  },
+  {
+   "name": "zlib (ppc-zlib, Wii)",
+   "version": "1.3.1 (pacman ppc-zlib-1.3.1-1)",
+   "origin": "https://www.zlib.net/",
+   "licence": "Zlib",
+   "licence_file": "LICENSES/zlib.txt",
+   "kind": "linked-binary",
+   "redistributed": [
+    "binary:boot.dol"
+   ],
+   "package_paths": [
+    "apps/CavEX/boot.dol"
+   ],
+   "modifications": "none",
+   "evidence": "pacman LICENSE zlib; LICENSES/zlib.txt is the licence header of the installed devkitPro ppc-zlib 1.3.1 zlib.h (Copyright (C) 1995-2024), replaced 2026-10-30",
+   "blocks_r18": false,
+   "files": []
+  },
+  {
+   "name": "newlib (devkitPPC libc/libm/libsysbase)",
+   "version": "4.6.0.20260123 (pacman devkitppc-newlib-4.6.0.20260123-4)",
+   "origin": "https://sourceware.org/newlib/ (devkitPro build)",
+   "licence": "newlib collection (COPYING.NEWLIB; per-file notices)",
+   "licence_file": "LICENSES/newlib.txt",
+   "kind": "linked-binary",
+   "redistributed": [
+    "binary:boot.dol"
+   ],
+   "package_paths": [
+    "apps/CavEX/boot.dol"
+   ],
+   "modifications": "none by CaveWii",
+   "evidence": "COPYING.NEWLIB fetched 2026-10-30 from https://sourceware.org/git/?p=newlib-cygwin.git;a=blob_plain;f=COPYING.NEWLIB (byte-identical at tag newlib-4.6.0 and HEAD b097f95233d2); the devkitPro install carries no copy",
+   "blocks_r18": false,
+   "files": []
+  },
+  {
+   "name": "libgcc (devkitPPC GCC runtime)",
+   "version": "GCC 15.2.0 (pacman devkitppc-gcc-15.2.0-7)",
+   "origin": "https://gcc.gnu.org/",
+   "licence": "GPL-3.0-or-later WITH GCC-exception-3.1",
+   "licence_file": "LICENSES/GCC-exception-3.1.txt",
+   "kind": "linked-binary",
+   "redistributed": [
+    "binary:boot.dol"
+   ],
+   "package_paths": [
+    "apps/CavEX/boot.dol"
+   ],
+   "modifications": "none",
+   "evidence": "GCC Runtime Library Exception 3.1: the MSYS2 gcc-libs RUNTIME.LIBRARY.EXCEPTION and COPYING.RUNTIME are byte-identical to https://raw.githubusercontent.com/gcc-mirror/gcc/releases/gcc-15/COPYING.RUNTIME (fetched 2026-10-30; gcc.gnu.org gitweb returned HTTP 429); maintainer Q6 = ship it. GPL-3.0 text: LICENSE",
+   "blocks_r18": false,
+   "files": []
+  }
+ ],
+ "build_only_dependencies": [
+  {
+   "name": "devkitPPC (GCC cross toolchain)",
+   "version": "r49.2 (gcc 15.2.0, binutils 2.45.1)",
+   "origin": "https://devkitpro.org",
+   "licence": "GPL-3.0-or-later AND GPL-2.0-or-later AND LGPL (pacman)",
+   "redistributed": false,
+   "blocks_r18": false
+  },
+  {
+   "name": "devkitppc-rules / devkitppc-crtls (wii_rules, rvl.ld)",
+   "version": "1.2.1 / 2.0.0",
+   "origin": "https://github.com/devkitPro",
+   "licence": "custom (pacman; text not installed)",
+   "redistributed": false,
+   "blocks_r18": false,
+   "note": "make rules and linker scripts only; licence text unverified, not shipped"
+  },
+  {
+   "name": "catnip (devkitPro CMake build driver, libogc sidecar build)",
+   "version": "devkitPro install",
+   "origin": "https://github.com/devkitPro",
+   "licence": "unknown (not checked)",
+   "redistributed": false,
+   "blocks_r18": false
+  },
+  {
+   "name": "PC build libraries: GLFW, GLEW, OpenGL, zlib, winpthreads, MinGW gcc-libs",
+   "version": "glfw 3.4, glew 2.2.0, zlib 1.3.2, winpthreads 13.0.0.r560, gcc-libs 15.2.0 (MSYS2 UCRT64)",
+   "origin": "https://www.msys2.org/",
+   "licence": "Zlib; BSD-3-Clause/MIT (GLEW); Zlib; MIT AND BSD-3-Clause-Clear; GPL-3.0-or-later WITH GCC-exception-3.1 (pacman)",
+   "redistributed": false,
+   "blocks_r18": false,
+   "note": "PC dev/test build only; no PC binary is in the release package. Becomes redistributed (and needs records) if a PC binary ever ships."
+  },
+  {
+   "name": "CMake, Python 3, bash (MSYS2/git-bash)",
+   "version": "cmake 4.2.3, Python 3.14.2 (this machine)",
+   "origin": "https://cmake.org, https://python.org, https://www.msys2.org",
+   "licence": "BSD-3-Clause; PSF-2.0; GPL-3.0-or-later",
+   "redistributed": false,
+   "blocks_r18": false
+  }
+ ]
+}

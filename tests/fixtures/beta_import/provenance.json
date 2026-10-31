@@ -1,0 +1,243 @@
+{
+  "jar_sha256": "ebb4ba06f6288c147865ff2d3a76bf9034f07dc3f2792335fe22dd41d3c8d7b7",
+  "seed": 4242,
+  "world_rand_seed": 4242,
+  "chunks": [
+    {
+      "dimension": 0,
+      "x": 0,
+      "z": 0,
+      "populated": 1,
+      "nonzero_sky_bytes": 6947
+    },
+    {
+      "dimension": 0,
+      "x": 0,
+      "z": 1,
+      "populated": 1,
+      "nonzero_sky_bytes": 7706
+    },
+    {
+      "dimension": 0,
+      "x": 0,
+      "z": 2,
+      "populated": 1,
+      "nonzero_sky_bytes": 8023
+    },
+    {
+      "dimension": 0,
+      "x": 0,
+      "z": 3,
+      "populated": 0,
+      "nonzero_sky_bytes": 7750
+    },
+    {
+      "dimension": 0,
+      "x": 1,
+      "z": 0,
+      "populated": 1,
+      "nonzero_sky_bytes": 5794
+    },
+    {
+      "dimension": 0,
+      "x": 1,
+      "z": 1,
+      "populated": 1,
+      "nonzero_sky_bytes": 7865
+    },
+    {
+      "dimension": 0,
+      "x": 1,
+      "z": 2,
+      "populated": 1,
+      "nonzero_sky_bytes": 8292
+    },
+    {
+      "dimension": 0,
+      "x": 1,
+      "z": 3,
+      "populated": 0,
+      "nonzero_sky_bytes": 8260
+    },
+    {
+      "dimension": 0,
+      "x": 2,
+      "z": 0,
+      "populated": 1,
+      "nonzero_sky_bytes": 5407
+    },
+    {
+      "dimension": 0,
+      "x": 2,
+      "z": 1,
+      "populated": 1,
+      "nonzero_sky_bytes": 7550
+    },
+    {
+      "dimension": 0,
+      "x": 2,
+      "z": 2,
+      "populated": 1,
+      "nonzero_sky_bytes": 8411
+    },
+    {
+      "dimension": 0,
+      "x": 2,
+      "z": 3,
+      "populated": 0,
+      "nonzero_sky_bytes": 8283
+    },
+    {
+      "dimension": 0,
+      "x": 3,
+      "z": 0,
+      "populated": 0,
+      "nonzero_sky_bytes": 5224
+    },
+    {
+      "dimension": 0,
+      "x": 3,
+      "z": 1,
+      "populated": 0,
+      "nonzero_sky_bytes": 4273
+    },
+    {
+      "dimension": 0,
+      "x": 3,
+      "z": 2,
+      "populated": 0,
+      "nonzero_sky_bytes": 7651
+    },
+    {
+      "dimension": 0,
+      "x": 3,
+      "z": 3,
+      "populated": 0,
+      "nonzero_sky_bytes": 8066
+    },
+    {
+      "dimension": -1,
+      "x": 0,
+      "z": 0,
+      "populated": 1,
+      "nonzero_sky_bytes": 1
+    },
+    {
+      "dimension": -1,
+      "x": 0,
+      "z": 1,
+      "populated": 1,
+      "nonzero_sky_bytes": 0
+    },
+    {
+      "dimension": -1,
+      "x": 0,
+      "z": 2,
+      "populated": 1,
+      "nonzero_sky_bytes": 0
+    },
+    {
+      "dimension": -1,
+      "x": 0,
+      "z": 3,
+      "populated": 0,
+      "nonzero_sky_bytes": 0
+    },
+    {
+      "dimension": -1,
+      "x": 1,
+      "z": 0,
+      "populated": 1,
+      "nonzero_sky_bytes": 0
+    },
+    {
+      "dimension": -1,
+      "x": 1,
+      "z": 1,
+      "populated": 1,
+      "nonzero_sky_bytes": 0
+    },
+    {
+      "dimension": -1,
+      "x": 1,
+      "z": 2,
+      "populated": 1,
+      "nonzero_sky_bytes": 0
+    },
+    {
+      "dimension": -1,
+      "x": 1,
+      "z": 3,
+      "populated": 0,
+      "nonzero_sky_bytes": 0
+    },
+    {
+      "dimension": -1,
+      "x": 2,
+      "z": 0,
+      "populated": 1,
+      "nonzero_sky_bytes": 0
+    },
+    {
+      "dimension": -1,
+      "x": 2,
+      "z": 1,
+      "populated": 1,
+      "nonzero_sky_bytes": 0
+    },
+    {
+      "dimension": -1,
+      "x": 2,
+      "z": 2,
+      "populated": 1,
+      "nonzero_sky_bytes": 0
+    },
+    {
+      "dimension": -1,
+      "x": 2,
+      "z": 3,
+      "populated": 0,
+      "nonzero_sky_bytes": 0
+    },
+    {
+      "dimension": -1,
+      "x": 3,
+      "z": 0,
+      "populated": 0,
+      "nonzero_sky_bytes": 0
+    },
+    {
+      "dimension": -1,
+      "x": 3,
+      "z": 1,
+      "populated": 0,
+      "nonzero_sky_bytes": 0
+    },
+    {
+      "dimension": -1,
+      "x": 3,
+      "z": 2,
+      "populated": 0,
+      "nonzero_sky_bytes": 0
+    },
+    {
+      "dimension": -1,
+      "x": 3,
+      "z": 3,
+      "populated": 0,
+      "nonzero_sky_bytes": 0
+    }
+  ],
+  "files": {
+    "east-light.bin": "7e74ef1664e12128b46c307f571ae5fec7a18f2aeb8f6e22b9815b48d8baabdc",
+    "generate.py": "7b0fb13a610c0097252003895e88f0f6af36621922d1c24a9e700848f730fad8",
+    "README.md": "88d1e60cdc965693f6a3008e438bb701664a24fc27e999b93e800024ae9d8b82",
+    "stored-light.bin": "7df3fe1c38e35edcdae2ee320c81fe6c64ff7aad6e24b95cecffe3afc542c39b",
+    "world\\level.dat": "25e8b8c05f91a924eaf3923fe0d8aee1489e9fe9d688498dd058764cb2f76e4a",
+    "world\\level.dat_old": "a9995afbb59e0590732dcf70308f58489810e4baef7d1f734ba56cae02125d27",
+    "world\\region\\r.0.0.mcr": "307285e635d1659a16e865018d54beade660dffb4999104051ed5cc52f9b148c",
+    "world\\DIM-1\\region\\r.0.0.mcr": "96c4e8a85aa29bd3748dc0816eb24bab3fff8c9283d6551fa79d51320c46e3e5"
+  },
+  "command": "python tests/fixtures/beta_import/generate.py --work D:\\cavewii-evidence\\l2\\beta-save-3",
+  "scope": "original WorldServer/ChunkProviderServer/SaveOldDir methods, no normal server main loop; original JAR reload confirms all saved arrays; east seam loads x=4,z=0..3 then func_6156_d drain"
+}

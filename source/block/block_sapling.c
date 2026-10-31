@@ -17,7 +17,12 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include "../graphics/render_block.h" // direct include (was transitive via blocks.h pre-split)
+#include "../graphics/render_item.h" // direct include (was transitive via blocks.h pre-split)
 #include "../network/server_local.h"
+#include "../network/server_local_state.h" // full server state (split from server_local.h)
+#include "../util.h"
+#include "../worldgen/tree_runtime.h"
 #include "blocks.h"
 
 static enum block_material getMaterial(struct block_info* this) {
@@ -26,8 +31,9 @@ static enum block_material getMaterial(struct block_info* this) {
 
 static size_t getBoundingBox(struct block_info* this, bool entity,
 							 struct AABB* x) {
+	// Beta BlockSapling.<init> (java:8-9): half-width .4F, height .8F.
 	if(x)
-		aabb_setsize(x, 0.8125F, 0.8125F, 0.8125F);
+		aabb_setsize(x, 0.8F, 0.8F, 0.8F);
 	return entity ? 0 : 1;
 }
 
@@ -45,22 +51,22 @@ static uint8_t getTextureIndex(struct block_info* this, enum side side) {
 	}
 }
 
-static bool onItemPlace(struct server_local* s, struct item_data* it,
+static bool onItemPlace(struct server_local* s, struct server_player* actor, struct item_data* it,
 						struct block_info* where, struct block_info* on,
 						enum side on_side) {
 	struct block_data blk;
-	if(!server_world_get_block(&s->world, where->x, where->y - 1, where->z,
+	if(!server_world_get_block(block_world(s), where->x, where->y - 1, where->z,
 							   &blk))
 		return false;
 
 	if(blk.type != BLOCK_DIRT && blk.type != BLOCK_GRASS)
 		return false;
 
-	return block_place_default(s, it, where, on, on_side);
+	return block_place_default(s, actor, it, where, on, on_side);
 }
 
 static size_t getDroppedItem(struct block_info* this, struct item_data* it,
-							 struct random_gen* g, struct server_local* s) {
+							 struct java_random* g, struct server_local* s) {
 	if(it) {
 		it->id = this->block->type;
 		it->durability = this->block->metadata & 3;
@@ -70,59 +76,95 @@ static size_t getDroppedItem(struct block_info* this, struct item_data* it,
 	return 1;
 }
 
+// Beta BlockFlower.canThisPlantGrowOnThisBlockID, inherited UNCHANGED by
+// BlockSapling (it never overrides the method): grass, dirt or tilledField
+// (farmland) -- the exact same predicate block_flower.c's flower_soil_ok /
+// block_rose.c's rose_soil_ok already implement for their own species.
+// [740c583: BlockFlower.canThisPlantGrowOnThisBlockID]
+static bool sapling_soil_ok(uint8_t type) {
+	return type == BLOCK_DIRT || type == BLOCK_GRASS || type == BLOCK_FARMLAND;
+}
+
+// Beta BlockSapling inherits BlockFlower.canBlockStay: undimmed full block
+// light >= 8 or sky visibility, plus valid soil (BlockFlower.java:39-40;
+// World.java:521-529 passes 0 rather than skylightSubtracted). The stored
+// max(sky, torch) check therefore has no night-dimming deviation.
+static bool sapling_can_block_stay(struct server_local* s,
+								   struct block_info* info) {
+	int light = info->block->sky_light > info->block->torch_light
+		? info->block->sky_light
+		: info->block->torch_light;
+	if(light < 8)
+		return false;
+	struct block_data below;
+	return server_world_get_block(block_world(s), info->x, info->y - 1, info->z,
+								  &below)
+		&& sapling_soil_ok(below.type);
+}
+
+// Beta BlockFlower.checkFlowerChange, inherited UNCHANGED by BlockSapling:
+// drop as an item and clear the block when it can no longer stay (soil
+// removed, or it fell dark) -- called from BOTH onNeighborBlockChange and
+// (via BlockSapling.updateTick's `super.updateTick(...)`, see onRandomTick
+// below) the random tick. Same shape as block_flower.c's flower_check /
+// block_rose.c's rose_check, but returns whether it actually popped the
+// block: onRandomTick (unlike flower/rose's own updateTick, which IS just
+// this check) has more to do afterward, and needs to know whether to
+// continue -- `info->block` is a snapshot taken BEFORE this call
+// (server_world.c's random-tick dispatcher hands onRandomTick a local
+// `struct block_data` copy, not a live chunk pointer), so it will NOT
+// reflect a write server_world_set_block below just made; the return value
+// is the only reliable signal. [740c583: BlockFlower.checkFlowerChange]
+static bool sapling_check(struct server_local* s, struct block_info* info) {
+	if(sapling_can_block_stay(s, info))
+		return false;
+	server_local_spawn_block_drops(s, info);
+	server_world_set_block(block_world(s), info->x, info->y, info->z,
+						   (struct block_data) {.type = BLOCK_AIR, .metadata = 0});
+	return true;
+}
+
+static void onNeighbourBlockChange(struct server_local* s,
+								   struct block_info* info) {
+	sapling_check(s, info);
+}
+
+// Beta 1.7.3 BlockSapling.updateTick: `super.updateTick(...)` (BlockFlower's
+// checkFlowerChange, sapling_check above) runs FIRST, popping the sapling as
+// an item when it is dark (light<8 && no sky) or its grass/dirt/farmland
+// support is gone -- BEFORE any grow-cadence roll. Beta then still reads the
+// light above and consumes nextInt(30) when that light is >= 9, even after
+// the sapling was removed. A surviving sapling grows only on a zero roll.
+// The FIRST qualifying roll sets the age bit (metadata | 8) and keeps the
+// sapling; the SECOND grows it into a tree via growTree (the faithful
+// WorldGen* builders), species in metadata & 3.
+//
+// [740c583: BlockSapling.updateTick + growTree]
 static void onRandomTick(struct server_local* s, struct block_info* this) {
-	if(this->block->sky_light < 9 && this->block->torch_light < 9)
+	bool popped = sapling_check(s, this);
+
+	// Light read at (x, y+1, z) -- Beta's getBlockLightValue of the block above,
+	// not the sapling cell (BlockSapling.java:15): slab/stairs/farmland neighbour max
+	// and the rain/thunder skylightSubtracted included (next-gaps-0924/F1). A
+	// non-resident cell reads 0 (Beta EmptyChunk), which fails the gate like before.
+	int light = server_local_block_light_value(s, this->x, this->y + 1, this->z);
+	if(light < 9)
 		return;
 
-	int age = this->block->metadata >> 2;
-	int tree_type = this->block->metadata & 3;
-
-	if(age < 3) {
-		this->block->metadata = ((age + 1) << 2) | tree_type;
-		server_world_set_block(s, this->x, this->y, this->z,
-							   *this->block);
+	if(rand_gen_int(&s->rand_src, 30) != 0)
 		return;
-	}
+	if(popped)
+		return; // Beta re-reads air metadata here; no sapling remains to age.
 
-	int height = rand_gen_range(&s->rand_src, 4, 7);
-
-	for(int k = 1; k < height; k++) {
-		struct block_data blk;
-		if(server_world_get_block(&s->world, this->x, this->y + k, this->z,
-								  &blk)
-		   && blk.type != BLOCK_AIR) {
-			return;
-		}
-	}
-
-	for(int k = 0; k < height; k++)
-		server_world_set_block(s, this->x, this->y + k, this->z,
-							   (struct block_data) {
-								   .type = BLOCK_LOG,
-								   .metadata = this->block->metadata & 0x3,
-							   });
-
-	for(int y = -3; y <= 0; y++) {
-		int size = (y < -1) ? 2 : 1;
-
-		for(int x = -size; x <= size; x++) {
-			for(int z = -size; z <= size; z++) {
-				struct block_data blk;
-				if((x != 0 || z != 0 || y == 0)
-				   && ((abs(x) != size || abs(z) != size)
-					   || (rand_gen(&s->rand_src) & 1 && y < 0))
-				   && server_world_get_block(&s->world, this->x + x,
-											 this->y + height + y, this->z + z,
-											 &blk)
-				   && blk.type == BLOCK_AIR) {
-					server_world_set_block(s, this->x + x, this->y + height + y,this->z + z,
-						(struct block_data) {
-							.type = BLOCK_LEAVES,
-							.metadata = this->block->metadata & 0x3,
-						});
-				}
-			}
-		}
+	uint8_t meta = this->block->metadata;
+	if((meta & 8) == 0) {
+		// First qualifying tick: advance to the aged state, keep the sapling.
+		struct block_data aged = *this->block;
+		aged.metadata = meta | 8;
+		server_world_set_block(block_world(s), this->x, this->y, this->z, aged);
+	} else {
+		// Second: grow into a tree (species = metadata & 3).
+		server_grow_tree(s, this->x, this->y, this->z, meta & 3);
 	}
 }
 
@@ -134,6 +176,7 @@ struct block block_sapling = {
 	.getTextureIndex = getTextureIndex,
 	.getDroppedItem = getDroppedItem,
 	.onRandomTick = onRandomTick,
+	.onNeighbourBlockChange = onNeighbourBlockChange, // Beta: pop when canBlockStay fails
 	.onRightClick = NULL,
 	.transparent = false,
 	.renderBlock = render_block_cross,
