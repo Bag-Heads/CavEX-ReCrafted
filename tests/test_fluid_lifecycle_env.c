@@ -1757,11 +1757,15 @@ static void test_world38_nether_frontier_converges(void) {
 			CHUNK_SIZE * CHUNK_SIZE) == 0);
 		dict_server_chunks_next(it);
 	}
-	assert(memcmp(&throttled->world.hell_populate_rng,
-		&baseline->world.hell_populate_rng,
-		sizeof(throttled->world.hell_populate_rng)) == 0);
-	assert(memcmp(&throttled->rand_src, &baseline->rand_src,
-		sizeof(throttled->rand_src)) == 0);
+	/* Struct assignment need not preserve padding bytes. Compare every RNG
+	 * field, including the cached Gaussian, rather than host ABI padding. */
+	const struct java_random* ar = &throttled->world.hell_populate_rng;
+	const struct java_random* br = &baseline->world.hell_populate_rng;
+	assert(ar->seed == br->seed && ar->have_next_gaussian == br->have_next_gaussian
+		&& ar->next_gaussian_cached == br->next_gaussian_cached);
+	assert(throttled->rand_src.seed == baseline->rand_src.seed
+		&& throttled->rand_src.has_next_gaussian == baseline->rand_src.has_next_gaussian
+		&& throttled->rand_src.next_gaussian == baseline->rand_src.next_gaussian);
 	assert(throttled->world.scheduled_tick_count
 		   == baseline->world.scheduled_tick_count);
 	struct scheduled_tick a_tick, b_tick;

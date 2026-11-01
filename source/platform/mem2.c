@@ -1397,7 +1397,18 @@ static uint32_t s_emul_takes, s_emul_grows, s_emul_shrinks, s_emul_overflow;
 static uint32_t s_emul_shrink_hw_low; /* fewest slabs after a hand-back */
 static void emul_lock(void) { while(atomic_flag_test_and_set(&s_emul_lock)) {} }
 static void emul_unlock(void) { atomic_flag_clear(&s_emul_lock); }
-static void* emul_carve(size_t bytes, void* ctx) { (void)ctx; return malloc(bytes); }
+static void* emul_carve(size_t bytes, void* ctx) {
+	(void)ctx;
+	/* Match the Wii carve's 32-byte alignment. Host malloc guarantees only
+	 * fundamental alignment (often 16 bytes), including for large slabs. Keep
+	 * the raw allocation immediately before the aligned block for hand-back. */
+	if(bytes > SIZE_MAX - 31u - sizeof(void*)) return NULL;
+	void* raw = malloc(bytes + 31u + sizeof(void*));
+	if(!raw) return NULL;
+	void* block = (void*)(((uintptr_t)raw + sizeof(void*) + 31u) & ~(uintptr_t)31u);
+	((void**)block)[-1] = raw;
+	return block;
+}
 static void emul_report(void) {
 	fprintf(stderr, "[mem2-column-emul] policy=%s takes=%u grows=%u "
 		"shrinks=%u overflow=%u slabs_end=%u peak=%u fewest_after_shrink=%u\n",
@@ -1577,7 +1588,7 @@ void mem2_free(void* ptr) {
 			} else if(s >= 0) {
 				void* block = mem2_pool_shrink(&s_emul_pool, (unsigned)s,
 					MEM2_POOL_COLUMN_BOOT_SLABS);
-				free(block);
+				if(block) free(((void**)block)[-1]);
 				s_emul_shrinks++;
 				if(mem2_pool_slabs(&s_emul_pool) < s_emul_shrink_hw_low)
 					s_emul_shrink_hw_low = mem2_pool_slabs(&s_emul_pool);

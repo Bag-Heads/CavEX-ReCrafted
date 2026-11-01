@@ -2282,8 +2282,14 @@ static void case_guest_landing_real(void) {
 
 /* ---- A2-W: per-world streaming after COMMIT --------------------------- */
 static unsigned aw_chunks[SERVER_LOCAL_WORLD_SLOTS], aw_unloads[SERVER_LOCAL_WORLD_SLOTS];
+static uint32_t aw_reserve_request, aw_landing_request;
 static void aw_observer(const struct client_rpc* call, void* user) {
 	lr_observer(call, user);
+	if(call->type == CRPC_CAPACITY_REQUEST
+	   && call->payload.capacity_request.op == CLIN_CAP_OP_RESERVE)
+		aw_reserve_request = call->payload.capacity_request.request_id;
+	if(call->type == CRPC_LANDING_ARM && !call->payload.landing_arm.cancel)
+		aw_landing_request = call->payload.landing_arm.token;
 	if(call->world_generation == 0 || call->world_index >= SERVER_LOCAL_WORLD_SLOTS)
 		return;
 	if(call->type == CRPC_CHUNK)
@@ -2521,22 +2527,22 @@ static void case_owner_loading_concurrent_transfer(void) {
 	check(server_transfer_request(s, s->guest_actor, WORLD_DIM_OVERWORLD,
 		&guest_back) == SERVER_TRANSFER_OK,
 		"concurrent: guest can request unviewed Overworld while host waits");
-	bool saw_capacity = false, saw_landing = false;
 	enum server_transfer_state state = SERVER_TRANSFER_IDLE;
 	bool was_paused = s->paused;
 	s->paused = false;
 	for(unsigned i = 0; i < MAX_STEPS; i++) {
 		state = server_transfer_state_of(s, guest_back);
-		saw_capacity |= state == SERVER_TRANSFER_CAPACITY;
-		saw_landing |= state == SERVER_TRANSFER_LANDING;
 		if(state == SERVER_TRANSFER_COMMITTED
 		   || state == SERVER_TRANSFER_ROLLED_BACK) break;
 		tick(s); /* the client drains replies; the host marker stays unacknowledged */
 	}
 	s->paused = was_paused;
-	check(saw_capacity,
+	/* The real client can reply and advance CAPACITY inside one tick. Record
+	 * this transaction's actual control messages, not a post-tick sample of a
+	 * transient state (the same rule as lr_drive's READY observer above). */
+	check(aw_reserve_request == guest_back,
 		"concurrent: guest really needed a capacity reply");
-	check(saw_landing,
+	check(aw_landing_request == guest_back,
 		"concurrent: guest really needed a landing reply");
 	check(state == SERVER_TRANSFER_COMMITTED
 			&& world_of(s, s->guest_actor) == &s->worlds[0],
@@ -3138,7 +3144,11 @@ static void population_image_copy(struct population_image* out,
 			memcpy(image->torch, sc->lighting_torch, sizeof(image->torch));
 			memcpy(image->heightmap, sc->heightmap, sizeof(image->heightmap));
 		}
-	out->rng = w->hell_populate_rng;
+	/* Keep the zeroed snapshot padding deterministic across host ABIs. A
+	 * whole-struct assignment may copy indeterminate java_random padding. */
+	out->rng.seed = w->hell_populate_rng.seed;
+	out->rng.have_next_gaussian = w->hell_populate_rng.have_next_gaussian;
+	out->rng.next_gaussian_cached = w->hell_populate_rng.next_gaussian_cached;
 }
 
 static struct server_local* cap_population_fixture(void) {
