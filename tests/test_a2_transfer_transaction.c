@@ -3290,7 +3290,8 @@ static void case_departed_owner_restore(bool host_remains) {
 	/* A resident outer-ring column can still need covering population work.
 	 * Prepare it through the real provision/drain path before testing only
 	 * transport backpressure; the probe must not stop at a generation quota. */
-	assert(src == &s->world);
+	/* Both actors start in the fixture's Overworld (slot 0). */
+	assert(src == &s->worlds[0]);
 	sc = split_populate(s, cx, cz);
 	check(server_world_light_drain(src), "departed restore: source light settled before inbox probe");
 	/* Leave only the first source-ring key unpublished. This is the exact
