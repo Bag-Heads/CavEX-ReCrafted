@@ -278,7 +278,11 @@ static void portal_case(unsigned kind, bool guest, bool nether) {
 		struct entity* candidate = dict_entity_cref(it)->value;
 		bool same_kind = kind == 0 ? candidate->type == ENTITY_BOAT
 			: kind == 2 ? candidate->type == ENTITY_MINECART
-			: candidate->type == ENTITY_MONSTER && candidate->data.monster.id == MONSTER_PIG;
+			: candidate->type == ENTITY_MONSTER && candidate->data.monster.id == MONSTER_PIG
+				&& candidate->data.monster.saddled;
+		/* The fixture mount is saddled. Ordinary destination pigs can spawn
+		 * during real travel; they are not copies of that mount. Boats/carts
+		 * have no natural spawner, so their kind alone identifies a copy. */
 		if(same_kind && server_local_entity_world(s, candidate) == destination)
 			duplicates++;
 		dict_entity_next(it);

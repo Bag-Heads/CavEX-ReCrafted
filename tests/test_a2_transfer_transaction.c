@@ -3267,6 +3267,17 @@ static void case_departed_owner_restore(bool host_remains) {
 		teardown(s);
 		return;
 	}
+	/* Restoration first reclaims staged destination columns. Its generation
+	 * budget can leave a different number resident on different hosts, so
+	 * finish that real work before reserving the inbox for the source probe. */
+	struct server_world* dst = &s->worlds[t->dst_slot];
+	for(unsigned i = 0; i < MAX_STEPS && dict_server_chunks_size(dst->chunks); i++) {
+		server_transfer_step(s);
+		clin_update_drain();
+	}
+	check(!dict_server_chunks_size(dst->chunks) && t->open
+			&& t->state == SERVER_TRANSFER_RESTORING,
+		  "departed restore: destination reclaim completes before source inbox probe");
 	struct server_world* src = &s->worlds[t->src_slot];
 	w_coord_t cx = t->source_cx - t->restore_radius;
 	w_coord_t cz = t->source_cz - t->restore_radius;
@@ -3276,6 +3287,12 @@ static void case_departed_owner_restore(bool host_remains) {
 		teardown(s);
 		return;
 	}
+	/* A resident outer-ring column can still need covering population work.
+	 * Prepare it through the real provision/drain path before testing only
+	 * transport backpressure; the probe must not stop at a generation quota. */
+	assert(src == &s->world);
+	sc = split_populate(s, cx, cz);
+	check(server_world_light_drain(src), "departed restore: source light settled before inbox probe");
 	/* Leave only the first source-ring key unpublished. This is the exact
 	 * state after one CHUNK has entered the FIFO and its sidecar has not. */
 	for(int dz = -t->restore_radius; dz <= t->restore_radius; dz++)

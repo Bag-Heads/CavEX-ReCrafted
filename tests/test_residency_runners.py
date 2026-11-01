@@ -11,6 +11,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 TOOLS = ROOT / "tools"
+COLLECT_CALL = ("& (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | "
+                "Select-Object -First 1) @collectArgs")
 PWSH = Path(os.environ.get(
     "CW_PWSH", str(Path.home() / ".cache/codex-runtimes") + "/"
     "codex-primary-runtime/dependencies/native/powershell/pwsh.exe"))
@@ -35,7 +37,7 @@ def assert_args():
     staged = section("run_staged_wii_hardware.ps1", "$stageArgs = @(",
                      'Write-Host "[run-staged] staging DOL')
     collected = section("run_staged_wii_hardware.ps1", "$collectArgs = @(",
-                        "& powershell @collectArgs")
+                        COLLECT_CALL)
     collector = section("collect_staged_wii.ps1", "$args = @(",
                         "& $pythonExe @args")
     direct = section("run_wii_hardware.ps1", "# BEGIN residency collector args",
@@ -109,7 +111,7 @@ def assert_preflight():
 def assert_exit_status():
     # Execute the staged runner's real collector-result tail with a fake child.
     # It writes an artifact carrying each gate status and returns nonzero.
-    tail = section("run_staged_wii_hardware.ps1", "& powershell @collectArgs",
+    tail = section("run_staged_wii_hardware.ps1", COLLECT_CALL,
                    "} finally {")
     for status in ("FAIL", "UNPROVEN"):
         with tempfile.TemporaryDirectory() as td:
@@ -124,7 +126,8 @@ function powershell {
 }
 """ + tail
             proc = run_ps(ps, td, status)
-            assert proc.returncode == 1, (status, proc.stdout, proc.stderr)
+            assert proc.returncode == 1 and (Path(td) / "FAIL.json").is_file(), (
+                status, proc.stdout, proc.stderr)
             assert status in (Path(td) / "FAIL.json").read_text(), status
 
 
