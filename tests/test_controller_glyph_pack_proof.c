@@ -17,6 +17,7 @@
  * offer a device either owner holds, and suppress an actionable card whose
  * device is gone. */
 #include <assert.h>
+#include <errno.h>
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -201,6 +202,10 @@ static void test_pack_pointers(void) {
 	const char* roots[] = {"packs", "texturepacks"};
 	for(size_t k = 0; k < sizeof(roots) / sizeof(roots[0]); k++) {
 		DIR* dir = opendir(roots[k]);
+		/* User-installed packs are optional in a clean checkout. The tracked
+		 * packs/ base and all bundled controller sheets are still required. */
+		if(!dir && !strcmp(roots[k], "texturepacks") && errno == ENOENT)
+			continue;
 		assert(dir);
 		struct dirent* entry;
 		while((entry = readdir(dir))) {

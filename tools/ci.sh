@@ -44,6 +44,17 @@ VERIFY_DIR="${CI_VERIFY_DIR:-build-verify}"
 ASAN_DIR="${CI_ASAN_DIR:-build-asan}"
 read -r -a CMAKE_ARGS <<< "${CI_CMAKE_ARGS:-}"
 
+# GPU upload and Tk tests need an actual display even when their windows are
+# hidden. Ubuntu CI has none; run the full suite on one software X server.
+CTEST_DISPLAY=()
+if [[ -z "${DISPLAY:-}" ]]; then
+  command -v xvfb-run >/dev/null || {
+    echo "FATAL: headless tests require xvfb-run (install xvfb and xauth)" >&2
+    exit 1
+  }
+  CTEST_DISPLAY=(xvfb-run -a)
+fi
+
 echo "::group::build + complete CTest faithfulness suite"
 cmake -B "$VERIFY_DIR" -S . -G Ninja -DBUILD_TESTING=ON "${CMAKE_ARGS[@]}"
 cmake --build "$VERIFY_DIR"
@@ -65,9 +76,9 @@ echo "gated: $((TEST_COUNT - KNOWN_FAIL_COUNT)) tests; known_fail (reported sepa
 GATED_RC=0
 # Parallel: timing tests are RUN_SERIAL and heavy ones share RESOURCE_LOCK
 # cw_heavy (CMakeLists "Parallel ctest isolation"). CW_CTEST_JOBS overrides.
-ctest --test-dir "$VERIFY_DIR" -j "${CW_CTEST_JOBS:-4}" --output-on-failure -LE known_fail || GATED_RC=$?
+"${CTEST_DISPLAY[@]}" ctest --test-dir "$VERIFY_DIR" -j "${CW_CTEST_JOBS:-4}" --output-on-failure -LE known_fail || GATED_RC=$?
 if [[ "$KNOWN_FAIL_COUNT" != "0" ]]; then
-  if ctest --test-dir "$VERIFY_DIR" -L known_fail; then
+  if "${CTEST_DISPLAY[@]}" ctest --test-dir "$VERIFY_DIR" -L known_fail; then
     echo "KNOWN FAIL tests PASSED -- report it; retirement needs an acceptance ruling"
   else
     echo "KNOWN FAIL: $KNOWN_FAIL_COUNT test(s) failing as recorded (not gated)"

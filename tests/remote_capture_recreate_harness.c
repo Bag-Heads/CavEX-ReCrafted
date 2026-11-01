@@ -5,6 +5,7 @@
  * operation failures, nonblocking readback, retry delays and stop boundaries.
  * It cannot establish IOS close-error semantics or bound a synchronous IOS call.
  */
+#define _POSIX_C_SOURCE 200809L
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -14,8 +15,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <winsock2.h>
-#include <windows.h>
+#include "support/remote_capture_host.h"
 #ifdef NDEBUG
 #error "Lifecycle assertions must remain enabled"
 #endif
@@ -25,7 +25,6 @@
 #define F_GETFL 3
 #define F_SETFL 4
 #endif
-typedef unsigned int socklen_t;
 struct thread { bool created; };
 static const char* scenario;
 static bool owned_listener,owned_client,dead_listener,ready_listener;
@@ -201,8 +200,10 @@ static void shutdown_here(void) {
     }
 }
 int main(int argc,char** argv) {
+#ifdef _WIN32
     SetErrorMode(SEM_FAILCRITICALERRORS|SEM_NOGPFAULTERRORBOX);
     _set_abort_behavior(0,_CALL_REPORTFAULT);
+#endif
     assert(argc==2); scenario=argv[1];
     started=enabled=true; worker.created=true;
     run(NULL);

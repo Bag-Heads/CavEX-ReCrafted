@@ -2710,6 +2710,12 @@ if(Python3_Interpreter_FOUND)
 	# contract tests drive package_app/build_resources against fixtures with the
 	# PyInstaller call mocked, and GuiTests.setUp already self-skips with
 	# skipTest() when tk.Tk() finds no display.
+	# mapping.json and the native converter are generated release resources,
+	# not checked-in data. Build them with the release builder for a clean clone.
+	add_custom_target(pack_helper_test_resources ALL
+		COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/build_pack_helper_resources.py
+			--cc ${CMAKE_C_COMPILER}
+		VERBATIM)
 	foreach(_cw_pack_helper_module core conversion desktop gui)
 		add_test(NAME test_pack_helper_${_cw_pack_helper_module}
 			COMMAND ${Python3_EXECUTABLE}
@@ -2800,15 +2806,18 @@ if(Python3_Interpreter_FOUND)
 	add_test(NAME test_wii_telemetry_server COMMAND ${Python3_EXECUTABLE}
 		${CMAKE_CURRENT_SOURCE_DIR}/tools/wii_telemetry_server.py
 		--selftest)
+	# This collector subtest needs the private original-Beta McRegion save.
+	add_test(NAME test_wii_telemetry_world_copy COMMAND ${Python3_EXECUTABLE}
+		${CMAKE_CURRENT_SOURCE_DIR}/tools/wii_telemetry_server.py --world-copy-selftest)
 	add_test(NAME test_heartbeat_fps_window COMMAND ${Python3_EXECUTABLE}
 		${CMAKE_CURRENT_SOURCE_DIR}/tests/test_heartbeat_fps_window.py
 		--bin $<TARGET_FILE:test_hw_telemetry>)
 	# capture-fix-1003: live-capture client/protocol witnesses and the real
 	# client <-> production-service pair (listener recreated per connection).
 	add_test(NAME test_remote_capture COMMAND ${Python3_EXECUTABLE}
-		${CMAKE_CURRENT_SOURCE_DIR}/tests/test_remote_capture.py)
+		${CMAKE_CURRENT_SOURCE_DIR}/tests/test_remote_capture.py --cc ${CMAKE_C_COMPILER})
 	add_test(NAME test_remote_capture_service COMMAND ${Python3_EXECUTABLE}
-		${CMAKE_CURRENT_SOURCE_DIR}/tests/test_remote_capture_service.py)
+		${CMAKE_CURRENT_SOURCE_DIR}/tests/test_remote_capture_service.py --cc ${CMAKE_C_COMPILER})
 	add_test(NAME test_wii_anchor_gap COMMAND ${Python3_EXECUTABLE}
 		${CMAKE_CURRENT_SOURCE_DIR}/tests/test_wii_anchor_gap.py)
 	# push-0921/C7: the build stamp embedded in every artifact is a FIXED
@@ -13867,6 +13876,7 @@ math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # KANBAN 09-
 		math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 2") # tutorial-ship: test_tutorial_world_real_build (fixture: the shipped world) + test_tutorial_world_real_load (every chunk, signs/chests, moved animal, broken chest)
 		math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # rawjar-1030: test_tex_beta_compose (raw b1.7.3.jar unzip: loader gui_2/anim == Pack Helper output, 1x/2x/4x; gate)
 		math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ingame-import-1030 A: test_beta_import_e2e (in-game importer pack == Pack Helper pack on a fixture jar)
+		math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101: separate private original-save collector selftest
 		math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # R12 save_reload_3m: test_save_reload_collector
 		math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ingame-import-1030/B: test_beta_import_sound (in-game sound phase == Pack Helper bytes; missing folder = textures only; cancel)
 	endif()
@@ -13898,7 +13908,8 @@ if(BUILD_TESTING)
 		bench_far_chunk bench_lighting_budget test_server_shutdown_env
 		test_chunk_mesher_enqueue_cap_env test_chunk_mesher_shutdown_env
 		test_settle_observer test_hw_telemetry
-		test_main_tick_pacing) # REL-10-tests: real 100/400 ms sleep windows
+		test_main_tick_pacing # REL-10-tests: real 100/400 ms sleep windows
+		test_chunk_gather_equiv) # CPU/wall stripe-hold ceilings require an isolated host
 	set(_cw_heavy_tests
 		test_redstone_torch_clock_storm_env test_sleep_spawn_stress_fixture
 		test_sleep_spawn_all_sleepers test_skylight_tick_golden
@@ -13949,9 +13960,13 @@ if(BUILD_TESTING)
 	foreach(_cw_t IN LISTS _cw_tools_tests)
 		if(TEST ${_cw_t})
 			set_property(TEST ${_cw_t} APPEND PROPERTY LABELS cw_tools)
+			set_property(TEST ${_cw_t} APPEND PROPERTY ENVIRONMENT
+				"CW_LAUNCH_PLAN_VERIFIER=$<TARGET_FILE:verify_wii_launch_plan>")
 		endif()
 	endforeach()
 endif()
+
+include(cmake/PublicTestInputs.cmake)
 
 # ---- Build-graph validation (review batch, 2026-08-27) ----
 # Runs at configure time in every BUILD_TESTING config (the CI verify leg).

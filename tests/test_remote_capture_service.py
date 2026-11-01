@@ -9,6 +9,7 @@ Credits originate only from socket peers, never from the C receive adapter.
 All generated SDK shims, binaries and SD fixtures live under the job folder.
 """
 from pathlib import Path
+import argparse
 import hashlib
 import importlib.util
 import os
@@ -24,7 +25,6 @@ sys.dont_write_bytecode = True
 
 ROOT = Path(__file__).resolve().parents[1]
 ARTIFACTS = ROOT / "tmp/jobs/capture-fix-1003"
-GCC = Path("C:/msys64/ucrt64/bin/gcc.exe")
 CASES = {
     "unarmed": b"secret",
     "nul": b"a\0remaining-secret",
@@ -219,12 +219,17 @@ def paired_case(exe, work, env, name):
 
 
 def main():
-    selected = sys.argv[1:] or list(CASES) + PAIRS + LIFECYCLES
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--cc", default=os.environ.get("CC", "cc"))
+    parser.add_argument("cases", nargs="*")
+    args = parser.parse_args()
+    selected = args.cases or list(CASES) + PAIRS + LIFECYCLES
     if any(name not in CASES and name not in PAIRS and name not in PROBES and name not in LIFECYCLES for name in selected):
         raise ValueError("Unknown service case")
     ARTIFACTS.mkdir(parents=True, exist_ok=True)
     env = os.environ.copy()
-    env["PATH"] = str(GCC.parent) + os.pathsep + env.get("PATH", "")
+    env["PATH"] = str(Path(args.cc).resolve().parent) + os.pathsep + env.get("PATH", "")
+    host_libraries = ["-lws2_32"] if os.name == "nt" else ["-pthread"]
     with tempfile.TemporaryDirectory(prefix="B01-service-", dir=ARTIFACTS) as td:
         folder = Path(td)
         (folder / "ogc").mkdir()
@@ -232,9 +237,9 @@ def main():
         (folder / "network.h").write_text(shim)
         (folder / "ogc/lwp_watchdog.h").write_text(shim)
         exe = folder / "service.exe"
-        command = [str(GCC), "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG",
+        command = [args.cc, "-std=c11", "-Wall", "-Wextra", "-Werror", "-UNDEBUG",
                    "-DPLATFORM_WII", "-I" + str(folder),
-                   str(ROOT / "tests/remote_capture_service_harness.c"), "-lws2_32", "-o", str(exe)]
+                   str(ROOT / "tests/remote_capture_service_harness.c"), *host_libraries, "-o", str(exe)]
         print("COMPILE: " + subprocess.list2cmdline(command), flush=True)
         source = Path(os.environ.get("REMOTE_CAPTURE_SOURCE", ROOT / "source/platform/remote_capture.c"))
         if "REMOTE_CAPTURE_SOURCE" in os.environ:
@@ -246,10 +251,10 @@ def main():
         failed = []
         lifecycle_exe = folder / "lifecycle.exe"
         if any(name in LIFECYCLES for name in selected):
-            lifecycle_command = [str(GCC), "-std=c99", "-pedantic", "-Wall", "-Wextra", "-Werror", "-UNDEBUG",
+            lifecycle_command = [args.cc, "-std=c99", "-pedantic", "-Wall", "-Wextra", "-Werror", "-UNDEBUG",
                                  "-DPLATFORM_WII", "-I" + str(folder),
                                  str(ROOT / "tests/remote_capture_recreate_harness.c"),
-                                 "-lws2_32", "-o", str(lifecycle_exe)]
+                                 *host_libraries, "-o", str(lifecycle_exe)]
             print("WII-BRANCH HOST C99 COMPILE: " + subprocess.list2cmdline(lifecycle_command), flush=True)
             if "REMOTE_CAPTURE_SOURCE" in os.environ:
                 lifecycle_command[1:1] = ['-DREMOTE_CAPTURE_SOURCE="' + source.as_posix() + '"',

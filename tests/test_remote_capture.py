@@ -1,5 +1,7 @@
 """Exercise auth grammar and the real capture client's success/failure transport."""
+import argparse
 import importlib.util
+import os
 from pathlib import Path
 import runpy
 import socket
@@ -13,6 +15,9 @@ from unittest.mock import patch
 sys.dont_write_bytecode = True
 
 root = Path(__file__).resolve().parents[1]
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument("--cc", default=os.environ.get("CC", "cc"))
+args = parser.parse_args()
 spec = importlib.util.spec_from_file_location("capture", root / "tools/capture_wii_live.py")
 client = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(client)
@@ -115,7 +120,7 @@ int main(void) {
     c = folder / "auth.c"
     c.write_text(code)
     exe = folder / "auth.exe"
-    subprocess.run(["C:/msys64/ucrt64/bin/gcc.exe", "-UNDEBUG", "-I"+str(root/"source"),
+    subprocess.run([args.cc, "-UNDEBUG", "-I"+str(root/"source"),
                     str(c), "-o", str(exe)], check=True)
     subprocess.run([str(exe)], check=True)
     for mode in ("valid", "nonce", "build", "short", "dimensions", "oversize"):
