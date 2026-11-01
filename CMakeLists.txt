@@ -2607,29 +2607,29 @@ add_test(NAME test_mem1_budget COMMAND test_mem1_budget)
 # gen_terrain was verified byte-exact vs mc173 across 8 seed/chunk scenarios incl.
 # negative coords (see tests/oracle/README.md). Same worldgen deps as test_worldgen;
 # intentionally NOT named test_* (capture tool, not an assert test).
-add_executable(dump_chunk
-	source/worldgen/java_random.c
-	source/worldgen/noise.c
-	source/worldgen/simplex.c
-	source/worldgen/biome.c
-	source/worldgen/beta_math.c
-	source/worldgen/cave.c
-	source/worldgen/worldgen.c
-				source/worldgen/worldgen_hell.c
-	source/platform/mem2.c
-	tests/oracle/dump_chunk.c
-)
-target_compile_definitions(dump_chunk PRIVATE PLATFORM_PC)
+# [public snapshot: needs private files] add_executable(dump_chunk
+# 	source/worldgen/java_random.c
+# 	source/worldgen/noise.c
+# 	source/worldgen/simplex.c
+# 	source/worldgen/biome.c
+# 	source/worldgen/beta_math.c
+# 	source/worldgen/cave.c
+# 	source/worldgen/worldgen.c
+# 				source/worldgen/worldgen_hell.c
+# 	source/platform/mem2.c
+# 	tests/oracle/dump_chunk.c
+# )
+# [public snapshot: needs private files] target_compile_definitions(dump_chunk PRIVATE PLATFORM_PC)
 # Capture tools are not test_ targets, so the suite's forced -UNDEBUG never
 # reaches them -- but their goldens feed the oracle gates, so a Release-
 # configured build dir must not strip their (or their deps') assert guards
 # into a garbage capture (the dump_redstone Release incident, 2026-08-26).
-target_compile_options(dump_chunk PRIVATE -UNDEBUG)
-target_include_directories(dump_chunk PRIVATE
-	${CMAKE_CURRENT_SOURCE_DIR}/source
-	${CMAKE_CURRENT_SOURCE_DIR}/third_party
-)
-target_link_libraries(dump_chunk m)
+# [public snapshot: needs private files] target_compile_options(dump_chunk PRIVATE -UNDEBUG)
+# [public snapshot: needs private files] target_include_directories(dump_chunk PRIVATE
+# 	${CMAKE_CURRENT_SOURCE_DIR}/source
+# 	${CMAKE_CURRENT_SOURCE_DIR}/third_party
+# )
+# [public snapshot: needs private files] target_link_libraries(dump_chunk m)
 
 # oracle-diff LIGHTING capture tool (tests/oracle/dump_light.c): builds the
 # synthetic "arena1" scenario and emits the settled sky/block light field in
@@ -2637,33 +2637,33 @@ target_link_libraries(dump_chunk m)
 # against a committed mc173 capture (an EXTERNAL Beta-1.7.3 light engine).
 # Pure-unit deps like test_lighting_multi: lighting.c + stack.c + a stub
 # blocks[] table. Capture tool, deliberately NOT named test_*.
-add_executable(dump_light
-	source/lighting.c
-	source/stack.c
-	tests/oracle/dump_light.c
-)
-target_compile_definitions(dump_light PRIVATE PLATFORM_PC)
-target_compile_options(dump_light PRIVATE -UNDEBUG) # capture-tool rule (see dump_chunk)
-target_include_directories(dump_light PRIVATE
-	${CMAKE_CURRENT_SOURCE_DIR}/source
-	${CMAKE_CURRENT_SOURCE_DIR}/third_party
-)
-target_link_libraries(dump_light m)
+# [public snapshot: needs private files] add_executable(dump_light
+# 	source/lighting.c
+# 	source/stack.c
+# 	tests/oracle/dump_light.c
+# )
+# [public snapshot: needs private files] target_compile_definitions(dump_light PRIVATE PLATFORM_PC)
+# [public snapshot: needs private files] target_compile_options(dump_light PRIVATE -UNDEBUG) # capture-tool rule (see dump_chunk)
+# [public snapshot: needs private files] target_include_directories(dump_light PRIVATE
+# 	${CMAKE_CURRENT_SOURCE_DIR}/source
+# 	${CMAKE_CURRENT_SOURCE_DIR}/third_party
+# )
+# [public snapshot: needs private files] target_link_libraries(dump_light m)
 
 # oracle-diff REDSTONE capture tool (tests/oracle/dump_redstone.c): the proven
 # repeater-circuit env fixture (torch -> 8-wire run -> delay-4 repeater ->
 # output wire) driven per-tick through the REAL server_world_tick, emitting
 # x,y,z@tick<TAB>power. Diffed by test_oracle_redstone against a committed
 # mc173 capture. Full-engine deps (env-test pattern). NOT named test_*.
-add_executable(dump_redstone tests/oracle/dump_redstone.c)
-target_link_libraries(dump_redstone cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input)
-target_compile_options(dump_redstone PRIVATE -UNDEBUG) # capture-tool rule (see dump_chunk)
-target_include_directories(dump_redstone PRIVATE
-	${CMAKE_CURRENT_SOURCE_DIR}/source
-	${CMAKE_CURRENT_SOURCE_DIR}/third_party
-)
-set_target_properties(dump_redstone PROPERTIES C_STANDARD 99)
-target_link_libraries(dump_redstone ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+# [public snapshot: needs private files] add_executable(dump_redstone tests/oracle/dump_redstone.c)
+# [public snapshot: needs private files] target_link_libraries(dump_redstone cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input)
+# [public snapshot: needs private files] target_compile_options(dump_redstone PRIVATE -UNDEBUG) # capture-tool rule (see dump_chunk)
+# [public snapshot: needs private files] target_include_directories(dump_redstone PRIVATE
+# 	${CMAKE_CURRENT_SOURCE_DIR}/source
+# 	${CMAKE_CURRENT_SOURCE_DIR}/third_party
+# )
+# [public snapshot: needs private files] set_target_properties(dump_redstone PROPERTIES C_STANDARD 99)
+# [public snapshot: needs private files] target_link_libraries(dump_redstone ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
 
 option(CAVEWII_REQUIRE_TEST_TOOLS
 	"Fail configure when Python, PowerShell, or bash tooling tests cannot be registered" OFF)
@@ -2765,33 +2765,33 @@ if(CAVEWII_REQUIRE_TEST_TOOLS AND NOT BASH_EXECUTABLE)
 	message(FATAL_ERROR "bash is required for the CaveWii tooling test suite")
 endif()
 if(Python3_Interpreter_FOUND)
-	add_test(NAME test_oracle_worldgen COMMAND ${Python3_EXECUTABLE}
-		${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/run_worldgen_oracle.py
-		--bin $<TARGET_FILE:dump_chunk>
-		--golden ${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/worldgen/mc173/seed-42-chunk-0_0.txt
-		--oracle-name mc173@16f39e7
-		--seed 42 --cx 0 --cz 0)
+	# [public snapshot: needs private files] add_test(NAME test_oracle_worldgen COMMAND ${Python3_EXECUTABLE}
+# 		${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/run_worldgen_oracle.py
+# 		--bin $<TARGET_FILE:dump_chunk>
+# 		--golden ${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/worldgen/mc173/seed-42-chunk-0_0.txt
+# 		--oracle-name mc173@16f39e7
+# 		--seed 42 --cx 0 --cz 0)
 	# Lighting parity vs the external mc173 light engine: the settled sky/block
 	# field of the synthetic "arena1" scenario (heightmap sky emission,
 	# horizontal under-platform bleed, leaves partial opacity, torch/glowstone
 	# spheres) must match the committed mc173 capture cell-for-cell. Closes the
 	# lighting leg of the oracle-diff plan (worldgen was the first).
-	add_test(NAME test_oracle_lighting COMMAND ${Python3_EXECUTABLE}
-		${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/run_lighting_oracle.py
-		--bin $<TARGET_FILE:dump_light>
-		--golden ${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/lighting/mc173/arena1.txt
-		--oracle-name mc173@16f39e7
-		--scenario arena1)
+	# [public snapshot: needs private files] add_test(NAME test_oracle_lighting COMMAND ${Python3_EXECUTABLE}
+# 		${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/run_lighting_oracle.py
+# 		--bin $<TARGET_FILE:dump_light>
+# 		--golden ${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/lighting/mc173/arena1.txt
+# 		--oracle-name mc173@16f39e7
+# 		--scenario arena1)
 	# Redstone per-tick parity vs mc173's tick engine: the repeater-circuit
 	# fixture's wire powers, repeater output state, and rise/fall timing
 	# (x,y,z@tick -> power scheme) must match the committed mc173 capture
 	# tick-for-tick. Third oracle-diff leg (worldgen, lighting, redstone).
-	add_test(NAME test_oracle_redstone COMMAND ${Python3_EXECUTABLE}
-		${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/run_lighting_oracle.py
-		--bin $<TARGET_FILE:dump_redstone>
-		--golden ${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/redstone/rs1_arbitrated.txt
-		--oracle-name mc173@16f39e7+decompile-arbitration
-		--scenario rs1)
+	# [public snapshot: needs private files] add_test(NAME test_oracle_redstone COMMAND ${Python3_EXECUTABLE}
+# 		${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/run_lighting_oracle.py
+# 		--bin $<TARGET_FILE:dump_redstone>
+# 		--golden ${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/redstone/rs1_arbitrated.txt
+# 		--oracle-name mc173@16f39e7+decompile-arbitration
+# 		--scenario rs1)
 	add_test(NAME test_wii_telemetry_server COMMAND ${Python3_EXECUTABLE}
 		${CMAKE_CURRENT_SOURCE_DIR}/tools/wii_telemetry_server.py
 		--selftest)
@@ -6364,7 +6364,7 @@ target_include_directories(test_worldgen_jar_parity PRIVATE ${CMAKE_CURRENT_SOUR
 set_target_properties(test_worldgen_jar_parity PROPERTIES C_STANDARD 99)
 target_compile_options(test_worldgen_jar_parity PRIVATE -UNDEBUG)
 target_compile_definitions(test_worldgen_jar_parity PRIVATE ${CAVEX_TEST_ENGINE_DEFINES})
-add_test(NAME test_worldgen_jar_parity COMMAND test_worldgen_jar_parity ${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/lighting/g9_option_b/fixtures/no-downgrade/original-jar.bin.gz)
+# [public snapshot: needs private files] add_test(NAME test_worldgen_jar_parity COMMAND test_worldgen_jar_parity ${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/lighting/g9_option_b/fixtures/no-downgrade/original-jar.bin.gz)
 set_tests_properties(test_worldgen_jar_parity PROPERTIES TIMEOUT 300)
 
 add_executable(test_light_queue_equiv tests/test_light_queue_equiv.c
@@ -6378,34 +6378,34 @@ target_include_directories(test_light_queue_equiv PRIVATE
 )
 set_target_properties(test_light_queue_equiv PROPERTIES C_STANDARD 99)
 target_link_libraries(test_light_queue_equiv ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
-add_test(NAME test_light_queue_equiv__history
-	COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/lighting/g9_option_b/compare/run_observer.py
-	$<TARGET_FILE:test_light_queue_equiv>)
-add_test(NAME test_light_queue_equiv__nether_setters_beta
-	COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/lighting/g9_option_b/compare/production_setters.py
-	$<TARGET_FILE:test_light_queue_equiv>)
-add_test(NAME test_light_queue_equiv__world_rng_load32_beta
-	COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/lighting/g9_option_b/compare/production_rng.py
-	$<TARGET_FILE:test_light_queue_equiv>)
-add_test(NAME test_light_queue_equiv__nether_runtime_lava_beta
-	COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/lighting/g9_option_b/compare/production_lava.py
-	$<TARGET_FILE:test_light_queue_equiv>)
+# [public snapshot: needs private files] add_test(NAME test_light_queue_equiv__history
+# 	COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/lighting/g9_option_b/compare/run_observer.py
+# 	$<TARGET_FILE:test_light_queue_equiv>)
+# [public snapshot: needs private files] add_test(NAME test_light_queue_equiv__nether_setters_beta
+# 	COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/lighting/g9_option_b/compare/production_setters.py
+# 	$<TARGET_FILE:test_light_queue_equiv>)
+# [public snapshot: needs private files] add_test(NAME test_light_queue_equiv__world_rng_load32_beta
+# 	COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/lighting/g9_option_b/compare/production_rng.py
+# 	$<TARGET_FILE:test_light_queue_equiv>)
+# [public snapshot: needs private files] add_test(NAME test_light_queue_equiv__nether_runtime_lava_beta
+# 	COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/lighting/g9_option_b/compare/production_lava.py
+# 	$<TARGET_FILE:test_light_queue_equiv>)
 foreach(_g9_q equiv explosion fault lifecycle provision shutdown phases drain_loss drain_stop_update contain checkpoint beta_oracle consumers workloads hw_workload packet_delivery packet_delivery_nether
 	generated_nether_beta nether_population_height_beta automatic_population_beta automatic_population_hold nether_provider_rng_beta generation_height_order_beta nether_plain_rollback g9x_dirty_reload g9x_snow_oom g9x_observer_reuse g9x_region_budget g9x_memory_progress g9x_publication g9x_drain_t1_equiv)
 	add_test(NAME test_light_queue_equiv__${_g9_q} COMMAND test_light_queue_equiv ${_g9_q})
 endforeach()
 # G9X-2: the case's CFR-derived assertions PLUS the same script replayed
 # through the instrumented original JAR (live JVM), compared step by step.
-add_test(NAME test_light_queue_equiv__g9x_callbacks
-	COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/lighting/g9_option_b/compare/setter_checks.py
-	--callbacks $<TARGET_FILE:test_light_queue_equiv>)
+# [public snapshot: needs private files] add_test(NAME test_light_queue_equiv__g9x_callbacks
+# 	COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/lighting/g9_option_b/compare/setter_checks.py
+# 	--callbacks $<TARGET_FILE:test_light_queue_equiv>)
 # ASTRA-G9B R7: historical producer/model/inputs in isolation. Changing
 # production is no longer required to reproduce the canonical debt output.
-add_test(NAME test_light_queue_equiv__generation_parity_debt_golden
-	COMMAND ${Python3_EXECUTABLE}
-	${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/lighting/g9_option_b/historical_debt/reproduce.py
-	--repo ${CMAKE_CURRENT_SOURCE_DIR}
-	--cache ${CMAKE_CURRENT_BINARY_DIR}/g9-historical-debt)
+# [public snapshot: needs private files] add_test(NAME test_light_queue_equiv__generation_parity_debt_golden
+# 	COMMAND ${Python3_EXECUTABLE}
+# 	${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/lighting/g9_option_b/historical_debt/reproduce.py
+# 	--repo ${CMAKE_CURRENT_SOURCE_DIR}
+# 	--cache ${CMAKE_CURRENT_BINARY_DIR}/g9-historical-debt)
 # G9X-7 (2026-10-15, G9-EXACT-PLAN item 20): exact Beta generation lighting
 # is release-blocking (maintainer ruling 2026-10-12 pm). The original-JAR
 # history gate passes exactly, so it is a normal blocking test: no
@@ -8233,17 +8233,17 @@ foreach(_craft_test
 	add_test(NAME ${_craft_test} COMMAND ${_craft_test})
 endforeach()
 
-add_executable(test_sort_oracle_equiv tests/oracle/sort/test_sort_oracle_equiv.c ${CAVEX_MP_SOURCES})
-target_link_libraries(test_sort_oracle_equiv cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input)
-target_include_directories(test_sort_oracle_equiv PRIVATE source third_party)
-set_target_properties(test_sort_oracle_equiv PROPERTIES C_STANDARD 99)
-target_link_libraries(test_sort_oracle_equiv ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+# [public snapshot: needs private files] add_executable(test_sort_oracle_equiv tests/oracle/sort/test_sort_oracle_equiv.c ${CAVEX_MP_SOURCES})
+# [public snapshot: needs private files] target_link_libraries(test_sort_oracle_equiv cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input)
+# [public snapshot: needs private files] target_include_directories(test_sort_oracle_equiv PRIVATE source third_party)
+# [public snapshot: needs private files] set_target_properties(test_sort_oracle_equiv PROPERTIES C_STANDARD 99)
+# [public snapshot: needs private files] target_link_libraries(test_sort_oracle_equiv ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
 if(WIN32)
-	target_link_libraries(test_sort_oracle_equiv ws2_32)
+	# [public snapshot: needs private files] target_link_libraries(test_sort_oracle_equiv ws2_32)
 endif()
-add_test(NAME test_sort_oracle_equiv COMMAND ${Python3_EXECUTABLE}
-	${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/sort/run.py
-	--bin $<TARGET_FILE:test_sort_oracle_equiv> --mp $<TARGET_FILE:test_mp_s0_env>)
+# [public snapshot: needs private files] add_test(NAME test_sort_oracle_equiv COMMAND ${Python3_EXECUTABLE}
+# 	${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/sort/run.py
+# 	--bin $<TARGET_FILE:test_sort_oracle_equiv> --mp $<TARGET_FILE:test_mp_s0_env>)
 
 add_executable(test_inventory_sort_golden tests/test_inventory_sort_golden.c)
 target_link_libraries(test_inventory_sort_golden cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input)
@@ -10842,25 +10842,25 @@ set_tests_properties(test_spawn_safety PROPERTIES TIMEOUT 240)
 # on identical inputs (terrain seed AND the pinned World.rand spawn RNG), seeds
 # 12345/42/0/-1/4242. Fixtures: tests/oracle/spawn/fixtures.json from capture_spawn.py
 # (original client jar). RED (exit 1) until REL-03 lands; exit 2 = setup failure.
-add_executable(test_spawn_oracle tests/test_spawn_oracle.c)
-target_link_libraries(test_spawn_oracle cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input
-	${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
-target_include_directories(test_spawn_oracle PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source ${CMAKE_CURRENT_SOURCE_DIR}/third_party ${CMAKE_CURRENT_SOURCE_DIR}/tests)
-set_target_properties(test_spawn_oracle PROPERTIES C_STANDARD 99)
-add_test(NAME test_spawn_oracle COMMAND test_spawn_oracle
-	${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/spawn/fixtures.json)
-set_tests_properties(test_spawn_oracle PROPERTIES TIMEOUT 600)
+# [public snapshot: needs private files] add_executable(test_spawn_oracle tests/test_spawn_oracle.c)
+# [public snapshot: needs private files] target_link_libraries(test_spawn_oracle cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input
+# 	${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+# [public snapshot: needs private files] target_include_directories(test_spawn_oracle PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source ${CMAKE_CURRENT_SOURCE_DIR}/third_party ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+# [public snapshot: needs private files] set_target_properties(test_spawn_oracle PROPERTIES C_STANDARD 99)
+# [public snapshot: needs private files] add_test(NAME test_spawn_oracle COMMAND test_spawn_oracle
+# 	${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/spawn/fixtures.json)
+# [public snapshot: needs private files] set_tests_properties(test_spawn_oracle PROPERTIES TIMEOUT 600)
 # R3 sweep: test_spawn_oracle over 20 seeds (small, negative, 32-bit edges, Long.MIN/MAX)
 # + the loaded body box never strictly intersects a block collision box. Fixtures:
 # tests/oracle/spawn/sweep_fixtures.json from capture_spawn_sweep.py (original client jar).
-add_executable(test_spawn_oracle_sweep tests/test_spawn_oracle_sweep.c)
-target_link_libraries(test_spawn_oracle_sweep cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input
-	${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
-target_include_directories(test_spawn_oracle_sweep PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source ${CMAKE_CURRENT_SOURCE_DIR}/third_party ${CMAKE_CURRENT_SOURCE_DIR}/tests)
-set_target_properties(test_spawn_oracle_sweep PROPERTIES C_STANDARD 99)
-add_test(NAME test_spawn_oracle_sweep COMMAND test_spawn_oracle_sweep
-	${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/spawn/sweep_fixtures.json)
-set_tests_properties(test_spawn_oracle_sweep PROPERTIES TIMEOUT 1200)
+# [public snapshot: needs private files] add_executable(test_spawn_oracle_sweep tests/test_spawn_oracle_sweep.c)
+# [public snapshot: needs private files] target_link_libraries(test_spawn_oracle_sweep cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input
+# 	${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+# [public snapshot: needs private files] target_include_directories(test_spawn_oracle_sweep PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source ${CMAKE_CURRENT_SOURCE_DIR}/third_party ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+# [public snapshot: needs private files] set_target_properties(test_spawn_oracle_sweep PROPERTIES C_STANDARD 99)
+# [public snapshot: needs private files] add_test(NAME test_spawn_oracle_sweep COMMAND test_spawn_oracle_sweep
+# 	${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/spawn/sweep_fixtures.json)
+# [public snapshot: needs private files] set_tests_properties(test_spawn_oracle_sweep PROPERTIES TIMEOUT 1200)
 # REL-03b (R3): a failed new-world spawn search (chunk generation refused through the
 # --wrap=mem2_alloc fault seam) stops world creation: status query false, no level.dat,
 # visible error. Prints "REL-03b RED" and exits 1 on failure.
