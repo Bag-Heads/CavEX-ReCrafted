@@ -39,7 +39,7 @@ function Set-StagedServiceDiagnosticConfig {
             $common = @("-WiiHost", $WiiHost,
                 "-Port", "$Port", "-ConnectTimeoutSeconds", "$ConnectTimeoutSeconds")
             if($StageToken) { $common += @("-StageToken", $StageToken) }
-            & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $tools "fetch_wii_stage_file.ps1") @common -RemotePath $remote -OutFile $local
+            & (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1) -NoProfile -ExecutionPolicy Bypass -File (Join-Path $tools "fetch_wii_stage_file.ps1") @common -RemotePath $remote -OutFile $local
             if($LASTEXITCODE -ne 0) { throw "service diagnostic config fetch failed: $remote" }
             $config = Get-Content -Raw -LiteralPath $local | ConvertFrom-Json
             if($null -eq $config.debug) {
@@ -49,9 +49,9 @@ function Set-StagedServiceDiagnosticConfig {
                 $config.debug | Add-Member -Force NoteProperty $entry.Key $entry.Value
             }
             [IO.File]::WriteAllText($local, ($config | ConvertTo-Json -Depth 100), [Text.UTF8Encoding]::new($false))
-            & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $tools "put_wii_stage_file.ps1") @common -RemotePath $remote -LocalPath $local
+            & (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1) -NoProfile -ExecutionPolicy Bypass -File (Join-Path $tools "put_wii_stage_file.ps1") @common -RemotePath $remote -LocalPath $local
             if($LASTEXITCODE -ne 0) { throw "service diagnostic config PUT failed: $remote" }
-            & powershell -NoProfile -ExecutionPolicy Bypass -File (Join-Path $tools "fetch_wii_stage_file.ps1") @common -RemotePath $remote -OutFile $readback
+            & (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1) -NoProfile -ExecutionPolicy Bypass -File (Join-Path $tools "fetch_wii_stage_file.ps1") @common -RemotePath $remote -OutFile $readback
             if($LASTEXITCODE -ne 0) { throw "service diagnostic config read-back failed: $remote" }
             Assert-ServiceDiagnosticConfig (Get-Content -Raw -LiteralPath $readback | ConvertFrom-Json)
             Write-Host "[service-diagnostic] verified $remote; human input, autopilot off"

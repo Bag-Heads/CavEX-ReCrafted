@@ -135,7 +135,7 @@ function Invoke-PowerCycleHook {
     $powerArgs.Add("-TimeoutSeconds")
     $powerArgs.Add("$PowerCycleTimeoutSeconds")
     try {
-        & powershell @powerArgs
+        & (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1) @powerArgs
         if($LASTEXITCODE -ne 0) {
             Write-Warning "matrix power-cycle hook failed with exit code $LASTEXITCODE"
         }
@@ -171,7 +171,7 @@ function Test-ResumePassArtifact {
     $oldErrorActionPreference = $ErrorActionPreference
     try {
         $ErrorActionPreference = "Continue"
-        $output = & powershell @validateArgs 2>&1
+        $output = & (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1) @validateArgs 2>&1
         $exitCode = $LASTEXITCODE
     } finally {
         $ErrorActionPreference = $oldErrorActionPreference
@@ -441,7 +441,7 @@ for($i = 0; $i -lt $ProfileList.Count; $i++) {
     $oldErrorActionPreference = $ErrorActionPreference
     try {
         $ErrorActionPreference = "Continue"
-        & powershell @args
+        & (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1) @args
         $exitCode = $LASTEXITCODE
     } finally {
         $ErrorActionPreference = $oldErrorActionPreference

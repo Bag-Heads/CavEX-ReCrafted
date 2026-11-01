@@ -172,7 +172,7 @@ function Save-StageManifestBeforeFetch {
         "-ConnectTimeoutSeconds", "$FetchConnectTimeoutSeconds",
         "-OutFile", $manifestFile
     )
-    $manifestOutput = & powershell @manifestArgs
+    $manifestOutput = & (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1) @manifestArgs
     $manifestExitCode = $LASTEXITCODE
     $manifestOutput | ForEach-Object { Write-Host $_ }
     if($manifestExitCode -ne 0) {
@@ -247,7 +247,7 @@ if(-not $FetchOnly) {
         $stageArgs += "-AllowDirty"
     }
     Write-Host "[bench-stage] using generic stage_wii_dol.ps1; ignore its CaveWii_v2 collector hint for this benchmark and use this wrapper's BENCH/NEXT lines."
-    & powershell @stageArgs
+    & (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1) @stageArgs
     if($LASTEXITCODE -ne 0) {
         throw "stage_wii_dol.ps1 failed with exit code $LASTEXITCODE"
     }
@@ -270,7 +270,7 @@ $fetchArgs = @(
     "-RemotePath", $RemoteResultPath,
     "-OutFile", $resultFile
 )
-& powershell @fetchArgs
+& (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1) @fetchArgs
 if($LASTEXITCODE -ne 0) {
     throw "fetch_wii_stage_file.ps1 failed with exit code $LASTEXITCODE. If the benchmark already ran, relaunch CaveWii Stage Server and retry with -FetchOnly."
 }

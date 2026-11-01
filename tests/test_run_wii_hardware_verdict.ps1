@@ -10,7 +10,7 @@ if(-not $waitMatch.Success) { throw "runner collector wait block not found" }
 $quarantineMatch = [regex]::Match($source, '(?ms)^# BEGIN prior-verdict quarantine\r?\n(.*?)^# END prior-verdict quarantine\r?\n')
 $quarantine = if($quarantineMatch.Success) { $quarantineMatch.Groups[1].Value } else { "" }
 
-$root = Join-Path $env:TEMP ("cw-verdict-test-" + [guid]::NewGuid().ToString("N"))
+$root = Join-Path ([IO.Path]::GetTempPath()) ("cw-verdict-test-" + [guid]::NewGuid().ToString("N"))
 New-Item -ItemType Directory -Path (Join-Path $root "tools") -Force | Out-Null
 @'
 param([string]$PassPath, [string]$ExpectedRunId, [string]$ExpectedProfile, [string]$ExpectedBuild)
@@ -65,9 +65,14 @@ switch($Scenario) {
     "valid-pass" { Write-Pass $true }
 }
 if($Scenario -like "collector-exit-*") {
-    $pythonExe = $env:ComSpec
     $exitCode = if($Scenario -eq "collector-exit-zero") { 0 } else { 7 }
-    $collectorArgs = @("/c", "exit", "$exitCode")
+    if($env:OS -eq "Windows_NT") {
+        $pythonExe = $env:ComSpec
+        $collectorArgs = @("/c", "exit", "$exitCode")
+    } else {
+        $pythonExe = (Get-Command sh).Source
+        $collectorArgs = @("-c", "`"exit $exitCode`"")
+    }
     $collectorOut = Join-Path $OutRoot "collector.stdout.log"
     $collectorErr = Join-Path $OutRoot "collector.stderr.log"
     __START_COLLECTOR__
@@ -83,7 +88,7 @@ $failures = 0
 try {
     $ErrorActionPreference = "Continue"
     foreach($case in @("stale-pass-fresh-fail", "verdict-less", "nonzero-with-pass", "nonzero-power-cycle", "null-with-pass", "both-verdicts", "invalid-pass", "valid-pass", "collector-exit-zero", "collector-exit-seven")) {
-        $output = & powershell -NoProfile -ExecutionPolicy Bypass -File $harnessPath -Root $root -Scenario $case 2>&1
+        $output = & (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1) -NoProfile -ExecutionPolicy Bypass -File $harnessPath -Root $root -Scenario $case 2>&1
         $code = $LASTEXITCODE
         $printedPass = ($output -join "`n") -match '(?m)^\[PASS\] '
         $expectPass = $case -in @("valid-pass", "collector-exit-zero")

@@ -9,6 +9,8 @@ returns failure; it does not prove Wii launch, HBC, or hardware recovery.
 from __future__ import annotations
 
 import argparse
+import os
+import shutil
 import socket
 import subprocess
 import sys
@@ -79,7 +81,11 @@ def start_power_server(paths: list[str]):
 
 
 def write_fake_wiiload(path: Path) -> None:
-    path.write_text("@echo off\r\necho fake wiiload %*\r\nexit /b 0\r\n", encoding="ascii")
+    if os.name == "nt":
+        path.write_text("@echo off\r\necho fake wiiload %*\r\nexit /b 0\r\n", encoding="ascii")
+    else:
+        path.write_text('#!/bin/sh\necho fake wiiload "$@"\nexit 0\n', encoding="ascii")
+        path.chmod(0o755)
 
 
 def assert_default_refuses_hbc_upload(repo: Path, powershell: str, wiiload: Path) -> None:
@@ -123,20 +129,7 @@ def main() -> int:
     ap.add_argument("--powershell", required=True)
     args = ap.parse_args()
 
-    repo = Path(args.repo).resolve()
-
-    # Precondition: the test runs run_wii_hardware.ps1 with -SkipBuild, so a
-    # pre-built CaveWii_v2.dol must exist in the repo root.  Without this check
-    # the PowerShell script throws "missing <dolPath>" before reaching the HBC
-    # upload-guard logic, and the test reports a misleading assertion error
-    # instead of naming the missing prerequisite.
-    dol_path = repo / "CaveWii_v2.dol"
-    if not dol_path.is_file():
-        sys.stderr.write(
-            f"[test_run_wii_power_cycle] SKIP: {dol_path} not found. "
-            "Build the Wii .dol first with build-verify.sh, then re-run.\n"
-        )
-        return 1
+    source_repo = Path(args.repo).resolve()
 
     telemetry_events: list[str] = []
     power_paths: list[str] = []
@@ -146,6 +139,20 @@ def main() -> int:
     power_port, power_thread, power_errors = start_power_server(power_paths)
 
     with tempfile.TemporaryDirectory() as td:
+        # The fake uploader never interprets its input. Test the recovery
+        # wiring in a scratch repo, independent of a local Wii build or SD.
+        repo = Path(td) / "repo"
+        (repo / "tools").mkdir(parents=True)
+        for name in ("run_wii_hardware.ps1", "invoke_wii_power_cycle.ps1"):
+            shutil.copyfile(source_repo / "tools" / name, repo / "tools" / name)
+        # The real collector imports its sibling evidence graders at startup.
+        for module in (source_repo / "tools").glob("*.py"):
+            shutil.copyfile(module, repo / "tools" / module.name)
+        (repo / "CaveWii_v2.dol").write_bytes(b"synthetic uploader input")
+        git = ["git", "-c", "user.name=test", "-c", "user.email=test@example.local"]
+        subprocess.run(git + ["init", "-q"], cwd=repo, check=True)
+        subprocess.run(git + ["add", "tools"], cwd=repo, check=True)
+        subprocess.run(git + ["commit", "-q", "-m", "fixture"], cwd=repo, check=True)
         wiiload = Path(td) / "fake_wiiload.cmd"
         write_fake_wiiload(wiiload)
         assert_default_refuses_hbc_upload(repo, args.powershell, wiiload)
@@ -193,10 +200,13 @@ def main() -> int:
             timeout=120,
         )
 
+        collector_stderr = out_root / "collector.stderr.log"
+        diagnostics = collector_stderr.read_text() if collector_stderr.is_file() else ""
+
     telemetry_thread.join(5)
     power_thread.join(5)
     if telemetry_thread.is_alive():
-        raise AssertionError("telemetry closer did not exit")
+        raise AssertionError("telemetry closer did not exit\n" + proc.stdout + diagnostics)
     if power_thread.is_alive():
         raise AssertionError("mock power server did not receive both requests")
     if telemetry_errors:

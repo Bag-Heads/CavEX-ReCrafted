@@ -59,6 +59,8 @@ function Resolve-Python {
     if(-not [string]::IsNullOrWhiteSpace($Python)) { return $Python }
     $cmd = Get-Command python -ErrorAction SilentlyContinue
     if($cmd) { return $cmd.Source }
+    $cmd = Get-Command python3 -ErrorAction SilentlyContinue
+    if($cmd) { return $cmd.Source }
     $cmd = Get-Command py -ErrorAction SilentlyContinue
     if($cmd) { return $cmd.Source }
     throw "python not found on PATH"

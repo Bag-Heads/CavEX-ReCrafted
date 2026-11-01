@@ -246,7 +246,7 @@ function Invoke-ConfiguredPowerCycle {
         $powerArgs += @("-PowerCycleCommand", $PowerCycleCommand)
     }
     try {
-        & powershell @powerArgs
+        & (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1) @powerArgs
         if($LASTEXITCODE -ne 0) {
             Write-Warning "power-cycle hook failed with exit code $LASTEXITCODE"
         }
@@ -302,7 +302,7 @@ function Collect-StageMailbox {
         "-ConnectTimeoutSeconds", "$StageMailboxConnectTimeoutSeconds",
         "-OutFile", $manifestFile
     )
-    & powershell @manifestArgs
+    & (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1) @manifestArgs
     if($LASTEXITCODE -ne 0) {
         throw "get_wii_stage_manifest.ps1 failed with exit code $LASTEXITCODE"
     }
@@ -374,7 +374,7 @@ function Collect-StageMailbox {
             "-RemotePath", $remote,
             "-OutFile", $outFile
         )
-        & powershell @fetchArgs
+        & (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1) @fetchArgs
         if($LASTEXITCODE -ne 0) {
             throw "fetch_wii_stage_file.ps1 failed for ${remote} with exit code $LASTEXITCODE"
         }
@@ -468,7 +468,7 @@ function Invoke-NeutralizeRunArgs {
             # while writing this, so the default is relied on deliberately,
             # not by oversight.
         )
-        & powershell @putArgs
+        & (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1) @putArgs
         if($LASTEXITCODE -ne 0) {
             Write-Warning "[run-staged] neutralize PUT failed (exit $LASTEXITCODE) -- cw_run_args.txt may still be armed; clear it by hand (or rerun this script) before the next boot"
         } else {
@@ -560,7 +560,7 @@ Write-Host "[run-staged] staging DOL and cw_run_args.txt via ${WiiHost}:$StagePo
 # $script:runArmed comment above (a failed/partial stage attempt is exactly
 # one of the "fails before launch" cases the neutralize path exists for).
 $script:runArmed = $true
-& powershell @stageArgs
+& (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1) @stageArgs
 if($LASTEXITCODE -ne 0) {
     throw "stage_wii_dol.ps1 failed with exit code $LASTEXITCODE"
 }
@@ -616,7 +616,7 @@ if(-not [string]::IsNullOrWhiteSpace($ExpectedBuild)) {
     $collectArgs += @("-ExpectedBuild", $ExpectedBuild)
 }
 
-& powershell @collectArgs
+& (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1) @collectArgs
 $collectExit = $LASTEXITCODE
 if($PowerCycleOnFailure -and $collectExit -ne 0) {
     Write-Warning "[run-staged] collection failed; invoking configured Wii power-cycle hook"

@@ -288,7 +288,11 @@ def check_spaced_and_delete(powershell: str, repo: Path, td: str) -> None:
 
     # Client-side refusal happens before any connection.
     proc = run_put(powershell, repo, 1, local_file, "sd:/apps/x /y.txt")
-    assert proc.returncode != 0 and "starts or ends with a space" in proc.stdout, proc.stdout
+    # PowerShell 7's concise error renderer can wrap between "ends" and
+    # "with", adding gutter/ANSI formatting. Assert the diagnostic's words
+    # without depending on the host terminal's line width.
+    assert proc.returncode != 0 and re.search(
+        r"starts or ends.*with a space", proc.stdout, re.S), proc.stdout
 
     # delete: PASS (tree, spaced); the line on the wire is whole.
     target = "sd:/apps/CavEX/saves/CaveWii Tutorial"

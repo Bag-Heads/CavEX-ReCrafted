@@ -59,7 +59,7 @@ function Invoke-PowerUrl {
 function Invoke-PowerCommand {
     param([string]$Command)
     Write-Host "[power] command"
-    & powershell -NoProfile -ExecutionPolicy Bypass -Command $Command
+    & (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1) -NoProfile -ExecutionPolicy Bypass -Command $Command
     if($LASTEXITCODE -ne 0) {
         throw "PowerCycleCommand failed with exit code $LASTEXITCODE"
     }

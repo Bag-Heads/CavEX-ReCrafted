@@ -31,7 +31,7 @@ def main():
         assert '[switch]$ServiceDiagnostic' in (ROOT / 'tools' / name).read_text(), name
     preamble = f"$RepoRoot='{ROOT.as_posix()}'; $Profile='perf_stress_5m'; $ServiceDiagnostic=$true; $Set=@(); $RunId='diag'; $TelemetryPort=39017; $AnchorSep=0; $WiiHost='localhost'\n"
     stage = section('run_staged_wii_hardware.ps1', '$stageArgs = @(', 'Write-Host "[run-staged] staging DOL')
-    collect = section('run_staged_wii_hardware.ps1', '$collectArgs = @(', '& powershell @collectArgs')
+    collect = section('run_staged_wii_hardware.ps1', '$collectArgs = @(', '& (Get-Command powershell, pwsh')
     output = run(preamble + stage + '\n$stageArgs -join "|"\n' + collect + '\n$collectArgs -join "|"')
     assert output.count('-ServiceDiagnostic') == 2, output
     collector = section('collect_staged_wii.ps1', '$args = @(', '& $pythonExe @args')

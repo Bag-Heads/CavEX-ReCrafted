@@ -243,6 +243,14 @@ function Convert-PrefixToNetmask {
 
 function Get-PrefixForLocalIp {
     param([string]$LocalIp)
+    if(-not (Get-Command Get-NetIPAddress -ErrorAction SilentlyContinue)) {
+        foreach($adapter in [System.Net.NetworkInformation.NetworkInterface]::GetAllNetworkInterfaces()) {
+            foreach($address in $adapter.GetIPProperties().UnicastAddresses) {
+                if($address.Address.ToString() -eq $LocalIp) { return $address.PrefixLength }
+            }
+        }
+        return 0
+    }
     $addr = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
         Where-Object { $_.IPAddress -eq $LocalIp } |
         Select-Object -First 1
@@ -253,6 +261,8 @@ function Get-PrefixForLocalIp {
 function Resolve-Python {
     if(-not [string]::IsNullOrWhiteSpace($Python)) { return $Python }
     $cmd = Get-Command python -ErrorAction SilentlyContinue
+    if($cmd) { return $cmd.Source }
+    $cmd = Get-Command python3 -ErrorAction SilentlyContinue
     if($cmd) { return $cmd.Source }
     $cmd = Get-Command py -ErrorAction SilentlyContinue
     if($cmd) { return $cmd.Source }
@@ -309,7 +319,7 @@ function Invoke-ConfiguredPowerCycle {
         $powerArgs += @("-PowerCycleCommand", $PowerCycleCommand)
     }
     try {
-        & powershell @powerArgs
+        & (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1) @powerArgs
         if($LASTEXITCODE -ne 0) {
             Write-Warning "power-cycle hook failed with exit code $LASTEXITCODE"
         }
@@ -518,9 +528,11 @@ $collectorArgs += @(Get-ResidencyCollectorArgs ([bool]$RequireResidency) $Reside
 
 function Start-Collector {
     Write-Host "[collect] $pythonExe $($collectorArgs -join ' ')"
+    $windowOptions = @{}
+    if($env:OS -eq "Windows_NT") { $windowOptions.WindowStyle = "Hidden" }
     $p = Start-Process -FilePath $pythonExe -ArgumentList $collectorArgs `
         -RedirectStandardOutput $collectorOut -RedirectStandardError $collectorErr `
-        -PassThru -WindowStyle Hidden
+        -PassThru @windowOptions
     $null = $p.Handle
     return $p
 }
@@ -586,9 +598,11 @@ try {
         "[attempt $attempt] $(Get-Date -Format o)" | Out-File -FilePath $wiiloadLog -Append -Encoding utf8
         $attemptOut = Join-Path $OutRoot "wiiload.attempt${attempt}.stdout.log"
         $attemptErr = Join-Path $OutRoot "wiiload.attempt${attempt}.stderr.log"
+        $windowOptions = @{}
+        if($env:OS -eq "Windows_NT") { $windowOptions.WindowStyle = "Hidden" }
         $p = Start-Process -FilePath $WiiloadExe -ArgumentList $wiiloadArgs `
             -RedirectStandardOutput $attemptOut -RedirectStandardError $attemptErr `
-            -Wait -PassThru -WindowStyle Hidden
+            -Wait -PassThru @windowOptions
         $wiiloadExit = $p.ExitCode
         if(Test-Path $attemptOut) {
             Get-Content $attemptOut | Tee-Object -FilePath $wiiloadLog -Append

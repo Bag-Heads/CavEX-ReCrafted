@@ -20,6 +20,8 @@ socket connect to 127.0.0.1 that the runner does for its netmask probe.
 from __future__ import annotations
 
 import argparse
+import os
+import re
 import shutil
 import subprocess
 import sys
@@ -59,6 +61,10 @@ def make_scratch_repo(real_repo: Path, root: Path) -> None:
 
 
 def write_fake_wiiload(path: Path, exit_code: int) -> None:
+    if os.name != "nt":
+        write_text(path, f'#!/bin/sh\necho fake wiiload "$@"\nexit {exit_code}\n')
+        path.chmod(0o755)
+        return
     write_text(
         path,
         f"@echo off\r\necho fake wiiload %*\r\nexit /b {exit_code}\r\n",
@@ -207,7 +213,14 @@ def main() -> int:
                 problems = []
                 if proc.returncode == 0:
                     problems.append("exit code 0 (expected failure)")
-                if message not in proc.stdout:
+                # PS7 concise errors wrap at the console width, including
+                # long paths. Remove rendering (ANSI/gutters), retaining the
+                # complete diagnostic and exact expected path.
+                plain = re.sub(r"\x1b\[[0-9;]*m", "", proc.stdout)
+                plain = " ".join(re.sub(r"^\s*\|\s*", "", line)
+                                 for line in plain.splitlines())
+                plain = " ".join(plain.split())
+                if message not in plain:
                     problems.append(f"message {message!r} not printed")
                 if count != expected:
                     problems.append(f"hook called {count}x (expected {expected})")

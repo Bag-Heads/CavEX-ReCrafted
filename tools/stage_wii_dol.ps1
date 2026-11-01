@@ -520,7 +520,15 @@ function Invoke-LocalLaunchPlanPreflight {
         [string]$LocalDolPath,
         [byte[]]$RunArgBytes
     )
-    $verifier = Join-Path $RepoRoot "build-verify\verify_wii_launch_plan.exe"
+    # CTest supplies its actual target path, including an out-of-tree build
+    # directory and the host executable suffix. Standalone use keeps auto-build.
+    $verifier = $env:CW_LAUNCH_PLAN_VERIFIER
+    if([string]::IsNullOrWhiteSpace($verifier)) {
+        $verifierName = if($env:OS -eq "Windows_NT") { "verify_wii_launch_plan.exe" } else { "verify_wii_launch_plan" }
+        $verifier = Join-Path (Join-Path $RepoRoot "build-verify") $verifierName
+    } elseif(-not (Test-Path -LiteralPath $verifier -PathType Leaf)) {
+        throw "configured launch-plan verifier missing: $verifier"
+    }
     if(-not (Test-Path $verifier)) {
         Write-Host "[local-runprep] verifier missing; building $verifier"
         $buildDir = Join-Path $RepoRoot "build-verify"
@@ -530,17 +538,22 @@ function Invoke-LocalLaunchPlanPreflight {
                 throw "failed to configure build-verify for local launch-plan verifier"
             }
         }
-        & cmake --build $buildDir --target verify_wii_launch_plan
+        & cmake --build $buildDir --target verify_wii_launch_plan --parallel 6
         if($LASTEXITCODE -ne 0 -or -not (Test-Path $verifier)) {
             throw "failed to build local launch-plan verifier at $verifier"
         }
     }
     $tmpDir = Join-Path $RepoRoot "tmp"
     New-Item -ItemType Directory -Force -Path $tmpDir | Out-Null
-    $tmpArgs = Join-Path $tmpDir "stage_wii_dol_local_args.txt"
+    $tmpArgs = Join-Path $tmpDir ("stage_wii_dol_local_args_{0}.txt" -f [guid]::NewGuid().ToString("N"))
     [System.IO.File]::WriteAllBytes($tmpArgs, $RunArgBytes)
-    $line = & $verifier $LocalDolPath $tmpArgs
-    if($LASTEXITCODE -ne 0) {
+    try {
+        $line = & $verifier $LocalDolPath $tmpArgs
+        $verifyExit = $LASTEXITCODE
+    } finally {
+        Remove-Item -LiteralPath $tmpArgs -Force -ErrorAction SilentlyContinue
+    }
+    if($verifyExit -ne 0) {
         throw "local launch-plan verifier failed: $line"
     }
     try {
@@ -652,9 +665,16 @@ if(-not $AssumeServerRunning -and -not $AllowHbcUpload) {
 
 if([string]::IsNullOrWhiteSpace($Netmask)) {
     $localIp = Get-LocalIpForRemote $WiiHost
-    $addr = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
-        Where-Object { $_.IPAddress -eq $localIp } |
-        Select-Object -First 1
+    if(Get-Command Get-NetIPAddress -ErrorAction SilentlyContinue) {
+        $addr = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction SilentlyContinue |
+            Where-Object { $_.IPAddress -eq $localIp } |
+            Select-Object -First 1
+    } else {
+        $addr = [System.Net.NetworkInformation.NetworkInterface]::GetAllNetworkInterfaces() |
+            ForEach-Object { $_.GetIPProperties().UnicastAddresses } |
+            Where-Object { $_.Address.ToString() -eq $localIp } |
+            Select-Object -First 1
+    }
     if($addr) {
         $Netmask = Convert-PrefixToNetmask ([int]$addr.PrefixLength)
         Write-Host "[net] local $localIp/$($addr.PrefixLength) -> Wii netmask $Netmask"
@@ -953,9 +973,11 @@ if($AssumeServerRunning) {
             New-Item -ItemType Directory -Force -Path $wiiloadLogRoot | Out-Null
             $attemptOut = Join-Path $wiiloadLogRoot "${safeRunId}.attempt${attempt}.stdout.log"
             $attemptErr = Join-Path $wiiloadLogRoot "${safeRunId}.attempt${attempt}.stderr.log"
+            $windowOptions = @{}
+            if($env:OS -eq "Windows_NT") { $windowOptions.WindowStyle = "Hidden" }
             $p = Start-Process -FilePath $WiiloadExe -ArgumentList $serverArgs `
                 -RedirectStandardOutput $attemptOut -RedirectStandardError $attemptErr `
-                -Wait -PassThru -WindowStyle Hidden
+                -Wait -PassThru @windowOptions
             $wiiloadExit = $p.ExitCode
             if(Test-Path $attemptOut) {
                 Get-Content -LiteralPath $attemptOut | ForEach-Object {
