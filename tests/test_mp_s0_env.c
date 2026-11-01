@@ -3050,7 +3050,9 @@ static void test_event_queue_backpressure_burst(void) {
  * session and delivers every event. Phase 2: cancel while the reader is
  * parked on the full ring returns promptly (no deadlock, no lost wakeup). */
 #define STALL_HEARTBEATS (SERVER_REMOTE_EVENT_QUEUE_CAPACITY * 4)
+static atomic_bool s_stall_phase1;
 static atomic_bool s_stall_phase2;
+static atomic_bool s_stall_burst2_sent;
 static void* stall_peer_entry(void* user) {
 	struct peer_fixture* fixture = user;
 	SOCKET peer = accept(fixture->listener, NULL, NULL);
@@ -3066,6 +3068,9 @@ static void* stall_peer_entry(void* user) {
 	   || !socket_write_fragmented(peer, login_response,
 								   sizeof(login_response)))
 		goto done;
+	/* The login wait pumps events. Do not let it consume this burst. */
+	while(!atomic_load(&s_stall_phase1))
+		thread_msleep(1);
 	for(int32_t i = 0; i < STALL_HEARTBEATS; i++)
 		if(!send_entity_heartbeat(peer, i))
 			goto done;
@@ -3075,12 +3080,28 @@ static void* stall_peer_entry(void* user) {
 		if(!send_entity_heartbeat(peer, STALL_HEARTBEATS + i))
 			goto done;
 	fixture->ok = true;
+	atomic_store(&s_stall_burst2_sent, true);
 	/* Hold the session (a live server) until the client's cancel closes it. */
 	while(recv(peer, (char*)input, sizeof(input), 0) > 0) {}
 done:
 	closesocket(peer);
 	closesocket(fixture->listener);
 	return NULL;
+}
+
+/* Unlike wait_for(), observing a parked reader must not drain its queue. */
+static bool wait_for_event_backpressure(struct server_remote* remote,
+									   uint32_t waits_before, bool second_burst) {
+	for(size_t elapsed = 0; elapsed < 5000; elapsed++) {
+		struct server_remote_status status;
+		server_remote_get_status(remote, &status);
+		if(status.queued_events == SERVER_REMOTE_EVENT_QUEUE_CAPACITY
+		   && status.event_backpressure_waits > waits_before
+		   && (!second_burst || atomic_load(&s_stall_burst2_sent)))
+			return true;
+		thread_msleep(1);
+	}
+	return false;
 }
 
 static void test_event_queue_stall_keeps_session(void) {
@@ -3090,12 +3111,19 @@ static void test_event_queue_stall_keeps_session(void) {
 	struct server_remote_impl* impl = remote.impl;
 	uint16_t port;
 	struct peer_fixture peer = {.listener = make_listener(&port)};
+	atomic_store(&s_stall_phase1, false);
 	atomic_store(&s_stall_phase2, false);
+	atomic_store(&s_stall_burst2_sent, false);
 	struct thread peer_thread;
 	assert(thread_create(&peer_thread, stall_peer_entry, &peer, 64));
 	assert(server_remote_start(&remote, "127.0.0.1", port, "Cave"));
 	assert(wait_for(&remote, burst_logged_in, 5000));
 
+	/* Start only after the login pump returns: its 256-event budget could
+	 * otherwise consume the login plus 255 heartbeats, leaving only one.
+	 * Observe a full ring AND a parked reader before timing the stall. */
+	atomic_store(&s_stall_phase1, true);
+	assert(wait_for_event_backpressure(&remote, 0, false));
 	/* Phase 1: starve the pump well past the old 500ms patience. */
 	thread_msleep(800);
 	struct server_remote_status mid;
@@ -3135,14 +3163,9 @@ static void test_event_queue_stall_keeps_session(void) {
 	/* Phase 2: park the reader on a full ring (no pumping), then cancel. */
 	uint32_t waits_before = status.event_backpressure_waits;
 	atomic_store(&s_stall_phase2, true);
-	for(size_t elapsed = 0; elapsed < 5000; elapsed++) {
-		server_remote_get_status(&remote, &status);
-		if(status.queued_events == SERVER_REMOTE_EVENT_QUEUE_CAPACITY
-		   && status.event_backpressure_waits > waits_before)
-			break;
-		thread_msleep(1);
-	}
-	assert(status.event_backpressure_waits > waits_before);
+	/* A full ring does not prove the peer finished its send loop. Cancelling
+	 * earlier could close its socket before it sets peer.ok. */
+	assert(wait_for_event_backpressure(&remote, waits_before, true));
 	ptime_t cancel_start = time_get();
 	server_remote_cancel(&remote);
 	int32_t cancel_ms = time_diff_ms(cancel_start, time_get());
