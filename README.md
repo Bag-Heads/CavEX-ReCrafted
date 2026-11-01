@@ -122,7 +122,7 @@ In game, your coordinates and FPS show on screen. Turn them off with `ui.show_co
 
 **Easiest (Windows): CavEX Asset Importer.** Download `CavEX-Asset-Importer-windows.zip` from the [latest release](https://github.com/Bag-Heads/CavEX-ReCrafted/releases/latest), unzip it, run `CavEX Asset Importer.exe`, and point it at your `b1.7.3.jar` and your SD card (with the game already on it). It finds your Beta sounds in `.minecraft/resources` by itself and builds a **Beta 1.7.3** pack on the card. Nothing is downloaded.
 
-On the Wii itself (not yet confirmed on a real Wii; use the PC way if it fails):
+Or on the Wii itself (tested on a real Wii):
 
 1. Copy your own `b1.7.3.jar` to `sd:/beta/b1.7.3.jar`.
 2. For sounds, optionally copy the `sound`, `newsound`, `music` and `newmusic` folders from your `.minecraft/resources` to `sd:/beta/resources/`, plus `streaming/13.ogg` and `cat.ogg`.
