@@ -388,7 +388,7 @@ def main():
     note_block = slice_between(
         source,
         "\t\tif(s_anchor.enabled) {\n\t\t\thw_anchor_evidence_note(",
-        "\n\t\tif(hw_run.enabled) {\n\t\t\thw_frame_evidence_note_trace",
+        "\n\t\t/* Release-gate admission",
         "frame-top anchor note")
     publish = slice_between(source, "\t\thb.anchor = s_anchor;", "\n",
                             "heartbeat anchor publication")

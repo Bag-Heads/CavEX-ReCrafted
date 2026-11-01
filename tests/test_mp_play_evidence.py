@@ -495,6 +495,15 @@ def device_verdict(rows=None):
 
 
 class MpPlayEvidenceTest(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.replay_scratch = tempfile.TemporaryDirectory(prefix='mp-play-replay-')
+        cls.addClassCleanup(cls.replay_scratch.cleanup)
+        cls.replay_fixtures = Path(cls.replay_scratch.name)
+        # Receipt logs and negative tapes are generated synthetic data; *.log
+        # is deliberately absent from a fresh public checkout.
+        write_fixtures(cls.replay_fixtures)
+
 
     def test_receipts_graded_on_device_failure(self):
         """A profile_done status!="ok" is still a FAIL, but the fixture receipts
@@ -1458,9 +1467,8 @@ class MpPlayEvidenceTest(unittest.TestCase):
         self.assertEqual([row for row in rows
                           if row['event'] in (mod.MP_PLAY_EVENT, 'chat_login')],
                          marker_rows())
-        log = (FIXTURES / 'good' / mod.CHAT_LOGIN_RECEIPT_NAME).read_text(
-            encoding='utf-8')
-        self.assertEqual(log.splitlines(), receipt_lines())
+        self.assertEqual(tape, (self.replay_fixtures / 'good' / 'telemetry.ndjson')
+                         .read_text(encoding='utf-8'))
 
     def test_offline_replay_entry_point(self):
         """`--replay <run dir>`: verdict + reasons out, and the directory is
@@ -1471,7 +1479,7 @@ class MpPlayEvidenceTest(unittest.TestCase):
                 ('good', 0, 'PASS'),
                 ('duplicate_receipt', 1,
                  'inv_move n=2 pick-up click: 1 generation 1')):
-            run_dir = FIXTURES / name
+            run_dir = self.replay_fixtures / name
             before = {path.name: path.read_bytes()
                       for path in sorted(run_dir.iterdir())}
             with self.subTest(fixture=name):
@@ -1499,7 +1507,7 @@ def duplicate_receipt_rows():
     return rows
 
 
-def write_fixtures():
+def write_fixtures(destination=FIXTURES):
     """Materialise tests/fixtures/mp_play/ -- the same pair this file builds,
     written as a run directory the shipped `--replay` entry point can read.
 
@@ -1515,7 +1523,7 @@ def write_fixtures():
              for tick in range(1, 501)]
     for name, rows in (('good', marker_rows()),
                        ('duplicate_receipt', duplicate_receipt_rows())):
-        out = FIXTURES / name
+        out = destination / name
         out.mkdir(parents=True, exist_ok=True)
         markers = [json.dumps(row, separators=(',', ':')) for row in rows]
         tape = []

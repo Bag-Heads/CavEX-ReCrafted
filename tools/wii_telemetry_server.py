@@ -14289,7 +14289,7 @@ def selftest() -> int:
             "last": True,
             "text": "fallback",
         })
-        fallback = pass_dir / "crash_mailbox_CaveWii_v2_hang_report.txt"
+        fallback = pass_dir / "crash_mailbox_CavEX_hang_report.txt"
         assert fallback.read_text(encoding="utf-8") == "fallback"
         assert mailbox.read_text(encoding="utf-8") == "old hang", (
             "the app-dir fallback report overwrote the primary mailbox artifact"
@@ -15421,8 +15421,6 @@ def selftest() -> int:
         assert list(NP_SUB) == ["create", "rename", "delete", "direct", "add",
                                 "edit", "name"]
         assert [NP_SUB[k] for k in NP_SUB] == [1 << i for i in range(7)]
-    # ui-build-1026/T16a: world_copy_convert evidence fails closed.
-    world_copy_selftest()
     return 0
 
 
@@ -16274,6 +16272,8 @@ def build_arg_parser() -> argparse.ArgumentParser:
     ap.add_argument("--require-service-exposure", action="store_true",
                     help="guarded stress diagnostic: >=300 admitted/alive seconds, >=8 ordinary 600-tick checkpoints, complete observer/input/active-music burst coverage; no hardware acceptance")
     ap.add_argument("--selftest", action="store_true")
+    ap.add_argument("--world-copy-selftest", action="store_true",
+                    help="test world-copy grading against the private original-Beta save fixture")
     # ui-build-1026/T16a: offline world_copy_convert verdict (device tape +
     # the rig's post-run card record); fails closed on any missing evidence.
     ap.add_argument("--world-copy-verdict", default="", metavar="TAPE",
@@ -16349,6 +16349,9 @@ def main() -> int:
                                         args.out if args.out != "tmp/wii_runs/manual" else "")
     if args.selftest:
         return selftest()
+    if args.world_copy_selftest:
+        world_copy_selftest()
+        return 0
     if args.vehicle_check_manifest or args.vehicle_validate_pass:
         try:
             if args.vehicle_check_manifest:

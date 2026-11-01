@@ -675,6 +675,12 @@ def _variant_pattern(base: str) -> "re.Pattern":
     return pat
 
 
+def _resource_file_key(path: Path):
+    # Match the in-game importer's case-insensitive filename order on every
+    # host. Path ordering/globbing otherwise changes with the host filesystem.
+    return path.name.lower(), path.name
+
+
 def process_sounds(resources_dir: Optional[Path], dest_root: Path, dry_run: bool,
                     transcoder: Optional[Path], strict_transcode: bool = False) -> list:
     keys, max_variants = sound_keys_and_max_variants()
@@ -696,7 +702,7 @@ def process_sounds(resources_dir: Optional[Path], dest_root: Path, dry_run: bool
         for root_name in ("sound", "newsound"):  # Beta's union, no precedence
             d = resources_dir / root_name / subdir if subdir else resources_dir / root_name
             if d.is_dir():
-                for f in sorted(d.iterdir()):
+                for f in sorted(d.iterdir(), key=_resource_file_key):
                     if f.is_file() and pat.match(f.name):
                         candidates.append(f)
 
@@ -769,7 +775,9 @@ def process_music(resources_dir: Optional[Path], dest_root: Path, dry_run: bool)
         d = resources_dir / src_dirname
         if not d.is_dir():
             continue
-        for f in sorted(d.glob("*.ogg")):
+        for f in sorted(d.iterdir(), key=_resource_file_key):
+            if not f.is_file() or f.suffix.lower() != ".ogg":
+                continue
             any_found = True
             data = f.read_bytes()
             entry = {
@@ -808,7 +816,9 @@ def process_records(resources_dir: Optional[Path], dest_root: Path, dry_run: boo
     out_dir = dest_root / "records"
     found_stems = set()
     if d.is_dir():
-        for f in sorted(d.glob("*.ogg")):
+        for f in sorted(d.iterdir(), key=_resource_file_key):
+            if not f.is_file() or f.suffix.lower() != ".ogg":
+                continue
             stem_lower = f.stem.lower()
             if stem_lower not in RECORD_STEMS or stem_lower in found_stems:
                 continue
