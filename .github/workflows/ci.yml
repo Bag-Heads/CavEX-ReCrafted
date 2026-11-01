@@ -29,11 +29,8 @@ jobs:
       - name: Require complete tooling test inventory
         run: echo "CI_CMAKE_ARGS=-DCAVEWII_REQUIRE_TEST_TOOLS=ON" >> "$GITHUB_ENV"
 
-      # EAD-007 (2026-10-11): Beta colours live in packs/beta-base; the Earth & Ash
-      # default (assets/) and the Isabella II pack carry the same Beta motion in
-      # their own colour ramps. All three variants must rebake byte-identically.
-      - name: Verify animated texture bake pipeline (Beta, Earth & Ash, Isabella II)
-        run: python3 tools/gen_anim_fx/verify_pack_bakes.py
+      # The animated-texture bake check needs the private art sources and runs in
+      # the private repo only.
 
       - name: Tests + ASan soak
         run: bash tools/ci.sh
