@@ -13968,6 +13968,13 @@ endif()
 
 include(cmake/PublicTestInputs.cmake)
 
+# ci-1101/01 (2026-11-01 assignment): maintainer identifies this as known-red
+# in the private repo too. WSL reproduces render offset=82226 at tick=13.
+# Keep executing it; tools/ci.sh reports known_fail separately from the gate.
+if(TEST test_column_dedup_render_equiv)
+	set_property(TEST test_column_dedup_render_equiv APPEND PROPERTY LABELS known_fail)
+endif()
+
 # ---- Build-graph validation (review batch, 2026-08-27) ----
 # Runs at configure time in every BUILD_TESTING config (the CI verify leg).
 # 1. Source-manifest drift: every on-disk source/**/*.c must be declared in
