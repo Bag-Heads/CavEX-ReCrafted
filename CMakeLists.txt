@@ -1213,6 +1213,7 @@ add_test(NAME test_window_registry COMMAND test_window_registry)
 add_executable(test_window_registry_unregistered EXCLUDE_FROM_ALL
 	tests/test_window_registry_unregistered.c
 )
+target_link_libraries(test_window_registry_unregistered m) # libm for Linux CI
 target_include_directories(test_window_registry_unregistered PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/source
 	${CMAKE_CURRENT_SOURCE_DIR}/third_party
@@ -1618,6 +1619,7 @@ add_executable(test_spawn_search_wait
 	source/game/gui/spawn_search_wait.c
 	tests/test_spawn_search_wait.c
 )
+target_link_libraries(test_spawn_search_wait m) # libm for Linux CI
 target_compile_definitions(test_spawn_search_wait PRIVATE PLATFORM_PC)
 target_include_directories(test_spawn_search_wait PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/source
@@ -1634,6 +1636,7 @@ add_executable(test_menu_autopilot_script
 	source/game/menu_autopilot_script.c
 	tests/test_menu_autopilot_script.c
 )
+target_link_libraries(test_menu_autopilot_script m) # libm for Linux CI
 set_target_properties(test_menu_autopilot_script PROPERTIES C_STANDARD 99)
 add_test(NAME test_menu_autopilot_script COMMAND test_menu_autopilot_script)
 
@@ -1644,6 +1647,7 @@ add_executable(test_world_copy_profile
 	source/game/menu_autopilot_script.c
 	tests/test_world_copy_profile.c
 )
+target_link_libraries(test_world_copy_profile m) # libm for Linux CI
 set_target_properties(test_world_copy_profile PROPERTIES C_STANDARD 99)
 add_test(NAME test_world_copy_profile COMMAND test_world_copy_profile)
 
@@ -1656,6 +1660,7 @@ add_executable(test_menus_dwell_contract
 	source/game/menu_autopilot_script.c
 	tests/test_menus_dwell_contract.c
 )
+target_link_libraries(test_menus_dwell_contract m) # libm for Linux CI
 set_target_properties(test_menus_dwell_contract PROPERTIES C_STANDARD 99)
 add_test(NAME test_menus_dwell_contract COMMAND test_menus_dwell_contract)
 set_tests_properties(test_menus_dwell_contract PROPERTIES
@@ -9032,6 +9037,7 @@ set_target_properties(test_entity_direct_colour_bracket PROPERTIES C_STANDARD 99
 add_test(NAME test_entity_direct_colour_bracket COMMAND test_entity_direct_colour_bracket)
 
 add_executable(test_mp_pause_menu_core tests/test_mp_pause_menu_core.c)
+target_link_libraries(test_mp_pause_menu_core m) # libm for Linux CI
 target_include_directories(test_mp_pause_menu_core PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source)
 set_target_properties(test_mp_pause_menu_core PROPERTIES C_STANDARD 99)
 add_test(NAME test_mp_pause_menu_core COMMAND test_mp_pause_menu_core)
@@ -10116,6 +10122,7 @@ find_path(_cw_audio_sdk_headers aesndlib.h HINTS
 	"C:/msys64/opt/devkitpro/libogc/include")
 if(_cw_audio_sdk_headers)
 	add_executable(test_g9_audio_bound tests/test_g9_audio_bound.c)
+	target_link_libraries(test_g9_audio_bound m) # libm for Linux CI
 	target_compile_definitions(test_g9_audio_bound PRIVATE PLATFORM_PC)
 	target_include_directories(test_g9_audio_bound PRIVATE
 		${CMAKE_CURRENT_SOURCE_DIR}/source)
@@ -12827,6 +12834,7 @@ add_executable(test_play_session
 	source/game/gui/play_session.c
 	source/game/gui/cworld_form_model.c
 )
+target_link_libraries(test_play_session m) # libm for Linux CI
 target_include_directories(test_play_session PRIVATE
 	${CMAKE_CURRENT_SOURCE_DIR}/source
 	${CMAKE_CURRENT_SOURCE_DIR}/third_party
