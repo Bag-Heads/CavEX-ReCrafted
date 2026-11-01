@@ -27,6 +27,8 @@
 
 Built on CavEX and fCavEX, this Wii-first engine aims for Beta 1.7.3 parity: the same world generation, block rules, recipes, redstone timing and fluids. Wii-specific additions are documented in [CHANGES.md](CHANGES.md).
 
+About 3,550 commits of Re-Crafted work went into this release. This public repository starts from one clean snapshot of that work, so GitHub's commit count only shows what came after it (see [History](#history)).
+
 ## Explore, build, play together
 
 Everything below is recorded on a real Wii. See [Texture packs](#texture-packs) for the art included in the zip.
@@ -213,6 +215,11 @@ By **BagHeads**, building on the work of:
 |---|---|
 | CavEX engine | xtreme8000 — GPLv3 |
 | fCavEX | yyy257, ByteBit and jilleb |
+| Creative inventory ideas (featured blocks first), game-state export (adapted, GPLv3), save-safety lessons ([amahpour/CavEX#51](https://github.com/amahpour/CavEX/issues/51), clean-quit race) | [amahpour/CavEX](https://github.com/amahpour/CavEX) |
+| Split-screen lessons, player-lookup and block-update design ideas (re-implemented) | [lberwa/CavEX](https://github.com/lberwa/CavEX) |
+| Beta 1.7.3 behaviour cross-checks (reference only, no code copied) | mc173 and BetrockServer |
+
+Ideas taken from other forks were rebuilt here, extended well beyond the original, covered by tests, and confirmed on a real Wii before shipping.
 | Boot credit cards | © 2026 BagHeads — CC BY-ND 4.0 |
 | Wii hand pointer | Homebrew Channel team, Team Twiizers / fail0verflow — GPLv2, used unchanged |
 | Controller button glyphs | WiiBrew uploaders Clorox, Hiker13526, Flark and Crayon — used with credit; no licence stated on WiiBrew |

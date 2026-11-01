@@ -134,6 +134,14 @@ a single-file library) and, where no in-tree copy existed, by fetching the
 exact upstream license file from the project's own canonical source. No
 license here was guessed or assumed.
 
+- Game-state export (source/game/state_export.{h,c})
+  Adapted from amahpour's CavEX fork, source/game/state_export.{h,c}
+  (renamed and fitted to this project's structs).
+  Upstream: https://github.com/amahpour/CavEX
+  License: GNU General Public License v3 (GPLv3), same as this project.
+  The creative item picker's "featured blocks first" layout is an idea
+  from the same fork, re-implemented from scratch (no code copied).
+
 - cglm (source/cglm/)
   License: MIT License. Copyright (c) 2015 Recep Aslantas <info@recp.me>.
   Upstream: https://github.com/recp/cglm
