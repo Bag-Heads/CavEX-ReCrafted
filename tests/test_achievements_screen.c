@@ -7,6 +7,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#ifdef _WIN32
+#include <direct.h>
+#define test_mkdir(d) mkdir(d)
+#else
+#include <sys/stat.h>
+#define test_mkdir(d) mkdir(d, 0755)
+#endif
 
 #include "game/game_state.h"
 #include "support/test_fixture_dir.h"
@@ -228,7 +235,7 @@ static void module_and_navigation(void) {
 		   && browse_calls == 0 && screen_achievements_test_row()->count == 0);
 	char dir[256];
 	test_fixture_dir("test_achievements_screen_tmp", dir, sizeof dir);
-	assert(mkdir(dir) == 0);
+	assert(test_mkdir(dir) == 0);
 	assert(achievements_init(dir));
 	assert(achievements_bind(0, 17, "screen0", ACH_MODE_REMOTE_SERVER)
 		   == ACH_BIND_OK);
@@ -303,7 +310,7 @@ static void module_and_navigation(void) {
 static void controllers_and_ir(void) {
 	char dir[256];
 	test_fixture_dir("test_achievements_controller_tmp", dir, sizeof dir);
-	assert(mkdir(dir) == 0 && achievements_init(dir));
+	assert(test_mkdir(dir) == 0 && achievements_init(dir));
 	assert(achievements_bind(0, 17, "controller", ACH_MODE_REMOTE_SERVER)
 		   == ACH_BIND_OK);
 	for(int family = INPUT_CAT_NUNCHUK; family <= INPUT_CAT_GAMECUBE;
@@ -513,7 +520,7 @@ static int captures(const char* pack, const char* out) {
 	gfx_update_light(1.0F, 0.0F, 0.0F, light_lookup_overworld);
 	char dir[256];
 	test_fixture_dir("test_achievements_capture_tmp", dir, sizeof dir);
-	assert(mkdir(dir) == 0);
+	assert(test_mkdir(dir) == 0);
 	assert(achievements_init(dir));
 	assert(achievements_bind(0, 17, "capture", ACH_MODE_REMOTE_SERVER)
 		   == ACH_BIND_OK);
@@ -578,7 +585,7 @@ static void split_pause_entry(void) {
 	assert(expanded.window.y + expanded.window.h >= status_copy.y + status_copy.h);
 	char dir[256];
 	test_fixture_dir("test_achievements_split_pause_tmp", dir, sizeof dir);
-	assert(mkdir(dir) == 0 && achievements_init(dir));
+	assert(test_mkdir(dir) == 0 && achievements_init(dir));
 	assert(achievements_bind(0, 17, "split0", ACH_MODE_LOCAL_WORLD) == ACH_BIND_OK);
 	assert(achievements_bind(1, 18, "split1", ACH_MODE_LOCAL_WORLD) == ACH_BIND_OK);
 	for(unsigned owner = 0; owner < 2; owner++) {
