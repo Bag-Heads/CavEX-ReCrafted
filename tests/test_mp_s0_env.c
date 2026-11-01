@@ -12968,7 +12968,10 @@ static int run_live_pvp(void) {
 	return 1;
 }
 
+#if __has_include("oracle/sort/replay_client.h") /* private oracle; absent in the public snapshot */
 #include "oracle/sort/replay_client.h"
+#define CW_HAVE_SORT_REPLAY 1
+#endif
 
 /* [740c583 EntityClientPlayerMP.onUpdate:31-35, func_4056_N:71-85]
  * Every executed remote tick sends a movement variant, including idle Packet10.
@@ -13077,10 +13080,12 @@ int main(int argc, char** argv) {
 	assert(clin_init());
 	blocks_init();
 	items_init();
+#ifdef CW_HAVE_SORT_REPLAY
 	if(argc == 3 && strcmp(argv[1], "--sort-replay") == 0)
 		return sort_replay_client(argv[2],false);
 	if(argc == 3 && strcmp(argv[1], "--sort-executor") == 0)
 		return sort_replay_client(argv[2],true);
+#endif
 	world_create(&gstate.world);
 	dict_entity_init(gstate.entities);
 	particle_init();

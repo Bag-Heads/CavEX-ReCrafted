@@ -6367,17 +6367,17 @@ set_tests_properties(test_light_no_downgrade PROPERTIES TIMEOUT 300)
 # [public snapshot: needs private files] add_test(NAME test_worldgen_jar_parity COMMAND test_worldgen_jar_parity ${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/lighting/g9_option_b/fixtures/no-downgrade/original-jar.bin.gz)
 # [public snapshot: needs private files] set_tests_properties(test_worldgen_jar_parity PROPERTIES TIMEOUT 300)
 
-add_executable(test_light_queue_equiv tests/test_light_queue_equiv.c
-	tools/wii_stage_server/source/sha256.c) # the debt golden's digest
-target_link_libraries(test_light_queue_equiv cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input)
-target_include_directories(test_light_queue_equiv PRIVATE
-	${CMAKE_CURRENT_SOURCE_DIR}/source
-	${CMAKE_CURRENT_SOURCE_DIR}/third_party
-	${CMAKE_CURRENT_SOURCE_DIR}/tests
-	${CMAKE_CURRENT_SOURCE_DIR}/tools/wii_stage_server/source
-)
-set_target_properties(test_light_queue_equiv PROPERTIES C_STANDARD 99)
-target_link_libraries(test_light_queue_equiv ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+# [public snapshot: needs private files] add_executable(test_light_queue_equiv tests/test_light_queue_equiv.c
+# 	tools/wii_stage_server/source/sha256.c) # the debt golden's digest
+# [public snapshot: needs private files] target_link_libraries(test_light_queue_equiv cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input)
+# [public snapshot: needs private files] target_include_directories(test_light_queue_equiv PRIVATE
+# 	${CMAKE_CURRENT_SOURCE_DIR}/source
+# 	${CMAKE_CURRENT_SOURCE_DIR}/third_party
+# 	${CMAKE_CURRENT_SOURCE_DIR}/tests
+# 	${CMAKE_CURRENT_SOURCE_DIR}/tools/wii_stage_server/source
+# )
+# [public snapshot: needs private files] set_target_properties(test_light_queue_equiv PROPERTIES C_STANDARD 99)
+# [public snapshot: needs private files] target_link_libraries(test_light_queue_equiv ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
 # [public snapshot: needs private files] add_test(NAME test_light_queue_equiv__history
 # 	COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/oracle/lighting/g9_option_b/compare/run_observer.py
 # 	$<TARGET_FILE:test_light_queue_equiv>)
@@ -6392,7 +6392,7 @@ target_link_libraries(test_light_queue_equiv ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLI
 # 	$<TARGET_FILE:test_light_queue_equiv>)
 foreach(_g9_q equiv explosion fault lifecycle provision shutdown phases drain_loss drain_stop_update contain checkpoint beta_oracle consumers workloads hw_workload packet_delivery packet_delivery_nether
 	generated_nether_beta nether_population_height_beta automatic_population_beta automatic_population_hold nether_provider_rng_beta generation_height_order_beta nether_plain_rollback g9x_dirty_reload g9x_snow_oom g9x_observer_reuse g9x_region_budget g9x_memory_progress g9x_publication g9x_drain_t1_equiv)
-	add_test(NAME test_light_queue_equiv__${_g9_q} COMMAND test_light_queue_equiv ${_g9_q})
+	# [public snapshot: needs private files] add_test(NAME test_light_queue_equiv__${_g9_q} COMMAND test_light_queue_equiv ${_g9_q})
 endforeach()
 # G9X-2: the case's CFR-derived assertions PLUS the same script replayed
 # through the instrumented original JAR (live JVM), compared step by step.
@@ -6410,10 +6410,10 @@ endforeach()
 # is release-blocking (maintainer ruling 2026-10-12 pm). The original-JAR
 # history gate passes exactly, so it is a normal blocking test: no
 # known_fail/metric exclusion label (the G9-OPTION-B card label only).
-add_test(NAME test_light_queue_equiv__generation_beta_parity
-	COMMAND test_light_queue_equiv generation_beta_parity)
-set_tests_properties(test_light_queue_equiv__generation_beta_parity
-	PROPERTIES LABELS "G9-OPTION-B")
+# [public snapshot: needs private files] add_test(NAME test_light_queue_equiv__generation_beta_parity
+# 	COMMAND test_light_queue_equiv generation_beta_parity)
+# [public snapshot: needs private files] set_tests_properties(test_light_queue_equiv__generation_beta_parity
+# 	PROPERTIES LABELS "G9-OPTION-B")
 
 # G9 R19 (ASTRA-G9-R19-IO): save IO off the server tick. The equivalence test
 # compares the synchronous reference, the shipping helper and the opt-in
@@ -6468,16 +6468,16 @@ add_test(NAME test_owner_swap_dimension_checkpoint_reload__deferred
 	COMMAND test_owner_swap_dimension_checkpoint_reload reload)
 add_test(NAME test_autosave_entity_storm__deferred COMMAND test_autosave_entity_storm)
 add_test(NAME test_a2_save_bytes_equiv__deferred COMMAND test_a2_save_bytes_equiv)
-add_test(NAME test_light_queue_equiv__checkpoint_deferred COMMAND test_light_queue_equiv checkpoint)
-add_test(NAME test_light_queue_equiv__hw_workload_deferred COMMAND test_light_queue_equiv hw_workload)
-set_tests_properties(
-	test_region_index_journal_equiv__deferred test_region_archive_safety__deferred
-	test_death_drop_journal_env__deferred
-	test_owner_swap_dimension_checkpoint_reload__deferred
-	test_autosave_entity_storm__deferred test_a2_save_bytes_equiv__deferred
-	test_light_queue_equiv__checkpoint_deferred
-	test_light_queue_equiv__hw_workload_deferred
-	PROPERTIES ENVIRONMENT "CW_G9_SAVE_IO=1" TIMEOUT 600)
+# [public snapshot: needs private files] add_test(NAME test_light_queue_equiv__checkpoint_deferred COMMAND test_light_queue_equiv checkpoint)
+# [public snapshot: needs private files] add_test(NAME test_light_queue_equiv__hw_workload_deferred COMMAND test_light_queue_equiv hw_workload)
+# [public snapshot: needs private files] set_tests_properties(
+# 	test_region_index_journal_equiv__deferred test_region_archive_safety__deferred
+# 	test_death_drop_journal_env__deferred
+# 	test_owner_swap_dimension_checkpoint_reload__deferred
+# 	test_autosave_entity_storm__deferred test_a2_save_bytes_equiv__deferred
+# 	test_light_queue_equiv__checkpoint_deferred
+# 	test_light_queue_equiv__hw_workload_deferred
+# 	PROPERTIES ENVIRONMENT "CW_G9_SAVE_IO=1" TIMEOUT 600)
 
 # I07 lane 3 (G9 drain 0.2-1.1 s ticks on Wii): ONE harness, two engines --
 # the production pools measure the real server_world_light_drain on the
