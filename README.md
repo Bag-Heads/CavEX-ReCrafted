@@ -120,13 +120,14 @@ In game, your coordinates and FPS show on screen. Turn them off with `ui.show_co
 
 **Beta 1.7.3 textures and sounds are not included.** You need your own `b1.7.3` jar to use them.
 
-Import directly on the Wii, with no PC needed for the import:
+**Easiest (Windows): CavEX Asset Importer.** Download `CavEX-Asset-Importer-windows.zip` from the [latest release](https://github.com/Bag-Heads/CavEX-ReCrafted/releases/latest), unzip it, run `CavEX Asset Importer.exe`, and point it at your `b1.7.3.jar` and your SD card (with the game already on it). It finds your Beta sounds in `.minecraft/resources` by itself and builds a **Beta 1.7.3** pack on the card. Nothing is downloaded.
+
+On the Wii itself (not yet confirmed on a real Wii; use the PC way if it fails):
 
 1. Copy your own `b1.7.3.jar` to `sd:/beta/b1.7.3.jar`.
 2. For sounds, optionally copy the `sound`, `newsound`, `music` and `newmusic` folders from your `.minecraft/resources` to `sd:/beta/resources/`, plus `streaming/13.ogg` and `cat.ogg`.
 3. Open **Texture Packs** in the game and choose **Import Beta 1.7.3**. Wait for **Done**, then select the **Beta 1.7.3** pack.
 
-On Windows, the **CavEX Asset Importer** (Pack Helper) can import textures and sounds from your jar. It finds the sounds automatically and names the pack **Beta 1.7.3**. Nothing is downloaded.
 
 You can also unzip your jar into `sd:/texturepacks/<name>/` by hand. This route has no sounds unless you add them: point the sound folder at `.minecraft/resources`.
 
