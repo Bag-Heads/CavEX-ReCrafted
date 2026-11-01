@@ -1,3 +1,22 @@
+/* ci-1101/12b render proof (2026-11-01; 11aa3bfc8 pins unchanged):
+ * P=354809385 passes both old tapes;
+ * git bisect identifies accepted IN-005 aa1ec22fb. First true difference
+ * byte83207 (reported buffer82226), tick13, mesh8/list0/vertex44: Block
+ * light9->14, identical position and Sky. Accepted d2cc795ff fluid relight
+ * changes 117 generation fields only (first byte1068404, 32->30).
+ * Fresh render bisect d2cc795ff..6838d53a0 identifies REL-FLK cf3c657fa:
+ * its direct parent af645a61b equals Q+F; cf3c657fa equals 6838d53a0,
+ * both complete seeds. Retained shells continue dirty generations: exactly
+ * 908 seed12345 fields change (first byte4229446/record611, 2->4), with
+ * every list/vertex/other header byte equal; seed42 is wholly unchanged.
+ * Direct 6bb5cb128^/6bb5cb128 captures isolate the accepted Beta fast-leaf
+ * delta: seed42 byte17958/record4/y64/list0, vertices452->432; seed12345
+ * unchanged. Direct a5cdacdfb and a3ef1a51c captures move neither tape.
+ * 6bb5cb128 reproduces both final pins. No six-file restoration assumption.
+ * Previous pins: manifest.json ci_1101_12_render_repin. Direct proof:
+ * C:/tmp/cavex-jobs/ci-1101/12b/; summary ../12/PROOF.md.
+ * Frozen CaveWii regression traces, not Beta oracle expectations.
+ */
 /* L1 FAST re-pin (2026-10-12; BRIEF-L1 keeps FAST rules): previous pins
  * ms2_12345_render.gz: 6c9c08ddd806d3fb59f8d0b4ad67c4c49b57f578e04e416a3625c169a4b29922
  * ms2_42_render.gz: 928ebb774648e727634776e9f8aa922a2834b81e9b3aa5aacb41e6db08514bef

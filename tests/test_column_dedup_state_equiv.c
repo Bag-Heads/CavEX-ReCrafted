@@ -1,3 +1,14 @@
+/* ci-1101/12 FAST re-pin (2026-11-01): P=354809385 passes the old tapes;
+ * all three private-history bisects identify accepted IN-005 aa1ec22fb.
+ * First server difference: tick2/offset48, torch 448875->3357488978 (12345),
+ * 3182550524->1050588483 (42); all other server fields remain identical.
+ * Client torch first differs at record27/offset1000 and record51/offset1864.
+ * Also includes accepted d2cc795ff fluid relight, cf3c657fa mesh retention,
+ * and 6838d53a0 lossless client relight: both complete state tapes equal
+ * 6838d53a0; two current captures repeat exactly. Previous pins and detailed
+ * attribution: manifest.json ci_1101_12_state_repin; evidence
+ * C:/tmp/cavex-jobs/ci-1101/12/. Frozen regression traces, not Beta oracles.
+ */
 /* L1 FAST re-pin (2026-10-12; BRIEF-L1 keeps FAST rules): previous pins
  * ms2_12345_client.gz: 7006f6163f334efee2e16e72dc0c9371c9e35b6b16ab895e7414eb2ac7197c87
  * ms2_12345_server.gz: 232d0f7c60f6dd6f8ca2276a44d278ec9f01763efd010c45bad92cd72b72a365

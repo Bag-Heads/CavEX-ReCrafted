@@ -462,12 +462,25 @@ int main(void) {
 	 * D:/cavewii-evidence/g9b3-evidence. This is not a Beta expectation. */
 	/* Existing capture mode skips only the frozen expectation; all repeated
 	 * normal/pressure/observer equivalence assertions still run. */
+	/* G9X-6 pin 0x20ae0cf605437c8d (maintainer ruling 3, 2026-10-14);
+	 * previous 0x4690c53d53bccebf. All 1178 old RPC records were identical
+	 * and in order, tick/RNG tail equal; 43 added CRPC_CHUNK republishes
+	 * of Beta-published light, first (3,0) Block 0->15 at (63,7,12).
+	 * tmp/jobs/loop/G9X-6/RERECORD.md.
+	 * ci-1101/12 FAST re-pin: P=354809385 reproduces 20ae0cf605437c8d
+	 * in all five normal/pressure/observer arms. Git bisect identifies the
+	 * accepted IN-005 quiet-but-lit setter aa1ec22fb (Chunk.java:215-250:
+	 * quiet ID/meta writes still schedule light and run block callbacks).
+	 * First changed byte 2794189 is CHUNK(48,16) Block light at world
+	 * (63,18,29), low nibble 1->0 (packed 17->16). aa1ec22fb and d2bb7a89c
+	 * both reproduce the new pin in all five arms, 207 chunks/1228 RPCs.
+	 * This is a CaveWii regression trace, not a Beta oracle expectation.
+	 * Evidence: C:/tmp/cavex-jobs/ci-1101/12/{bisect-*,first-single-cell.json,
+	 * parent-single-attr.log,moving-single-attr.log,head-single-attr.log}.
+	 * Native GDB: the old baseline assertion called UCRT abort (0xc0000409).
+	 */
 	const uint64_t baseline = getenv("CW_CAPTURE_SINGLE_GOLDEN") ? a
-		: UINT64_C(0x20ae0cf605437c8d); /* G9X-6 re-record (maintainer ruling 3,
-		 * 2026-10-14); old pin 0x4690c53d53bccebf. All 1178 old RPC records are
-		 * byte-identical and in order, tick/RNG tail equal; 43 added CRPC_CHUNK
-		 * republishes of Beta-published light, first (3,0) Block 0->15 at
-		 * (63,7,12). tmp/jobs/loop/G9X-6/RERECORD.md. */
+		: UINT64_C(0x30a9fe4e7e8885a3);
 	if(!getenv("CW_CAPTURE_SINGLE_GOLDEN"))
 		assert(a == baseline);
 #ifndef CW_CAPTURE_PINNED_BASELINE

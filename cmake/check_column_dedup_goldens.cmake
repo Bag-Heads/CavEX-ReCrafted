@@ -1,6 +1,10 @@
+# ci-1101/12 render FAST re-pin: P=354809385; accepted changes, old pins
+# and first divergence in manifest.json ci_1101_12_render_repin.
+# ci-1101/12 state FAST re-pin: P=354809385; accepted changes, old pins
+# and first divergence in manifest.json ci_1101_12_state_repin.
 # G9X-6 re-pin (maintainer ruling 3, 2026-10-14): Beta-published light republish
 # (CRPC_CHUNK refresh of already-sent columns; server traces and seed-42 render
-# byte-identical), evidence tmp/jobs/loop/G9X-6/RERECORD.md. Current hashes:
+# byte-identical), evidence tmp/jobs/loop/G9X-6/RERECORD.md. G9X-6 hashes:
 # ms2_12345_client.gz 664c35f577003a81697080217391d7e9c30db5749f76eb722f277c440467ea6c
 # ms2_12345_render.gz 90ed95c15ec4389741ae38d33f2bc1fbb14a5b606db6380d790731a6911f3752
 # ms2_42_client.gz 9ab89273df80881bd85c52bc574c29817ab3b0308f33c543a26974e0c3c12194
@@ -68,12 +72,12 @@ set(_column_baseline_files
     ms2_12345_client.gz ms2_12345_render.gz ms2_12345_server.gz
     ms2_42_client.gz ms2_42_render.gz ms2_42_server.gz)
 set(_column_baseline_hashes
-    664c35f577003a81697080217391d7e9c30db5749f76eb722f277c440467ea6c
-    90ed95c15ec4389741ae38d33f2bc1fbb14a5b606db6380d790731a6911f3752
-    aeefbfc6bf42bd3e750a558c2581940ce3bc81dba8d595a4a1ae9c023edd069c
-    9ab89273df80881bd85c52bc574c29817ab3b0308f33c543a26974e0c3c12194
-    0ed22a6c7c81a28d7c07ea764c0dd260bac56c9ff42a9303a9dee376cbb5603b
-    6d6857046bfa3418358b4f381cc453b01d04fb47a61733aebb314dc16a38a956)
+    13caf710ca5f697f50d059613f19029c5f79607855d2833911ffeaaded2a7bd9
+    5137639b048223c3e5f40b83370a9e22bfa031e4d63e7c3087676285e8b7d99f
+    e2afa463b2f30a0466193dfb9415c6cb3852caf81e1bf81c7153f356f7b0d118
+    f39fc4f83ba118b8c2b611e98f349cdcbb578d46cb9e896f9c31edfc04c897cc
+    acf3f8efcb1e26ec3cd8b07e4db52b7fdb1c228309f93e7db31e72b668c909d3
+    d06e0c0f345a311dc03aa4869314b8ca0665a129f3b5d2f36a2ed85436a05e93)
 foreach(_i RANGE 0 5)
     list(GET _column_baseline_files ${_i} _file)
     list(GET _column_baseline_hashes ${_i} _expected)
