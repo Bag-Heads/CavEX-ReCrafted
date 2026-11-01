@@ -1,0 +1,44 @@
+name: Publish Pack Helper (Windows)
+# Builds the CavEX Asset Importer for Windows from this commit and attaches it to
+# an existing release. Run by hand only; publishing stays a human decision.
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Release tag to attach the zip to
+        required: true
+        default: v0.1.0
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: msys2/setup-msys2@v2
+        id: msys2
+        with:
+          msystem: UCRT64
+          install: mingw-w64-ucrt-x86_64-gcc
+      - name: Windows compiler
+        shell: pwsh
+        run: '"${{ steps.msys2.outputs.msys2-location }}\ucrt64\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append'
+      - name: Install pinned build inputs
+        run: python -m pip install -r tools/pack_helper/requirements-build.win32.lock
+      - name: Build
+        run: python tools/pack_helper/package_app.py --cc gcc --out dist/pack-helper
+      - name: Frozen smoke test
+        run: python tools/pack_helper/smoke_packaged.py dist/pack-helper dist/frozen-smoke.json
+      - name: Zip
+        shell: pwsh
+        run: Compress-Archive -Path "dist/pack-helper/CavEX Asset Importer" -DestinationPath CavEX-Asset-Importer-windows.zip
+      - name: Attach to the release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ inputs.release_tag }}" CavEX-Asset-Importer-windows.zip --clobber --repo "${{ github.repository }}"
