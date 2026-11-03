@@ -3748,8 +3748,8 @@
   },
   {
    "path": "source/game/gui/screen_title.c",
-   "sha256": "a9c8bea6d2b0025dbb9dc62c8668a7d4bd3fa8448e9631ab0bc0847e439ceb02",
-   "size": 35838
+   "sha256": "a65aa20130a8e0b6940613998ab64e9453b5b011651ad7361c9a7cd69ddd62f7",
+   "size": 36527
   },
   {
    "path": "source/game/gui/screen_video_settings.c",
@@ -12823,8 +12823,8 @@
   },
   {
    "path": "tools/tutorial_world/build_tutorial.py",
-   "sha256": "59dd6f3ee027d11767392da9532015eca7e98180fe470842421e95bba86ee496",
-   "size": 246542
+   "sha256": "a56b9b0483e8ab90859dc6a597be48cb4168473d919791e6dcacf760b33db933",
+   "size": 248486
   },
   {
    "path": "tools/tutorial_world/demo_scene.py",
@@ -13023,9 +13023,9 @@
   }
  ],
  "inventory_representation": "git archive file bytes",
- "public_base_commit": "3fccc08a05299d6739ee4ad03ae71b94fd3349b0",
+ "public_base_commit": "eed089d4c1bd8588c42b13a2a15b0c3af3d7ac66",
  "schema": 1,
- "source_commit": "f44acfa77dd9d7b7f517e5f63050073f6ed3d229",
- "source_tree": "b421d36c3952da3fa3013e52c7c8a0bccbc846be",
+ "source_commit": "5b6f93b38b0ffd19515308638895fd03a19d7f67",
+ "source_tree": "6b8437d6027a9328944f05ce73c7aa2c00ffe5ef",
  "status": "hardware-unconfirmed"
 }

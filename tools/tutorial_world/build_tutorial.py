@@ -102,6 +102,8 @@ IRON_ARMOUR = (306, 307, 308, 309)
 LEATHER, BOAT, REED_ITEM, PAPER, BOOK = 334, 333, 338, 339, 340
 COMPASS, FISHING_ROD, CLOCK, FISH_COOKED = 345, 346, 347, 350
 GOLD_INGOT = 266
+# Beta Item.java:111,124: ItemShears(103), shiftedIndex = 256 + n.
+SHEARS = 359
 # Item ids whose Beta max stack is 1 (ItemFood, ItemTool, ItemSword, ItemHoe,
 # ItemArmor, ItemBow, ItemBucket, ItemMinecart, ItemBoat, ItemSign,
 # ItemDoor, ItemFlintAndSteel, ItemFishingRod, ItemSaddle, ItemMap,
@@ -128,6 +130,10 @@ def max_stack(item_id):
     return STACK_MAX.get(item_id, 64)
 
 DEVIATIONS = [
+    "ci-1101/79: tutorial review polish; lesson gates include the kerbs, "
+    "the cane exit has a breakable fence behind the crop, and the bridge's "
+    "north fence sits above the live wire so its circuit is unchanged; "
+    "landing controls use docs/controls_sheet.md, with local sign/kit fixes",
     "shed kit: walls stand ON the footprint perimeter (not set back): every "
     "interior coordinate in section 2 (tables, chests, nooks) assumes it",
     "stop 1: demo lantern post moved from the stair cell (200,296) to "
@@ -856,9 +862,21 @@ class Tutorial:
         # (alone on the quay it read as a stray block)
         self.chest(197, 65, 307, [(0, APPLE, 1), (1, APPLE, 1), (2, APPLE, 1),
                                   (3, APPLE, 1)])
-        self.post_sign(202, 65, 303, "WELCOME! / WALK NORTH: / GATE 1 IS / "
-                       "STRAIGHT AHEAD", "west")
-        self.reserved.add((202, 303))
+        # ci-1101/79: in front of gate 1, inside the spawn yaw-145 view;
+        # rotation 15 faces back toward the player at (200,304).
+        self.post_sign(198, 65, 299, "WELCOME! / WALK NORTH: / GATE 1 IS / "
+                       "STRAIGHT AHEAD", 15)
+        self.reserved.add((198, 299))
+        # ci-1101/79: shipped controls, including use on a chest (controls_sheet).
+        for x, lines in (
+                (203, ["WIIMOTE+NUNCHUK", "A INV B JUMP", "Z MINE C USE",
+                       "C: OPEN CHEST"]),
+                (205, ["CLASSIC", "X INV A JUMP", "ZR MINE ZL USE",
+                       "ZL: OPEN CHEST"]),
+                (207, ["GAMECUBE", "Y INV A JUMP", "R MINE L USE",
+                       "L: OPEN CHEST"])):
+            self.post_sign(x, 65, 304, lines, "south")
+            self.reserved.add((x, 304))
         # Demo lantern post beside the L0s stairs; its sign faces the boardwalk.
         self.beacon(202, 296, "south",
                     "LOOK AROUND / WALK TO THE / LANTERN POST / TURN TO LOOK",
@@ -928,7 +946,7 @@ class Tutorial:
         self.lamp(197, 279)
         # Gate: fallen oak across L2 (deviation: on the road). V6b: two logs
         # high, so it has to be broken (a 1-high log is just jumped).
-        for x in (193, 194, 195):
+        for x in range(192, 197):  # ci-1101/79: include both kerbs
             w.log(x, 66, 262)
             w.log(x, 67, 262)
         self.post_sign(196, 66, 263, "BREAK THIS LOG / TO GO ON", "south")
@@ -971,7 +989,7 @@ class Tutorial:
                     "CRAFT PLANKS / 1 LOG = 4 / 2 PLANKS = / 4 STICKS")
         w.set(186, 66, 244, 58)
         self.sign(186, 67, 244, "OPEN CRAFTING / MAKE PLANKS / THEN A TABLE / "
-                  "PLACE IT HERE", "south", wall=True)
+                  "4 PLANKS=TABLE", "south", wall=True)
         # V6b: a wall sign above the spot, so the 'here' cell stays free
         self.sign(190, 67, 244, "PLACE YOUR / TABLE HERE", "south", wall=True)
         # Nook (SW): partition, door, bed, chest, torch.
@@ -989,7 +1007,7 @@ class Tutorial:
         w.torch(188, 68, 244, "south")
         # Gate: ditch across L3. V6b: 2 deep (a 1-deep ditch is walked in
         # and out of, so 'fill the ditch' was never needed).
-        for x in (201, 202, 203):
+        for x in range(200, 205):  # ci-1101/79: include both kerbs
             for z in (241, 242):
                 w.set(x, 65, z, 0)
                 w.set(x, 64, z, 0)
@@ -1032,7 +1050,7 @@ class Tutorial:
         w.torch(205, 68, 221, "east")
         w.torch(206, 68, 224, "north")
         # Gate: cobble wall across the z=222 leg at x=217.
-        for z in (221, 222, 223):
+        for z in range(220, 225):  # ci-1101/79: include both kerbs
             for y in (66, 67):
                 w.set(217, y, z, COBBLE)
         self.post_sign(217, 66, 220, "DIG THROUGH / USE THE PICK / KEEP THE "
@@ -1210,7 +1228,8 @@ class Tutorial:
         self.sign(226, 15, 206, "LAPIS: UNDER 32", "east", wall=True)
         self.sign(234, 15, 204, "REDSTONE <16", "west", wall=True)
         self.sign(234, 15, 206, "DIAMOND <16", "west", wall=True)
-        self.sign(230, 14, 203, "IRON PICK FOR / GOLD, REDSTONE / AND DIAMOND",
+        self.sign(230, 14, 203, "IRON PICK FOR / GOLD, REDSTONE / AND DIAMOND / "
+                  "COME BACK LATER",
                   "south", wall=True)
         w.torch(226, 14, 205, "east")
         w.torch(234, 14, 205, "west")
@@ -1306,7 +1325,7 @@ class Tutorial:
         # V6b: the chest fills the 1x1 pocket beside the empty furnace (the
         # 'yours' one), with what it takes to fill it
         self.chest(291, 66, 206, [(0, COAL, 8), (1, 15, 6), (2, COBBLE, 8),
-                                  (3, 12, 8), (4, 77, 1)])
+                                  (3, 12, 8), (4, 77, 1), (5, 17, 2)])
         # V6b: a crafting table, so 'build a furnace' can be done here.
         w.set(285, 66, 210, 58)
         # V7: charcoal (FurnaceRecipes: log -> coal damage 1)
@@ -1322,7 +1341,7 @@ class Tutorial:
         w.torch(285, 68, 208, "east")
         w.torch(288, 68, 210, "north")
         # Gate: cobble wall x=296, z213..215 with a closed iron door.
-        for z in (213, 215):
+        for z in (212, 213, 215, 216):  # ci-1101/79: block both kerbs
             for y in (66, 67):
                 w.set(296, y, z, COBBLE)
         w.door(296, 66, 214, "west", material="iron")
@@ -1370,7 +1389,7 @@ class Tutorial:
                   lower=(COBBLE, 0), upper=(PLANKS, 0), mid_posts=3)
         self.chest(317, 66, 233, [(0, WOOD_HOE, 1), (1, SEEDS, 8),
                                   (2, BONE_MEAL, 4, 15), (3, BUCKET, 1),
-                                  (4, WHEAT, 3), (5, BREAD, 1)])
+                                  (4, WHEAT, 3), (5, BREAD, 1), (6, SHEARS, 1)])
         for y in (66, 67, 68):
             w.set(320, y, 233, PLANKS)
             w.set(320, y, 234, PLANKS)
@@ -1417,7 +1436,7 @@ class Tutorial:
             w.reed(x, 66, 247, 3)
             self.walk.discard((x, 66, 247))
         self.post_sign(312, 66, 247, "CANE GROWS BY / WATER, UP TO 3 / CUT THE "
-                       "CANE / TO PASS", "south")
+                       "CANE / THEN THE FENCE", "south")
         self.walk.discard((312, 66, 247))
         # Practice: a bucket hole by the south gate path.
         w.set(315, 65, 248, 0)
@@ -1455,6 +1474,8 @@ class Tutorial:
         self.post_sign(317, 66, 241, "A PEN: THE / DOOR KEEPS / THE "
                        "ANIMALS IN", "west")
         self.walk.discard((317, 66, 241))
+        self.post_sign(317, 66, 243, "SHEAR SHEEP / FOR WOOL", "west")
+        self.walk.discard((317, 66, 243))
         # Pumpkins along the south fence.
         for x in (318, 319, 320):
             w.pumpkin(x, 66, 249, "north")
@@ -1468,6 +1489,11 @@ class Tutorial:
             w.reed(x, 66, 250, 2)
         w.water_source(314, 65, 250)
         w.set(314, 64, 250, 3)
+        # ci-1101/79: cane is passable; the breakable fence closes its exit.
+        for x in range(312, 317):
+            w.set(x, 66, 251, FENCE)
+            self.walk.discard((x, 66, 251))
+            self.reserved.add((x, 251))
         # The yard is lit by glowstone set flush in the grass walks; the
         # light pass tops up any cell the lattice misses.
         self.floor_glow(305, 233, 321, 249, 65, step=8,
@@ -1521,7 +1547,7 @@ class Tutorial:
         self.shed("s10_house", 293, 295, 299, 301, 65, doors=[(296, 295),
                   (293, 298)], trim="red", lower=(COBBLE, 0),
                   upper=(45, 0), chimney=(298, 300))
-        self.beacon(300, 294, "north", "LAST STOP / CRAFT A BED / THEN THE "
+        self.beacon(300, 294, "north", "LAST BASIC STOP / CRAFT A BED / THEN THE "
                     "HUB")
         w.bed(294, 66, 297, "north")
         self.sign(295, 67, 296, "CRAFT A BED / 3 WOOL 3 PLANKS / SLEEP WHEN "
@@ -1544,7 +1570,7 @@ class Tutorial:
         self.sign(298, 67, 298, "KEEP MONSTERS / AWAY: NEAR / ONES STOP / "
                   "YOUR SLEEP", "west", wall=True)
         # Hub gate: wall x=288 z297..299, iron door, button on the east side.
-        for z in (297, 299):
+        for z in (296, 297, 299, 300):  # ci-1101/79: block both kerbs
             for y in (66, 67):
                 w.set(288, y, z, COBBLE)
         w.door(288, 66, 298, "west", material="iron")
@@ -1829,7 +1855,7 @@ class Tutorial:
             w.set(x, 65, 255, GRAVEL)
             w.noteblock(x, 66, 255, 12)
             self.walk.discard((x, 66, 255))
-        self.post_sign(216, 66, 258, "A TORCH POWERS / GOLD RAILS", "south")
+        self.post_sign(216, 66, 258, "REDSTONE TORCH / POWERS GOLD / RAILS", "south")
         self.walk.discard((216, 66, 258))
         # Shelters over each station: 4 log posts + a roof.
         for (xa, xb) in ((206, 210), (236, 240)):
@@ -2049,6 +2075,9 @@ class Tutorial:
         for x in range(319, 327):
             w.wire(x, 66, 210)
             self.walk.discard((x, 66, 210))
+        # ci-1101/79: close the north bypass without replacing the live wire.
+        for x in range(321, 325):
+            w.set(x, 67, 210, FENCE)
         for z in (211, 212, 213):
             w.wire(319, 66, z)
             w.wire(326, 66, z)
@@ -2789,6 +2818,8 @@ class Tutorial:
         self.chest(247, 67, 264, [(0, COMPASS, 1), (1, CLOCK, 1),
                                   (2, PAPER, 8), (3, IRON_INGOT, 4),
                                   (4, GOLD_INGOT, 4), (5, REDSTONE, 2)])
+        w.set(247, 67, 263, 58)  # ci-1101/79: craft beside the map chest
+        self.walk.discard((247, 67, 263))
         self.sign(248, 67, 264, "MAKE A MAP: / 8 PAPER ROUND / A COMPASS. / "
                   "A CLOCK = TIME", "north")
         # V3 planting beds (no trees: the gate sightlines stay open): a
@@ -4441,7 +4472,7 @@ class Tutorial:
         for (z, kit, text) in (
                 (205, LEATHER_ARMOUR, "WEAR ARMOUR TO / TAKE LESS HARM: "
                  "/ LEATHER IS / LIGHT, CHEAP"),
-                (207, IRON_ARMOUR, "WEAR IRON FOR / BETTER CARE: / 24 "
+                (207, IRON_ARMOUR, "WEAR IRON FOR / MORE DEFENCE / 24 "
                  "INGOTS MAKE / A FULL SET")):
             w.slab(295, 66, z, "stone", double=True)
             self.chest(295, 67, z, [(i, it, 1) for i, it in enumerate(kit)])

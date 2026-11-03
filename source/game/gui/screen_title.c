@@ -538,6 +538,25 @@ static void screen_title_update(struct screen* s, float dt) {
 		title_activate(decision.target);
 		return;
 	}
+	/* Test-only ("debug.title_press":"tutorial", default off): one press of the
+	 * Tutorial row through the real activation path, 8 s after the title first
+	 * shows, so an unattended real-Wii run proves the button (ci-1101/78). */
+	static int s_dbg_press = -1; /* -1 unread, 0 off/done, 1 armed */
+	static float s_dbg_press_t;
+	if(s_dbg_press < 0)
+		s_dbg_press = strcmp(config_read_string(&gstate.config_user,
+												"debug.title_press", "off"),
+							 "tutorial")
+			== 0;
+	if(s_dbg_press == 1) {
+		s_dbg_press_t += dt;
+		if(s_dbg_press_t >= 8.0F) {
+			s_dbg_press = 0;
+			fprintf(stderr, "[title] debug.title_press: Tutorial\n");
+			title_activate(TB_TUTORIAL);
+			return;
+		}
+	}
 	/* R-C: a press the rule CONSUMED reaches nothing else this frame. Under a
 	 * remap that puts activate and Close on one physical button, the press
 	 * below would otherwise be both a focus move and a quit (review A6-4). */
