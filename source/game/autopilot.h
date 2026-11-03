@@ -151,6 +151,10 @@ bool autopilot_take_place_pulse(void);
 // camera's degrees (yaw 0 = +Z, positive toward +X; pitch 90 level, larger = down).
 // The menus_dwell walker uses it to face each demo container (menu_dwell_demo.h).
 void autopilot_aim_set_deg(int yaw_deg, int pitch_deg);
+// Walk/keep-up modes only: hold this camera pitch (same degrees as above) instead
+// of the fixed ~26-deg-down walk look. 0 = unset (default; walk look unchanged).
+// Promo capture only (debug.autopilot_walk_pitch_deg): looks down at a held map.
+void autopilot_walk_pitch_set_deg(int pitch_deg);
 
 // Aim mode only: latch ONE place pulse for screen_ingame to consume as an
 // empty-hand right-click on whatever the crosshair holds (same cap as the

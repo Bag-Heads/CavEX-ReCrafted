@@ -34,7 +34,7 @@ def setUpModule():
     global _T, _DIR
     _T = bt.build()
     _DIR = tempfile.TemporaryDirectory()
-    _T.w.save(os.path.join(_DIR.name, "CaveWii Tutorial"), light=False)
+    _T.w.save(os.path.join(_DIR.name, "CavEX Tutorial"), light=False)
 
 
 def tearDownModule():
@@ -43,7 +43,7 @@ def tearDownModule():
 
 class TutorialBuild(unittest.TestCase):
     def saved(self):
-        return os.path.join(_DIR.name, "CaveWii Tutorial")
+        return os.path.join(_DIR.name, "CavEX Tutorial")
 
     def test_no_problems(self):
         self.assertEqual(bt.check_problems(_T.w), [])

@@ -43,8 +43,8 @@
   },
   {
    "path": "ASSET_ATTRIBUTION.md",
-   "sha256": "4c1ced55072e278dc6772b20a21f46ea8cf3d4ae7b6597a010817bcf586eda97",
-   "size": 8047
+   "sha256": "7afd66a6b8a47722c80078048e8efa418d962fb2d979207b2bd30eba39d7e69b",
+   "size": 8045
   },
   {
    "path": "CHANGES.md",
@@ -53,8 +53,8 @@
   },
   {
    "path": "CMakeLists.txt",
-   "sha256": "8bc67b3c9318501f0e10b0881a80b58103f40ce3e64e973eec9289c8ed187d59",
-   "size": 933589
+   "sha256": "b777548506afabbe367e5109782e3f21478e97ea34e29c45370e7964047ac648",
+   "size": 933587
   },
   {
    "path": "CMakePresets.json",
@@ -1048,8 +1048,8 @@
   },
   {
    "path": "docs/release-install.md",
-   "sha256": "c500c5a67087a38f76bccd2e0cf7f5ec2454606db667d7b82f75ac60bc5bef49",
-   "size": 10270
+   "sha256": "e2318301f766a036d265c51384ffcb7aa7490ada088e580df305b1ce776dc6fd",
+   "size": 10329
   },
   {
    "path": "docs/site/assets/icon.png",
@@ -3278,13 +3278,13 @@
   },
   {
    "path": "source/game/autopilot.c",
-   "sha256": "3bcadc4e697a8f1ce21e2c1bbf97f0525498cd0df2a3e504caf39113cf4d98dd",
-   "size": 42893
+   "sha256": "a59e8966586bd43ada0f10ccd24675ba668a1a728eb1d6e4c5f2aa0cc116edee",
+   "size": 43210
   },
   {
    "path": "source/game/autopilot.h",
-   "sha256": "147cd9b63d57b5ec953ef18c5855143691b1be02317e8030fd91408c703bc485",
-   "size": 13191
+   "sha256": "dda569469c03562a93c874df1ced0493e43c6ed82e49df6fa6edb5fe7c354939",
+   "size": 13488
   },
   {
    "path": "source/game/autopilot_keepup.h",
@@ -3583,8 +3583,8 @@
   },
   {
    "path": "source/game/gui/screen.h",
-   "sha256": "69809a1ba6e1914bb09f0c0bc0bf403d29e89dbdecbb3e1fdecca23c59156e44",
-   "size": 51836
+   "sha256": "c5c20538302cbd4e4b44a1fd105e163a39f93c27406af3a25ef8122def00e95b",
+   "size": 51894
   },
   {
    "path": "source/game/gui/screen_achievements.c",
@@ -3723,8 +3723,8 @@
   },
   {
    "path": "source/game/gui/screen_select_world.c",
-   "sha256": "fcf958b2f4cd4404cc17e6e9e78ecf44a283cf66b8bf720dfd125158d1419836",
-   "size": 122238
+   "sha256": "8b2b50150674be222593011bd635828f0dc5fa0258f497b187e36cd269d69e0c",
+   "size": 122418
   },
   {
    "path": "source/game/gui/screen_sign.c",
@@ -3748,8 +3748,8 @@
   },
   {
    "path": "source/game/gui/screen_title.c",
-   "sha256": "b63f6824ada0f08da20a42b95f1713bb1415de5090a598473098f8a95bb701ce",
-   "size": 35342
+   "sha256": "a9c8bea6d2b0025dbb9dc62c8668a7d4bd3fa8448e9631ab0bc0847e439ceb02",
+   "size": 35838
   },
   {
    "path": "source/game/gui/screen_video_settings.c",
@@ -4638,8 +4638,8 @@
   },
   {
    "path": "source/main.c",
-   "sha256": "39c4b4ac74be773d21a86e60edbf035f91ad3ebc625ddb8e6996f6abdc984262",
-   "size": 457130
+   "sha256": "453ac7652e3c7c5ad5163e958d8afcff9ac262d357f68c728c5a1b8de7f69715",
+   "size": 457318
   },
   {
    "path": "source/network/checkpoint_journal_guard.c",
@@ -9403,8 +9403,8 @@
   },
   {
    "path": "tests/test_make_release.py",
-   "sha256": "a0e365d2d83e192ca95dd1f51c98ad7ea5aa04acec6f47806ff26092141af9be",
-   "size": 77344
+   "sha256": "fa863679773c9486a30ab02f259bf750492d7401e256bc1e17d6f7ffb8ec4869",
+   "size": 77398
   },
   {
    "path": "tests/test_map_demo_option.c",
@@ -10338,8 +10338,8 @@
   },
   {
    "path": "tests/test_put_wii_stage_file_sha_mismatch.py",
-   "sha256": "eaff3c6e3b4bac921f9dcb4d6a2e8325625c9c8db5d9e330a4db39f6a9379d2e",
-   "size": 16334
+   "sha256": "1a81d3205360585e690355ad58cdd450f2b97af4b45c24c1c58b4594fb444b04",
+   "size": 16328
   },
   {
    "path": "tests/test_quit_unsavable_env.c",
@@ -11233,8 +11233,8 @@
   },
   {
    "path": "tests/test_stage_fetch_path.c",
-   "sha256": "d460e2a47e225035e06c55951cb2ad270db53dbe5129b93395c05056e54ea70b",
-   "size": 19523
+   "sha256": "d9cbd1902ddd487ad26840db063a1c1640b09c6e6391e26d4887dc52b9adf993",
+   "size": 19493
   },
   {
    "path": "tests/test_stage_line_reader.ps1",
@@ -11418,8 +11418,8 @@
   },
   {
    "path": "tests/test_title_tutorial.c",
-   "sha256": "5b66de8402f8346f70bbdd2eab990e428514edde06b67200e4138b83b6f5c55f",
-   "size": 13993
+   "sha256": "f109795ffb0e9937b747cb93e5dcc2ac0eba4addea537980b0c165f14142440f",
+   "size": 15773
   },
   {
    "path": "tests/test_tnt_evidence.py",
@@ -11488,13 +11488,13 @@
   },
   {
    "path": "tests/test_tutorial_build.py",
-   "sha256": "4056f32f66a249fd4817c4f16e074888e9b3d2c17105e58dc2905a5d6a336eb1",
-   "size": 5259
+   "sha256": "0cc64312b355ac12f4191643ff9c8e303c9f073e073941885e49280a7251a00f",
+   "size": 5255
   },
   {
    "path": "tests/test_tutorial_world_load.c",
-   "sha256": "49da2beba9c1decf81eb18763735023707d4f2b6a1771868afa02ec299a2741c",
-   "size": 23457
+   "sha256": "6bb4526b51a655e1386bbbebf549b80bfe2416d3dbcdc907b9dda4eceb8fb554",
+   "size": 23455
   },
   {
    "path": "tests/test_tutorial_worldgen_lib.py",
@@ -11773,8 +11773,8 @@
   },
   {
    "path": "tests/test_world_list_incremental.c",
-   "sha256": "6cbee8ed63ac8c3f335d41e95cb9a1d98ad978eaabf14caa8b9b384f6a4fb57f",
-   "size": 29366
+   "sha256": "a1ddc2dc1321d750389a9a191814e3e921ef03eda3be37750ce7d83e8f15c418",
+   "size": 30885
   },
   {
    "path": "tests/test_world_manage_env.c",
@@ -12108,8 +12108,8 @@
   },
   {
    "path": "tools/archive_wii_saves.ps1",
-   "sha256": "16e43af2fc25d76fc0a887c3bbbf52eb9b8fdea4c9b145235edd810bd6856ecc",
-   "size": 67676
+   "sha256": "5fb75462dadfe1f6e0330f8a2e849cdad36b84b798eee4f165d4828dcdcde383",
+   "size": 67703
   },
   {
    "path": "tools/asan_soak.sh",
@@ -12203,8 +12203,8 @@
   },
   {
    "path": "tools/cw_saves_common.ps1",
-   "sha256": "256efcd545755e2e32de904d61da4b86b187c50c8ac6c89e11192c2f6e9193d1",
-   "size": 151777
+   "sha256": "67bb9991f2f91d2c4ce3ee51df79e71308cff4c5d8956f226b5a48a42620c574",
+   "size": 151928
   },
   {
    "path": "tools/cwbuild.ps1",
@@ -12213,8 +12213,8 @@
   },
   {
    "path": "tools/delete_wii_stage_path.ps1",
-   "sha256": "af438e1adf3c93e8252abea75198f1f1572a6e4dfd61c15f0a824ab77a785dff",
-   "size": 4069
+   "sha256": "439acb19ead5860fe20811c17a6256ae1d24cc0db3a67b58d32ea92d7bf8ae22",
+   "size": 4067
   },
   {
    "path": "tools/dolphin_capture.ps1",
@@ -12418,8 +12418,8 @@
   },
   {
    "path": "tools/install_wii_proof_launcher.ps1",
-   "sha256": "7dcea047b51eca5645dd50212ad9404dc7f7cd7216dccabc5ef53ab8672dec65",
-   "size": 12072
+   "sha256": "84953a618dec7f2426f82f91a2ee19aa5f09fbeefad903e92ec54847cc90305d",
+   "size": 12064
   },
   {
    "path": "tools/invoke_wii_power_cycle.ps1",
@@ -12493,8 +12493,8 @@
   },
   {
    "path": "tools/make_release.sh",
-   "sha256": "1fc04f1de68f41d5df6d271e457724aee35167ad8dc0664ac016522966c6843a",
-   "size": 68566
+   "sha256": "7e7acbc1d81b6eba18449e999510d0f89e36e147bcc67915853ddab04f592e4d",
+   "size": 68790
   },
   {
    "path": "tools/make_title_logo.py",
@@ -12673,8 +12673,8 @@
   },
   {
    "path": "tools/provision_wii_sd.ps1",
-   "sha256": "9626f71328e297744608dbaad7c6b3cb957d2ba9391dfb9440c9af13ffae17c3",
-   "size": 13953
+   "sha256": "5ab55caa5b619c74710004308e146371c66f03fec7d8c527491ffd665cc01803",
+   "size": 13949
   },
   {
    "path": "tools/put_wii_stage_file.ps1",
@@ -12693,8 +12693,8 @@
   },
   {
    "path": "tools/release-assets.json",
-   "sha256": "5ba139e9fd86b95a6c6dbd443e18fa4753f84ade9bbd35e76324fc2d7cd87e35",
-   "size": 123122
+   "sha256": "fa2a44f3e04f0eb0f655416e6a7eea1799d6faed7a0077a5388de14139e3ce3b",
+   "size": 123120
   },
   {
    "path": "tools/release-dependencies.json",
@@ -12743,8 +12743,8 @@
   },
   {
    "path": "tools/run_staged_wii_hardware.ps1",
-   "sha256": "3e3be6d6d562809bc874c48c6d8bfac430fd3765f10a0a5a2b279bdc462dc525",
-   "size": 32387
+   "sha256": "204765edcac0f025070a30bb7ea76dbff3abaa8a4d329be13fa7a0cbffda09b5",
+   "size": 32383
   },
   {
    "path": "tools/run_wii_hardware.ps1",
@@ -12753,13 +12753,13 @@
   },
   {
    "path": "tools/run_wii_lighting_bench.ps1",
-   "sha256": "283f48d429934babb5fa9f7c9921caadb36f70264300766c7082e0032071db3b",
-   "size": 10913
+   "sha256": "c437341ab55e0eab1df4381b00910ad173a4dca0c49553f12ceb0814651ecf1e",
+   "size": 10897
   },
   {
    "path": "tools/run_wii_profile_matrix.ps1",
-   "sha256": "11332a24b2f6cefc06b4101e2e6f73913e6544b63cfa006e41fe13e7459f486f",
-   "size": 22153
+   "sha256": "b3c3d4edb9bca7022c656bbcc8d27ead9bccd6e75557ee4f3b5f9e32d1ceb9aa",
+   "size": 22145
   },
   {
    "path": "tools/save_reload_evidence.py",
@@ -12808,8 +12808,8 @@
   },
   {
    "path": "tools/stage_wii_dol.ps1",
-   "sha256": "bbb54beff1d2357995386ef9a4c8fbfa01ec4cc1d2823e67646a6fe868821128",
-   "size": 57353
+   "sha256": "60c7748e225aa503b5ff2879f2e8454adb3fbd7a6ba9f536f33f649dc8cc8a23",
+   "size": 57349
   },
   {
    "path": "tools/sync_dolphin_controls.ps1",
@@ -12823,8 +12823,8 @@
   },
   {
    "path": "tools/tutorial_world/build_tutorial.py",
-   "sha256": "e5ffe805880be714c5f9c01f25cc54f8196dfd7daaff50d7391efebdbd0d49ef",
-   "size": 246546
+   "sha256": "59dd6f3ee027d11767392da9532015eca7e98180fe470842421e95bba86ee496",
+   "size": 246542
   },
   {
    "path": "tools/tutorial_world/demo_scene.py",
@@ -12833,8 +12833,8 @@
   },
   {
    "path": "tools/tutorial_world/iso_render.py",
-   "sha256": "a427a7f7c3311c52dc58c1cf68f4face67b4c9c59e23cff4b2ae8a7d02078848",
-   "size": 63346
+   "sha256": "3e3137bd21d6ea3559bc8ffe73c7b9f6cdd44c9ff315593a174edac3b27ab12f",
+   "size": 63344
   },
   {
    "path": "tools/tutorial_world/light_tables.py",
@@ -12893,8 +12893,8 @@
   },
   {
    "path": "tools/wait_and_run_wii_hardware.ps1",
-   "sha256": "9594e58998097e986ea605bac649ea93d4a28aaccc6d9a38f72f7b88947848b3",
-   "size": 10127
+   "sha256": "cfb34fe83d9f7cccc493a1d892b2dc624de068c7b6c2832b91dd1f2769c11ff0",
+   "size": 10119
   },
   {
    "path": "tools/wii_batch_loop.ps1",
@@ -13022,11 +13022,10 @@
    "size": 1397
   }
  ],
- "inventory_representation": "git archive file bytes, including committed export/EOL attributes",
- "public_base_commit": "b038674eef16e9df4ba11a77378b7a7c3e49f688",
+ "inventory_representation": "git archive file bytes",
+ "public_base_commit": "3fccc08a05299d6739ee4ad03ae71b94fd3349b0",
  "schema": 1,
- "source_commit": "32722e55545a7ee5c8e36666528456e5237df680",
- "source_tree": "99682c784396079a8672b9b3885655531cb527da",
- "status": "final-source-snapshot-hardware-unconfirmed-scan-not-legal-clearance",
- "superseded_unpushed_commit": "a0ce3cdc284184a8e34aac645187d99760640e98"
+ "source_commit": "f44acfa77dd9d7b7f517e5f63050073f6ed3d229",
+ "source_tree": "b421d36c3952da3fa3013e52c7c8a0bccbc846be",
+ "status": "hardware-unconfirmed"
 }

@@ -3,7 +3,7 @@
 Build the shipped CaveWii tutorial world ("Tutorial Island": island trail +
 hub) from tmp/jobs/tutorial-1021/layout-spec.md (layout-spec v1).
 
-    python tools/tutorial_world/build_tutorial.py            # saves/CaveWii Tutorial
+    python tools/tutorial_world/build_tutorial.py            # saves/CavEX Tutorial
     python tools/tutorial_world/build_tutorial.py --out DIR [--previews DIR]
 
 V2 style pass (tmp/jobs/tutorial-1021/v2-style-guide.md): medieval harbour
@@ -85,7 +85,7 @@ import worldgen_lib as wl  # noqa: E402
 import light_tables  # noqa: E402
 
 REPO = os.path.abspath(os.path.join(HERE, "..", ".."))
-DEFAULT_OUT = os.path.join(REPO, "saves", "CaveWii Tutorial")
+DEFAULT_OUT = os.path.join(REPO, "saves", "CavEX Tutorial")
 DEFAULT_PREVIEWS = os.path.join(REPO, "tmp", "jobs", "tutorial-1021")
 
 # Beta item ids used by the chests (Item.java shiftedIndex = 256 + n).

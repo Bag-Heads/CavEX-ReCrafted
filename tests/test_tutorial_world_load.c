@@ -234,7 +234,7 @@ static void check_animals(const char* fixture) {
  * and the C reader's counts equal the builder's own summary; one pen animal
  * moves and its chunk saves and reloads; one chest is broken and its chunk
  * re-saves twice (edit, then an unchanged rewrite of the game's own rows). */
-#define REAL_WORLD "CaveWii Tutorial" /* build_tutorial.py DEFAULT_OUT dir */
+#define REAL_WORLD "CavEX Tutorial" /* build_tutorial.py DEFAULT_OUT dir */
 #define REAL_CHUNKS 32				  /* one region: chunks (0..31, 0..31) */
 
 static long summary_value(const char* path, const char* key) {

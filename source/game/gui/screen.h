@@ -754,7 +754,8 @@ int screen_title_focused_row(void);
  * DEFAULT_OUT), looked up under "paths.worlds". It RESUMES that folder through
  * the ordinary Load-tab world load; a missing folder opens an honest
  * explanation instead. */
-#define SCREEN_TITLE_TUTORIAL_DIR "CaveWii Tutorial"
+#define SCREEN_TITLE_TUTORIAL_DIR "CavEX Tutorial"
+#define SCREEN_TITLE_TUTORIAL_LEGACY_DIR "CaveWii Tutorial"
 /* TRANSITION ALIAS of screen_title_focus_is_play -- the standalone Multiplayer
  * row no longer exists. Kept DEFINED (one line in screen_title.c) so main.c's
  * mpp_hook_menu_focus links unchanged until the joint seam commit (Load-tab

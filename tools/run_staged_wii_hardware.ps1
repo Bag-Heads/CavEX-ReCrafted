@@ -202,7 +202,7 @@ if([string]::IsNullOrWhiteSpace($OutRoot)) {
 New-Item -ItemType Directory -Force -Path $OutRoot | Out-Null
 
 Write-Host "[run-staged] run_id=$RunId profile=$Profile"
-Write-Host "[run-staged] requirement: launch 'CaveWii Stage Server' on the Wii first"
+Write-Host "[run-staged] requirement: launch 'DOL Stage Server' on the Wii first"
 if($LaunchAfterStage) {
     Write-Host "[run-staged] experimental CWRUN1 launch requested; this path is hardware-unconfirmed."
 }

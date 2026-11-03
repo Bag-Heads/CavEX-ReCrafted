@@ -276,7 +276,7 @@ Build on this card: $stamp
 
 Normal proof loop:
 1. Leave this SD card in the Wii.
-2. Launch "CaveWii Stage Server" from HBC.
+2. Launch "DOL Stage Server" from HBC.
 3. On the PC, run:
    powershell -NoProfile -ExecutionPolicy Bypass -File tools\run_staged_wii_hardware.ps1 -WiiHost <wii-ip> -Profile heartbeat_selftest
 4. The runner first saves the stage-server manifest plus any previous hang_report.txt / fbguard_report.txt / lighting_bench.txt under tmp\wii_runs\<run-id>\stage_mailbox, including the app-dir fallback copies the watchdog writes when the sd:/ root open fails (previous_*_report_fallback.txt).

@@ -17,8 +17,10 @@
 	along with CavEX.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <time.h>
 
 #include "../../config.h"
@@ -299,7 +301,7 @@ static void screen_title_reset(struct screen* s, int width, int height) {
 /* ---- Tutorial world (ui-build-1026 T03) ----------------------------------
  *
  * The row opens the SHIPPED world (tools/tutorial_world/build_tutorial.py,
- * staged by tools/make_release.sh as saves/CaveWii Tutorial/) through the
+ * staged by tools/make_release.sh as saves/CavEX Tutorial/) through the
  * SAME load the Load tab's Play world issues: client creative armed from
  * level.dat, loading_reason_begin(LOAD_SAVE), then the asyncsnd world-entry
  * gate, which sends SRPC_LOAD_WORLD and shows the loading screen. No new
@@ -336,11 +338,23 @@ static void title_tutorial_explain(const char* line1, const char* line2) {
 	screen_set(&screen_confirm);
 }
 
-static bool title_tutorial_path(char* out, size_t cap) {
+static const char* title_tutorial_path(char* out, size_t cap) {
 	const char* saves
 		= config_read_string(&gstate.config_user, "paths.worlds", "saves");
-	int n = snprintf(out, cap, "%s/%s", saves, SCREEN_TITLE_TUTORIAL_DIR);
-	return n > 0 && (size_t)n < cap;
+	const char* directory = SCREEN_TITLE_TUTORIAL_DIR;
+	int n = snprintf(out, cap, "%s/%s", saves, directory);
+	if(n <= 0 || (size_t)n >= cap)
+		return NULL;
+	/* 0.1.0 cards retain the old folder. Prefer the new release's world;
+	 * an existing but unreadable new world must not resume the old one. */
+	struct stat st;
+	if(stat(out, &st) != 0 && errno == ENOENT) {
+		directory = SCREEN_TITLE_TUTORIAL_LEGACY_DIR;
+		n = snprintf(out, cap, "%s/%s", saves, directory);
+		if(n <= 0 || (size_t)n >= cap)
+			return NULL;
+	}
+	return directory;
 }
 
 static bool title_tutorial_present(const char* path) {
@@ -356,9 +370,9 @@ static bool title_tutorial_present(const char* path) {
 }
 
 static void title_start_tutorial(void) {
-	char path[512];
-	if(!title_tutorial_path(path, sizeof(path))
-	   || !title_tutorial_present(path)) {
+	char path[512] = {0};
+	const char* directory = title_tutorial_path(path, sizeof(path));
+	if(!directory || !title_tutorial_present(path)) {
 		fprintf(stderr, "[title] tutorial world not found: %s/level.dat\n",
 				path);
 		title_tutorial_explain("Tutorial world not found - reinstall CavEX",
@@ -368,7 +382,7 @@ static void title_start_tutorial(void) {
 	/* A fresh Play session that REMEMBERS the tutorial, so a Back or a failed
 	 * load returns to the Load tab with it selected. */
 	play_session_enter_fresh();
-	(void)play_session_remember_world(SCREEN_TITLE_TUTORIAL_DIR);
+	(void)play_session_remember_world(directory);
 
 	/* The Load tab's creative arming (sworld_arm_client_creative): always
 	 * assigned, so a creative world cannot leak its mode into this one. */

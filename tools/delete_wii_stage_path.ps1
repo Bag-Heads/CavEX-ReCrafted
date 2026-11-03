@@ -25,7 +25,7 @@
       tools\delete_wii_stage_path.ps1 -WiiHost 192.0.2.72 -Mode file `
         -RemotePath "sd:/apps/CavEX/saves/CaveWii"
       tools\delete_wii_stage_path.ps1 -WiiHost 192.0.2.72 -Mode tree `
-        -RemotePath "sd:/apps/CavEX/saves/CaveWii Tutorial"
+        -RemotePath "sd:/apps/CavEX/saves/CavEX Tutorial"
 #>
 [CmdletBinding()]
 param(

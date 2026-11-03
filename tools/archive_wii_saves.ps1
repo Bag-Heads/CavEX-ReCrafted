@@ -146,8 +146,8 @@ if(@($Keep).Count -eq 0) {
 }
 # PROTECTED worlds are never archived or deleted by rig tooling, whatever the
 # keep list says: the shipped tutorial world (the title Tutorial button opens
-# saves/CaveWii Tutorial; a card without it makes that button dead).
-foreach($protected in @('CaveWii Tutorial')) {
+# saves/CavEX Tutorial, or the legacy saves/CaveWii Tutorial on 0.1.0 cards).
+foreach($protected in @('CavEX Tutorial', 'CaveWii Tutorial')) {
     if(Test-CwNameEqual $protected $Name) {
         Write-CwFail "-Name '$Name' is a PROTECTED world (the shipped tutorial world); rig tooling never archives it"
         exit $script:CwSavesExit.Refused

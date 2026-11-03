@@ -509,7 +509,7 @@ static void check_creative_suffix(void) {
 }
 
 // --- (8) the shipped tutorial is hidden from Play game > Load (maintainer 10-31) ----
-// A saves dir holding saves/CaveWii Tutorial (LevelName "Tutorial Island") plus two
+// A saves dir holding saves/CavEX Tutorial (LevelName "Tutorial Island") plus two
 // ordinary worlds lists ONLY the two. The filter keys on the folder constant the
 // title's Tutorial row opens (SCREEN_TITLE_TUTORIAL_DIR), never the display name: a
 // player's own world NAMED "Tutorial Island" in another folder still lists. The
@@ -570,6 +570,44 @@ static void check_tutorial_hidden(void) {
 	assert(screen_sworld_test_row_count() == 2);
 	assert(!screen_sworld_test_hidden_autoload_path(SCREEN_TITLE_TUTORIAL_DIR, out,
 													 sizeof(out)));
+
+	/* 0.1.0 legacy-only and an upgraded card with BOTH folders: neither
+	 * tutorial is listed, so only the player's World B has that display name.
+	 * Exact-name autoload must reach only folders the reset actually saw. */
+	char legacy[256];
+	snprintf(legacy, sizeof(legacy), "%s/%s", s_fixture_TUT_ROOT,
+			 SCREEN_TITLE_TUTORIAL_LEGACY_DIR);
+	make_mode_world(legacy, "Tutorial Island", false);
+	for(int both = 0; both < 2; both++) {
+		if(both)
+			make_mode_world(tut, "Tutorial Island", false);
+		screen_sworld_test_reset(640, 480);
+		assert(screen_sworld_test_row_count() == 2);
+		while(screen_sworld_test_pending() > 0)
+			(void)screen_sworld_test_resolve_step(8);
+		size_t island_rows = 0;
+		for(size_t i = 0; i < 2; i++) {
+			const char* name = NULL;
+			const char* dir = NULL;
+			(void)screen_sworld_test_row(i, &name, &dir, NULL, NULL, NULL);
+			assert(strcmp(dir, SCREEN_TITLE_TUTORIAL_DIR) != 0);
+			assert(strcmp(dir, SCREEN_TITLE_TUTORIAL_LEGACY_DIR) != 0);
+			if(strcmp(name, "Tutorial Island") == 0)
+				island_rows++;
+		}
+		assert(island_rows == 1);
+		assert(screen_sworld_test_hidden_autoload_path(
+			SCREEN_TITLE_TUTORIAL_LEGACY_DIR, out, sizeof(out)));
+		assert(strcmp(out, legacy) == 0);
+		assert(screen_sworld_test_hidden_autoload_path(
+			SCREEN_TITLE_TUTORIAL_DIR, out, sizeof(out)) == (both != 0));
+		if(both)
+			assert(strcmp(out, tut) == 0);
+		snprintf(probe, sizeof(probe), "%s/level.dat", legacy);
+		f = fopen(probe, "rb");
+		assert(f && "legacy tutorial must remain on disk");
+		fclose(f);
+	}
 
 	screen_sworld_test_delete_tree(s_fixture_TUT_ROOT);
 	test_fixture_dir_cleanup(s_fixture_TUT_ROOT);

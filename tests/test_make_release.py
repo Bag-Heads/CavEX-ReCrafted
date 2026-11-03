@@ -106,7 +106,7 @@ open(os.path.join(out, "level.dat"), "wb").write(b"stub level.dat")
 open(os.path.join(out, "region", "r.0.0.mcr"), "wb").write(b"stub region")
 '''
 STUB_TUTORIAL_TEST = b"print('stub tutorial test: OK')\n"
-TUTORIAL_WORLD_DIR = "CaveWii Tutorial"
+TUTORIAL_WORLD_DIR = "CavEX Tutorial"
 
 
 def run(cmd: list[str], cwd: Path, timeout: int = 120) -> subprocess.CompletedProcess:

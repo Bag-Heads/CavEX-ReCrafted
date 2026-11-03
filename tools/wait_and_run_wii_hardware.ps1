@@ -189,9 +189,9 @@ if(-not $SkipProvision) {
     if($LASTEXITCODE -ne 0) {
         throw "provision_wii_sd.ps1 failed with exit code $LASTEXITCODE"
     }
-    Write-Host "[action] eject the SD, put it in the Wii, and launch 'CaveWii Stage Server' from HBC."
+    Write-Host "[action] eject the SD, put it in the Wii, and launch 'DOL Stage Server' from HBC."
 } else {
-    Write-Host "[wait-run] provisioning skipped; launch 'CaveWii Stage Server' from HBC."
+    Write-Host "[wait-run] provisioning skipped; launch 'DOL Stage Server' from HBC."
 }
 
 Write-Host "[wait-run] waiting for stage server by starting the staged hardware runner."

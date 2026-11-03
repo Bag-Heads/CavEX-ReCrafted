@@ -37,7 +37,7 @@ param(
     # auto-exits back to the loader on its own (source/game/hw_run.c
     # hw_run_auto_exit_ready), but exit-to-loader does not by itself put the
     # console back into a stageable state: unless the Wii's boot path
-    # (Priiloader autoboot) is configured to relaunch "CaveWii Stage Server" on
+    # (Priiloader autoboot) is configured to relaunch "DOL Stage Server" on
     # power-up, the NEXT staged push in this loop has nothing listening on
     # StagePort to connect to. This flag is the PC-side half of that loop --
     # the Wii-side half (Priiloader autoboot pointed at the resident stage
@@ -290,7 +290,7 @@ if($Mode -eq "staged" -and -not $LaunchAfterStage) {
     Write-Warning "staged matrix without -LaunchAfterStage still requires manual Wii launch per profile"
 }
 if($PowerCycleBetweenProfiles) {
-    Write-Warning "PowerCycleBetweenProfiles set: this PC-side loop assumes Priiloader on the Wii autoboots 'CaveWii Stage Server' on power-up. If that autoboot is not configured, each power-cycle leaves the console at the System Menu / HBC and the next stage push will fail to connect -- this flag cannot verify or configure that for you."
+    Write-Warning "PowerCycleBetweenProfiles set: this PC-side loop assumes Priiloader on the Wii autoboots 'DOL Stage Server' on power-up. If that autoboot is not configured, each power-cycle leaves the console at the System Menu / HBC and the next stage push will fail to connect -- this flag cannot verify or configure that for you."
 }
 
 $results = New-Object System.Collections.Generic.List[object]

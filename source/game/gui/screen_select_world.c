@@ -224,16 +224,21 @@ static uint32_t resolve_step_max_ms = 0; // worst single resolve step this boot
 
 /* HIDDEN TUTORIAL WORLD (maintainer ruling 2026-10-31): the shipped tutorial
  * save (saves/SCREEN_TITLE_TUTORIAL_DIR, the SAME folder constant the title's
- * Tutorial row opens) is never a Load-tab row. Matched on the DIRECTORY name,
+ * Tutorial row opens) and its 0.1.0 legacy folder are never Load-tab rows.
+ * This also prevents duplicates after an upgrade. Matched on the DIRECTORY name,
  * never on its LevelName ("Tutorial Island"), so a player's own world that
  * happens to share the display name still lists. Because it is never pushed,
  * every per-row action (Play, delete, copy, rename, options) and the row count
  * / empty-list text cannot reach it. Autoload by that exact directory name
  * (hardware-profile harness) still opens it: see sworld_hidden_autoload_path. */
-static bool sworld_tutorial_hidden = false; /* seen (and skipped) by the last reset */
+static unsigned sworld_tutorial_hidden = 0; /* folders seen/skipped by last reset */
 
-static bool sworld_dir_is_hidden(const char* name) {
-	return strcmp(name, SCREEN_TITLE_TUTORIAL_DIR) == 0;
+static unsigned sworld_tutorial_bit(const char* name) {
+	if(strcmp(name, SCREEN_TITLE_TUTORIAL_DIR) == 0)
+		return 1;
+	if(strcmp(name, SCREEN_TITLE_TUTORIAL_LEGACY_DIR) == 0)
+		return 2;
+	return 0;
 }
 
 // Portable "is <parent>/<name> a directory?" test. Uses stat() rather than
@@ -278,7 +283,7 @@ static void screen_sworld_reset(struct screen* s, int width, int height) {
 	 * to turn heap pressure into immediate field writes through address zero. */
 	resolve_cursor = 0;
 	archive_opens = 0;
-	sworld_tutorial_hidden = false;
+	sworld_tutorial_hidden = 0;
 	gui_selection = 0;
 	focus_button = -1;
 	modal_open = false;
@@ -367,8 +372,9 @@ static void screen_sworld_reset(struct screen* s, int width, int height) {
 				bool journaled = world_copy_journals_contains(journals, string_get_cstr(destination));
 				string_clear(destination);
 				if(journaled) continue;
-				if(sworld_dir_is_hidden(dir->d_name)) {
-					sworld_tutorial_hidden = true;
+				unsigned tutorial_bit = sworld_tutorial_bit(dir->d_name);
+				if(tutorial_bit) {
+					sworld_tutorial_hidden |= tutorial_bit;
 					continue;
 				}
 				// ENUMERATE ONLY. The level.dat open + gzip inflate + NBT walk moved to
@@ -2213,11 +2219,11 @@ static float menu_motion_time;
  * when `name` is exactly the tutorial folder AND the last reset saw that folder
  * on the card (a directory, not .incomplete, not a copy-journal target). */
 static bool sworld_hidden_autoload_path(const char* name, char* out, size_t cap) {
-	if(!name || !sworld_dir_is_hidden(name) || !sworld_tutorial_hidden)
+	if(!name || !(sworld_tutorial_bit(name) & sworld_tutorial_hidden))
 		return false;
 	const char* saves
 		= config_read_string(&gstate.config_user, "paths.worlds", "saves");
-	int n = snprintf(out, cap, "%s/%s", saves, SCREEN_TITLE_TUTORIAL_DIR);
+	int n = snprintf(out, cap, "%s/%s", saves, name);
 	return n > 0 && (size_t)n < cap;
 }
 
@@ -2258,7 +2264,7 @@ static void screen_sworld_update(struct screen* s, float dt) {
 			hopt.needs_convert = false;
 			sworld_arm_client_creative(&hopt, NULL);
 			string_clear(hopt.path);
-			(void)play_session_remember_world(SCREEN_TITLE_TUTORIAL_DIR);
+			(void)play_session_remember_world(autoload_name);
 			loading_reason_begin(0, LOAD_SAVE);
 			if(!loading_notice_gate_load_world(hidden_path, &screen_select_world))
 				loading_reason_end(0);

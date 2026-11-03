@@ -2817,7 +2817,8 @@ function Invoke-CwSavesSelfTest {
     _CwAssert ($r7.Status -eq 'ambiguous') "two blocks sharing a display name are ambiguous, never a guess"
 
     # --- spaced-paths (2026-10-30) ------------------------------------
-    _CwAssert ($null -eq (Get-CwStagePathProblem -Path 'sd:/apps/CavEX/saves/CaveWii Tutorial/level.dat')) "a spaced world path is sendable"
+    _CwAssert ($null -eq (Get-CwStagePathProblem -Path 'sd:/apps/CavEX/saves/CavEX Tutorial/level.dat')) "a spaced world path is sendable"
+    _CwAssert ($null -eq (Get-CwStagePathProblem -Path 'sd:/apps/CavEX/saves/CaveWii Tutorial/level.dat')) "the legacy tutorial path is still sendable"
     _CwAssert ($null -eq (Get-CwStagePathProblem -Path 'sd:/texturepacks/isabella-ii/About Isabella.txt')) "a spaced pack file is sendable"
     _CwAssert ($null -ne (Get-CwStagePathProblem -Path 'sd:/apps/a"b')) "a quote is refused"
     _CwAssert ($null -ne (Get-CwStagePathProblem -Path 'sd:/apps/../x')) "'..' is refused"

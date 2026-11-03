@@ -6915,7 +6915,7 @@ if(Python3_Interpreter_FOUND)
 	# chest through the game's own region reader/writer.
 	add_test(NAME test_tutorial_world_real_build COMMAND ${Python3_EXECUTABLE}
 		${CMAKE_CURRENT_SOURCE_DIR}/tools/tutorial_world/build_tutorial.py
-		--out "${CMAKE_CURRENT_BINARY_DIR}/tutorial_world_real/CaveWii Tutorial"
+		--out "${CMAKE_CURRENT_BINARY_DIR}/tutorial_world_real/CavEX Tutorial"
 		--summary ${CMAKE_CURRENT_BINARY_DIR}/tutorial_world_real/summary.txt)
 	set_tests_properties(test_tutorial_world_real_build PROPERTIES
 		FIXTURES_SETUP tutorial_world_real TIMEOUT 600)

@@ -5909,6 +5909,9 @@ int main(int argc, char** argv) {
 	// armed exactly when mode==2 (ap_keepup), mirroring the unstick reset
 	// above. Every other mode leaves this a dead struct.
 	autopilot_keepup_reset(&gstate.autopilot.keepup, ap_keepup);
+	// Promo capture only: walk while looking down at a held map (0 = unchanged).
+	autopilot_walk_pitch_set_deg(config_read_int(
+		&gstate.config_user, "debug.autopilot_walk_pitch_deg", 0));
 	if(ap_aim) {
 		int pitch_deg
 			= config_read_int(&gstate.config_user, "debug.autopilot_pitch_deg", 130);

@@ -17,27 +17,27 @@ static int parse(const char* line, char* out, size_t cap) {
 
 /* spaced-paths 2026-10-30: the CWSTAGE4 put header. The old
  * sscanf("%15s %lu %64s %255s") turned the Tutorial world's level.dat into
- * a stray FILE ".../saves/CaveWii". main.c now takes the fixed fields by
+ * a stray FILE ".../saves/CavEX". main.c now takes the fixed fields by
  * sscanf and the path by cw_stage_tail_path(header, 3, ...). */
 static void test_put_paths(void) {
 	const char* sha =
 		"0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef";
 	char line[512], out[256];
 	snprintf(line, sizeof line,
-			 "CWSTAGE4R 1234 %s sd:/apps/CavEX/saves/CaveWii Tutorial/"
+			 "CWSTAGE4R 1234 %s sd:/apps/CavEX/saves/CavEX Tutorial/"
 			 "level.dat",
 			 sha);
 	{
 		char proto[16], cut[256], s[65];
 		unsigned long size;
 		assert(sscanf(line, "%15s %lu %64s %255s", proto, &size, s, cut) == 4);
-		assert(strcmp(cut, "sd:/apps/CavEX/saves/CaveWii") == 0
+		assert(strcmp(cut, "sd:/apps/CavEX/saves/CavEX") == 0
 			   && "documents the stray-file truncation");
 		assert(sscanf(line, "%15s %lu %64s", proto, &size, s) == 3);
 		assert(size == 1234 && strcmp(s, sha) == 0);
 	}
 	assert(cw_stage_tail_path(line, 3, out, sizeof out) == CW_FETCH_PATH_OK);
-	assert(strcmp(out, "sd:/apps/CavEX/saves/CaveWii Tutorial/level.dat")
+	assert(strcmp(out, "sd:/apps/CavEX/saves/CavEX Tutorial/level.dat")
 		   == 0);
 	assert(valid_sd_path(out));
 
@@ -117,7 +117,7 @@ static void test_delete_policy(void) {
 	/* allowed */
 	assert(cw_delete_target_ok("sd:/apps/CavEX/saves/CaveWii",
 							   CW_DELETE_MODE_FILE));
-	assert(cw_delete_target_ok("sd:/apps/CavEX/saves/CaveWii Tutorial",
+	assert(cw_delete_target_ok("sd:/apps/CavEX/saves/CavEX Tutorial",
 							   CW_DELETE_MODE_TREE));
 	assert(cw_delete_target_ok("sd:/apps/CavEX/hang_report_3.txt",
 							   CW_DELETE_MODE_FILE));
@@ -286,17 +286,17 @@ static void test_delete_walk(void) {
 	fake_add("sd:/apps/CavEX/stage_token.txt", 0);
 	fake_add(S, 1);
 	fake_add("sd:/apps/CavEX/saves/CaveWii", 0); /* the stray file */
-	fake_add("sd:/apps/CavEX/saves/CaveWii Tutorial", 1);
-	fake_add("sd:/apps/CavEX/saves/CaveWii Tutorial/level.dat", 0);
-	fake_add("sd:/apps/CavEX/saves/CaveWii Tutorial/region", 1);
-	fake_add("sd:/apps/CavEX/saves/CaveWii Tutorial/region/r.0.0.mcr", 0);
-	fake_add("sd:/apps/CavEX/saves/CaveWii Tutorial/DIM-1", 1);
+	fake_add("sd:/apps/CavEX/saves/CavEX Tutorial", 1);
+	fake_add("sd:/apps/CavEX/saves/CavEX Tutorial/level.dat", 0);
+	fake_add("sd:/apps/CavEX/saves/CavEX Tutorial/region", 1);
+	fake_add("sd:/apps/CavEX/saves/CavEX Tutorial/region/r.0.0.mcr", 0);
+	fake_add("sd:/apps/CavEX/saves/CavEX Tutorial/DIM-1", 1);
 	fake_add("sd:/apps/CavEX/saves/New World 1", 1);
 	fake_add("sd:/apps/CavEX/saves/New World 1/level.dat", 0);
 	fake_add("sd:/apps/CavEX/empty", 1);
 
 	/* the stray file: file mode on a dir / dir mode on a file are refused */
-	assert(del("sd:/apps/CavEX/saves/CaveWii Tutorial",
+	assert(del("sd:/apps/CavEX/saves/CavEX Tutorial",
 			   CW_DELETE_MODE_FILE, &removed) == CW_DELETE_NOT_FILE);
 	assert(del("sd:/apps/CavEX/saves/CaveWii", CW_DELETE_MODE_DIR,
 			   &removed) == CW_DELETE_NOT_DIR);
@@ -307,18 +307,18 @@ static void test_delete_walk(void) {
 			   &removed) == CW_DELETE_ABSENT && removed == 0);
 
 	/* dir mode: empty only */
-	assert(del("sd:/apps/CavEX/saves/CaveWii Tutorial", CW_DELETE_MODE_DIR,
+	assert(del("sd:/apps/CavEX/saves/CavEX Tutorial", CW_DELETE_MODE_DIR,
 			   &removed) == CW_DELETE_NOT_EMPTY);
-	assert(fake_alive("sd:/apps/CavEX/saves/CaveWii Tutorial/level.dat"));
+	assert(fake_alive("sd:/apps/CavEX/saves/CavEX Tutorial/level.dat"));
 	assert(del("sd:/apps/CavEX/empty/", CW_DELETE_MODE_DIR, &removed)
 		   == CW_DELETE_OK && removed == 1);
 
 	/* tree: removes exactly that world, siblings untouched */
-	assert(del("sd:/apps/CavEX/saves/CaveWii Tutorial/",
+	assert(del("sd:/apps/CavEX/saves/CavEX Tutorial/",
 			   CW_DELETE_MODE_TREE, &removed) == CW_DELETE_OK);
 	assert(removed == 5);
 	for(int i = 0; i < g_fake_n; i++)
-		if(strstr(g_fake[i].path, "CaveWii Tutorial"))
+		if(strstr(g_fake[i].path, "CavEX Tutorial"))
 			assert(!g_fake[i].alive);
 	assert(fake_alive("sd:/apps/CavEX/saves/New World 1/level.dat"));
 	assert(fake_alive(S));

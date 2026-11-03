@@ -141,6 +141,12 @@ static bool autopilot_route_hazard(struct block_data b) {
 }
 
 static bool s_script_portal_walk, s_script_portal_safe;
+/* autopilot_walk_pitch_set_deg: 0 = the fixed walk look (every profile). */
+static int s_walk_pitch_deg;
+static float ap_walk_pitch(void) {
+	return s_walk_pitch_deg ? (float)s_walk_pitch_deg * GLM_PI / 180.0F
+							: GLM_PI * 0.5F + 0.45F;
+}
 static bool s_script_portal_sneak;
 static struct autopilot_portal_return_anchor s_script_portal_anchor;
 static int s_script_portal_target = -1;
@@ -524,7 +530,7 @@ void autopilot_tick(void) {
 	// mode 0's curving-yaw code below so that code path -- and every
 	// existing consumer of it (far_walk_6m first) -- stays byte-identical.
 	if(gstate.autopilot.mode == 2) {
-		gstate.autopilot.pitch = GLM_PI * 0.5F + 0.45F;
+		gstate.autopilot.pitch = ap_walk_pitch();
 		if(s_script_portal_walk) {
 			struct autopilot_portal_return_step route;
 			s_script_portal_safe = autopilot_portal_step(
@@ -568,7 +574,7 @@ void autopilot_tick(void) {
 	}
 
 	// GLM_PI/2 = look level; larger = look down. ~25 deg below level surfaces the ground.
-	gstate.autopilot.pitch = GLM_PI * 0.5F + 0.45F;
+	gstate.autopilot.pitch = ap_walk_pitch();
 	// Slow yaw drift (~0.1 rad/s at 20Hz): a wide curving walk that keeps reaching new chunks.
 	gstate.autopilot.yaw = (float)t * 0.005F;
 
@@ -740,6 +746,10 @@ bool autopilot_take_place_pulse(void) {
 		return true;
 	}
 	return false;
+}
+
+void autopilot_walk_pitch_set_deg(int pitch_deg) {
+	s_walk_pitch_deg = pitch_deg;
 }
 
 void autopilot_aim_set_deg(int yaw_deg, int pitch_deg) {

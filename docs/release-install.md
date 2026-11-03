@@ -36,11 +36,11 @@ The card should then look like this:
     sd:/apps/CavEX/config.json       your settings
     sd:/apps/CavEX/config_wii.json   default settings (fallback)
     sd:/apps/CavEX/assets/           default art and sound
-    sd:/apps/CavEX/saves/CaveWii Tutorial/  the tutorial world
+    sd:/apps/CavEX/saves/CavEX Tutorial/  the tutorial world
     sd:/config.json                       same settings at the card root
     sd:/config_wii.json                   same default settings at the card root
     sd:/assets/                           same art and sound at the card root
-    sd:/saves/CaveWii Tutorial/           same tutorial world at the card root
+    sd:/saves/CavEX Tutorial/           same tutorial world at the card root
     sd:/texturepacks/README.txt           how to add your own Beta 1.7.3 pack
     sd:/texturepacks/isabella-ii/         optional Isabella II pack (CC BY 3.0)
     sd:/LICENSE, NOTICE, LICENSES/        licences and credits
@@ -58,13 +58,13 @@ screen should appear with the Earth & Ash default textures.
 
 ## 3a. The tutorial world
 The zip includes a ready-made tutorial world, **Tutorial Island** (folder
-`saves/CaveWii Tutorial/`). To start it: press **Tutorial** on the title
+`saves/CavEX Tutorial/`). To start it: press **Tutorial** on the title
 screen. It is not shown in the Play game > Load list. You land on
 the beach; follow the numbered gates along the trail. Signs explain each
 stop and chests hold what you need: controls, crafting, tools, mining,
 smelting, farming and animals, beds, minecarts, redstone and monsters.
 
-Unzipping a newer release over an old one replaces `saves/CaveWii Tutorial/`
+Unzipping a newer release over an old one replaces `saves/CavEX Tutorial/`
 with a fresh copy. To keep your progress there, copy that folder somewhere
 else first (or rename it). Your other worlds are not touched.
 
@@ -72,6 +72,8 @@ The world is built at release time by `tools/make_release.sh` from
 `tools/tutorial_world/build_tutorial.py` (never committed; `saves/` is
 gitignored). The packager runs `tests/test_tutorial_build.py` first and
 writes no zip if that test or the build fails.
+
+After updating from 0.1.0, you may delete the old `saves/CaveWii Tutorial/` folder.
 
 ## 4. If your settings file is lost or broken
 The game reads `config.json`. If that file is missing, empty or not valid

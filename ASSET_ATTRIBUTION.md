@@ -46,7 +46,7 @@ Maintainer notes (status `ok`, but confirm):
 | Optional pack | Isabella II (CC BY 3.0, Bonemouse), `texturepacks/isabella-ii/` only. No Isabella II file is in `assets/` |
 | Never shipped | Mojang/Beta textures and sounds; owned oracle JARs, decompiles, `beta_pack`, `.minecraft` (denied by `clean_export.py`; no package paths) |
 | User-owned packs | Imported by the Pack Helper (`tools/import_owned_beta_assets.py`) into `texturepacks/beta-1.7.3` on the player's card. Local ownership is not redistribution permission |
-| Tutorial world | `saves/CaveWii Tutorial` is untracked and is not in the export or zip. It needs its own record if it ever ships |
+| Tutorial world | `saves/CavEX Tutorial` is untracked and is not in the export or zip. It needs its own record if it ever ships |
 | Music | No music files ship in `assets/`. Earth & Ash music candidates live only in the private `artwork/` tree |
 
 ## Inventory by group

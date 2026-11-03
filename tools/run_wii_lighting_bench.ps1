@@ -176,7 +176,7 @@ function Save-StageManifestBeforeFetch {
     $manifestExitCode = $LASTEXITCODE
     $manifestOutput | ForEach-Object { Write-Host $_ }
     if($manifestExitCode -ne 0) {
-        throw "get_wii_stage_manifest.ps1 failed with exit code $manifestExitCode. Relaunch CaveWii Stage Server and retry with -FetchOnly."
+        throw "get_wii_stage_manifest.ps1 failed with exit code $manifestExitCode. Relaunch DOL Stage Server and retry with -FetchOnly."
     }
     $manifest = Get-Content -Raw -LiteralPath $manifestFile | ConvertFrom-Json
     $entry = Get-ManifestFileEntry -Manifest $manifest -RemotePath $RemotePath
@@ -252,10 +252,10 @@ if(-not $FetchOnly) {
         throw "stage_wii_dol.ps1 failed with exit code $LASTEXITCODE"
     }
     if($NoLaunch) {
-        Write-Host "[NEXT] Launch the staged benchmark from HBC, then relaunch CaveWii Stage Server and rerun this script with -FetchOnly."
+        Write-Host "[NEXT] Launch the staged benchmark from HBC, then relaunch DOL Stage Server and rerun this script with -FetchOnly."
         exit 0
     }
-    Write-Host "[NEXT] After the benchmark writes $RemoteResultPath, relaunch CaveWii Stage Server if needed; this script will now try to fetch the result."
+    Write-Host "[NEXT] After the benchmark writes $RemoteResultPath, relaunch DOL Stage Server if needed; this script will now try to fetch the result."
 }
 
 $resultFile = Join-Path $OutRoot "lighting_bench.txt"
@@ -272,7 +272,7 @@ $fetchArgs = @(
 )
 & (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1) @fetchArgs
 if($LASTEXITCODE -ne 0) {
-    throw "fetch_wii_stage_file.ps1 failed with exit code $LASTEXITCODE. If the benchmark already ran, relaunch CaveWii Stage Server and retry with -FetchOnly."
+    throw "fetch_wii_stage_file.ps1 failed with exit code $LASTEXITCODE. If the benchmark already ran, relaunch DOL Stage Server and retry with -FetchOnly."
 }
 
 $text = Get-Content -Raw -LiteralPath $resultFile

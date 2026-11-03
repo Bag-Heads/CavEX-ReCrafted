@@ -181,7 +181,7 @@ if(-not [string]::IsNullOrWhiteSpace($Netmask)) {
 $meta = @"
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <app version="1">
-  <name>CaveWii Stage Server</name>
+  <name>DOL Stage Server</name>
   <coder>CaveWii</coder>
   <version>1.5</version>
   <release_date>$(Get-Date -Format yyyyMMdd)000000</release_date>
@@ -223,7 +223,7 @@ Protocol:
 - CWRUN1 is hardware-unconfirmed; use -LaunchAfterStage only for explicit launcher testing.
 
 Use:
-1. Launch "CaveWii Stage Server" from the Homebrew Channel.
+1. Launch "DOL Stage Server" from the Homebrew Channel.
 2. Leave the Wii on the stage-server screen.
 3. On the PC, run:
    powershell -NoProfile -ExecutionPolicy Bypass -File tools\stage_wii_dol.ps1 -WiiHost <wii-ip> -AssumeServerRunning -Profile heartbeat_selftest

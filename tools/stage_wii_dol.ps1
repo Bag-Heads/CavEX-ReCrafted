@@ -659,7 +659,7 @@ if($BuildStageServerOnly) {
 Assert-HardwareProofTree
 
 if(-not $AssumeServerRunning -and -not $AllowHbcUpload) {
-    throw "refusing to upload the stage server through HBC by default: accepted HBC uploads have black-screened the Wii and required a hard power hold. Launch CaveWii Stage Server from SD and rerun with -AssumeServerRunning, or pass -AllowHbcUpload for an explicit recovery-risk experiment."
+    throw "refusing to upload the stage server through HBC by default: accepted HBC uploads have black-screened the Wii and required a hard power hold. Launch DOL Stage Server from SD and rerun with -AssumeServerRunning, or pass -AllowHbcUpload for an explicit recovery-risk experiment."
 }
 
 

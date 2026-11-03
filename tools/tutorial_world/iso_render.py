@@ -3,7 +3,7 @@
 Offline isometric 3D previews of a World (review aid only, not game code).
 
     python tools/tutorial_world/iso_render.py                 # build tutorial in memory
-    python tools/tutorial_world/iso_render.py --save "saves/CaveWii Tutorial"
+    python tools/tutorial_world/iso_render.py --save "saves/CavEX Tutorial"
     python tools/tutorial_world/iso_render.py --box 186,286,214,314 --view se --out x.png
     python tools/tutorial_world/iso_render.py --all --html   # overview + every zone + index.html
     python tools/tutorial_world/iso_render.py --box 204,198,256,212 --elev s --ymin 66 --ymax 86

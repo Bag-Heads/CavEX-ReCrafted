@@ -2695,7 +2695,7 @@
  "excluded_proprietary": [
   "Mojang/Beta 1.7.3 textures and sounds: user-imported by the Pack Helper into texturepacks/beta-1.7.3 on the user's card, never in the export or zip",
   "owned oracle JARs, decompiles, beta_pack, .minecraft (denied by tools/clean_export.py)",
-  "saves/ including 'CaveWii Tutorial' (untracked; not in the export or release zip)"
+  "saves/ including 'CavEX Tutorial' (untracked; not in the export or release zip)"
  ],
  "generated_from": "HEAD records from tmp/jobs/release-plan/REL-18e4/gen_assets.py, filtered 2026-10-30 to the paths docs/release-allowlist.json exports (artwork/ and private docs/ records dropped: maintainer Q1/Q2)",
  "groups": [

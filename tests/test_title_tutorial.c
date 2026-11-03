@@ -12,10 +12,10 @@
  *      SCREEN_TITLE_FOCUS_TUTORIAL), and the walker's OWN decision
  *      (menu_ap_focus_walk_button) driving this real screen reaches Play,
  *      Tutorial and Texture packs from every row within its press limit;
- *   2. with saves/CaveWii Tutorial/level.dat present, ONE press (pad, and
+ *   2. with saves/CavEX Tutorial/level.dat present, ONE press (pad, and
  *      separately one pointer click) issues exactly one SRPC_LOAD_WORLD and
  *      shows the loading screen -- the Load tab's own load route -- for the
- *      world path <paths.worlds>/CaveWii Tutorial, and the Play session
+ *      world path <paths.worlds>/CavEX Tutorial, and the Play session
  *      remembers the tutorial directory (resume, not copy); a Beta-format
  *      world there is NOT loaded: the Load tab opens (its convert notice
  *      asks first);
@@ -74,18 +74,25 @@ int screen_confirm_test_lines(const char* text[3], int y[3], const char** yes_la
 
 #define TT_RUN_DIR "tmp_title_tutorial_run"
 #define TT_WORLD FE_SAVES_DIR "/" SCREEN_TITLE_TUTORIAL_DIR
+#define TT_LEGACY_WORLD FE_SAVES_DIR "/" SCREEN_TITLE_TUTORIAL_LEGACY_DIR
 
-static void tt_tutorial_world(bool present) {
-	remove(TT_WORLD "/level.dat");
-	fe_rmdir(TT_WORLD);
+static void tt_named_world(const char* path, bool present) {
+	char level[512];
+	snprintf(level, sizeof(level), "%s/level.dat", path);
+	remove(level);
+	fe_rmdir(path);
 	if(!present)
 		return;
 	assert(fe_mkdir(FE_SAVES_DIR) == 0 || errno == EEXIST);
-	assert(fe_mkdir(TT_WORLD) == 0 || errno == EEXIST);
-	FILE* f = fopen(TT_WORLD "/level.dat", "wb");
+	assert(fe_mkdir(path) == 0 || errno == EEXIST);
+	FILE* f = fopen(level, "wb");
 	assert(f && "could not write the fixture level.dat");
 	fputs("fixture", f); /* content is the rig's level_archive double's */
 	fclose(f);
+}
+
+static void tt_tutorial_world(bool present) {
+	tt_named_world(TT_WORLD, present);
 }
 
 /* 1. order + walker seam. */
@@ -164,7 +171,7 @@ static void case_walker_on_real_title(void) {
 		   MENU_AP_FOCUS_WALK_MAX);
 }
 
-static void tt_expect_load(const char* how) {
+static void tt_expect_load_directory(const char* how, const char* directory) {
 	if(fe_rpcs != 1 || fe_rpc_last != SRPC_LOAD_WORLD
 	   || fe_screen_last != &screen_load_world)
 		fprintf(stderr, "[%s] rpcs %u last %d screen %p (want 1 / %d / %p)\n",
@@ -177,16 +184,20 @@ static void tt_expect_load(const char* how) {
 	const char* worlds
 		= config_read_string(&gstate.config_user, "paths.worlds", "saves");
 	char want[512];
-	snprintf(want, sizeof(want), "%s/%s", worlds, SCREEN_TITLE_TUTORIAL_DIR);
+	snprintf(want, sizeof(want), "%s/%s", worlds, directory);
 	if(strcmp(tt_load_path, want) != 0)
 		fprintf(stderr, "[%s] load path \"%s\" (want \"%s\")\n", how,
 				tt_load_path, want);
 	assert(strcmp(tt_load_path, want) == 0
 		   && "the load request named another world path");
 	const char* remembered = play_session_world_dir();
-	assert(remembered && strcmp(remembered, SCREEN_TITLE_TUTORIAL_DIR) == 0
+	assert(remembered && strcmp(remembered, directory) == 0
 		   && "the Play session does not remember the tutorial world");
 	assert(!gstate.config_creative);
+}
+
+static void tt_expect_load(const char* how) {
+	tt_expect_load_directory(how, SCREEN_TITLE_TUTORIAL_DIR);
 }
 
 /* 2. present: one pad press, then one pointer click, each loads it. */
@@ -224,6 +235,47 @@ static void case_tutorial_present(void) {
 	printf("PASS tutorial present: one press (pad or pointer) loads saves/%s "
 		   "through SRPC_LOAD_WORLD + the loading screen; session remembers "
 		   "it (resume)\n", SCREEN_TITLE_TUTORIAL_DIR);
+}
+
+/* 0.1.0 upgrade: legacy-only resumes; both always open the new folder.
+ * An existing new directory without level.dat never falls back to legacy. */
+static void case_tutorial_upgrade(void) {
+	struct fe_roles r = fe_roles_for(FE_REMOTE);
+	tt_named_world(TT_LEGACY_WORLD, true);
+	for(int state = 0; state < 3; state++) {
+		tt_tutorial_world(state == 1);
+		if(state == 2)
+			assert(fe_mkdir(TT_WORLD) == 0);
+		fe_attach(FE_REMOTE);
+		fe_open(&screen_title);
+		fe_pointer_off();
+		fe_step();
+		fe_tap(r.down);
+		fe_rpcs = 0;
+		fe_rpc_last = -1;
+		fe_screen_last = NULL;
+		fe_screen_sets = 0;
+		tt_load_path[0] = 0;
+		fe_tap(r.click);
+		if(state == 2) {
+			assert(fe_rpcs == 0 && tt_load_path[0] == 0);
+			assert(fe_screen_last == &screen_confirm && fe_screen_sets == 1);
+		} else {
+			tt_expect_load_directory(state == 0 ? "legacy only" : "both",
+				state == 0 ? SCREEN_TITLE_TUTORIAL_LEGACY_DIR
+						   : SCREEN_TITLE_TUTORIAL_DIR);
+		}
+		FILE* f = fopen(TT_LEGACY_WORLD "/level.dat", "rb");
+		char contents[16] = {0};
+		assert(f);
+		assert(fread(contents, 1, sizeof(contents), f) == 7);
+		fclose(f);
+		assert(strcmp(contents, "fixture") == 0);
+	}
+	tt_named_world(TT_LEGACY_WORLD, false);
+	tt_tutorial_world(false);
+	puts("PASS tutorial upgrade: legacy fallback, new preferred, legacy untouched; "
+		 "existing new folder never falls back");
 }
 
 /* 2b. A Beta-format world in the tutorial folder: never loaded from the
@@ -323,6 +375,8 @@ int main(void) {
 
 	remove(TT_RUN_DIR "/" TT_WORLD "/level.dat");
 	fe_rmdir(TT_RUN_DIR "/" TT_WORLD);
+	remove(TT_RUN_DIR "/" TT_LEGACY_WORLD "/level.dat");
+	fe_rmdir(TT_RUN_DIR "/" TT_LEGACY_WORLD);
 	remove(TT_RUN_DIR "/config.json");
 	remove(TT_RUN_DIR "/config_wii.json");
 	remove(TT_RUN_DIR "/" FE_REMAP_CONFIG);
@@ -338,6 +392,7 @@ int main(void) {
 	case_rows_and_walker();
 	case_walker_on_real_title();
 	case_tutorial_present();
+	case_tutorial_upgrade();
 	case_tutorial_beta_format();
 	case_tutorial_absent();
 

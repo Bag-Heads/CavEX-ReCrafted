@@ -771,7 +771,7 @@ fi
 #       SD root AND under apps/CavEX/ -- the game opens "paths.worlds"
 #       = "saves" relative to its CWD, which can resolve to either place (the
 #       same "staging both is harmless" rule as config_wii.json and assets/).
-TUTORIAL_WORLD_DIR="CaveWii Tutorial" # build_tutorial.py's DEFAULT_OUT dir name
+TUTORIAL_WORLD_DIR="CavEX Tutorial" # build_tutorial.py's DEFAULT_OUT dir name
 TUTORIAL_BUILDER="tools/tutorial_world/build_tutorial.py"
 TUTORIAL_TEST="tests/test_tutorial_build.py"
 for REL in "$TUTORIAL_BUILDER" "$TUTORIAL_TEST"; do

@@ -263,7 +263,7 @@ def check_spaced_and_delete(powershell: str, repo: Path, td: str) -> None:
     local_file.write_bytes(LOCAL_PAYLOAD)
     lock_dir = Path(td) / "rig-lock"
 
-    for remote in ("sd:/apps/CavEX/saves/CaveWii Tutorial/level.dat",
+    for remote in ("sd:/apps/CavEX/saves/CavEX Tutorial/level.dat",
                    "sd:/texturepacks/isabella-ii/About Isabella.txt",
                    "sd:/apps/CavEX/LICENSES/Isabella-II/About Isabella.txt"):
         # A server WITH spaced-paths gets the whole path as the line's tail.
@@ -280,7 +280,7 @@ def check_spaced_and_delete(powershell: str, repo: Path, td: str) -> None:
     seen = []
     port, thread, errors = start_one_shot_server(payload_sha, BASE_CAPS, seen)
     proc = run_put(powershell, repo, port, local_file,
-                   "sd:/apps/CavEX/saves/CaveWii Tutorial/level.dat")
+                   "sd:/apps/CavEX/saves/CavEX Tutorial/level.dat")
     _join(thread, errors)
     if proc.returncode == 0 or "spaced-paths" not in proc.stdout:
         raise AssertionError(f"spaced put to an old server was not refused:\n{proc.stdout}")
@@ -295,7 +295,7 @@ def check_spaced_and_delete(powershell: str, repo: Path, td: str) -> None:
         r"starts or ends.*with a space", proc.stdout, re.S), proc.stdout
 
     # delete: PASS (tree, spaced); the line on the wire is whole.
-    target = "sd:/apps/CavEX/saves/CaveWii Tutorial"
+    target = "sd:/apps/CavEX/saves/CavEX Tutorial"
     seen = []
     port, thread, errors = start_delete_server(
         {"status": "PASS", "reason": "deleted", "bytes": 5}, NEW_CAPS, seen)
