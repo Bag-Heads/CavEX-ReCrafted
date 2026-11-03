@@ -12,7 +12,7 @@ for them.
 - An SD card (FAT32). For the release proof, use an empty card.
 - A Wii Remote with Nunchuk. A Classic Controller and a GameCube controller
   also work.
-- The release zip: `CaveWii_<version>-<commit>-PERFORMANCE-VERIFIED.zip`.
+- The release zip: `CavEX-ReCrafted-<version>-Wii.zip`.
   A zip whose name ends in `-UNCERTIFIED` has no real-Wii proof behind it.
   Treat it as a test build.
 

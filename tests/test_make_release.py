@@ -446,8 +446,8 @@ def test_publish_flag_refused(scratch_repo: Path, bash: str, tmp: Path) -> None:
 def test_zip_name_explicit_version(scratch_repo: Path, bash: str, tmp: Path) -> None:
     """Maintainer decision 2026-09-02: with an explicit --version (how a real
     release is actually cut -- e.g. --version 0.1.0, matching VERSION),
-    the zip is named EXACTLY 'CaveWii_<version>-<sha>[-UNCERTIFIED].zip',
-    never the old 'CaveWii_v2-<version>-<sha>' repo/binary-name prefix."""
+    the zip is named EXACTLY 'CavEX-ReCrafted-<version>-<sha>-Wii-UNCERTIFIED.zip'
+    (product name 'CavEX: ReCrafted', maintainer 2026-11-03), never 'CaveWii'."""
     case_dir = tmp / "explicit_version"
     case_dir.mkdir()
     dol, elf = write_fake_dol_elf(case_dir)
@@ -469,10 +469,10 @@ def test_zip_name_explicit_version(scratch_repo: Path, bash: str, tmp: Path) -> 
     zips = list(out_dir.glob("*.zip"))
     if len(zips) != 1:
         raise AssertionError(f"expected exactly one zip in {out_dir}, found: {zips}")
-    expected = f"CaveWii_0.1.0-{sha_short}-UNCERTIFIED.zip"
+    expected = f"CavEX-ReCrafted-0.1.0-{sha_short}-Wii-UNCERTIFIED.zip"
     if zips[0].name != expected:
         raise AssertionError(f"expected zip named {expected!r}, got {zips[0].name!r}")
-    print("PASS: zip name is exactly 'CaveWii_<version>-<sha>[-UNCERTIFIED].zip' with an explicit --version")
+    print("PASS: zip name is exactly 'CavEX-ReCrafted-<version>-<sha>-Wii-UNCERTIFIED.zip' with an explicit --version")
 
 
 def test_full_package_layout_and_provenance(scratch_repo: Path, bash: str, tmp: Path) -> None:
@@ -501,18 +501,18 @@ def test_full_package_layout_and_provenance(scratch_repo: Path, bash: str, tmp: 
         raise AssertionError(f"expected --allow-uncertified to mark the zip name UNCERTIFIED: {zip_path.name}")
 
     # --- product-name zip naming (maintainer decision 2026-09-02): the
-    # release artifact is named "CaveWii_<version>-<sha>[-UNCERTIFIED].zip",
-    # not the repo/binary name "CaveWii_v2-...". (This no-explicit-version
+    # release artifact is named "CavEX-ReCrafted-<version>-...-Wii...zip"
+    # (maintainer 2026-11-03), never the old "CaveWii" names. (This no-explicit-version
     # run resolves RELEASE_VERSION to "<VERSION file>+<git describe>", so the
-    # exact literal "CaveWii_<VERSION>-<sha>" form -- with no "+describe" --
+    # exact literal "CavEX-ReCrafted-<VERSION>-<sha>" form -- with no "+describe" --
     # is asserted separately below, in test_zip_name_explicit_version, where
     # --version is pinned explicitly the way a real release cut would.)
-    if not zip_path.name.startswith("CaveWii_"):
+    if not zip_path.name.startswith("CavEX-ReCrafted-"):
         raise AssertionError(
-            f"expected the zip to be named 'CaveWii_<version>-<sha>...zip', got: {zip_path.name}"
+            f"expected the zip to be named 'CavEX-ReCrafted-<version>-...zip', got: {zip_path.name}"
         )
-    if zip_path.name.startswith("CaveWii_v2-"):
-        raise AssertionError(f"zip name still uses the old 'CaveWii_v2-' product prefix: {zip_path.name}")
+    if "CaveWii" in zip_path.name:
+        raise AssertionError(f"zip name still uses the old 'CaveWii' name: {zip_path.name}")
 
     with zipfile.ZipFile(zip_path) as zf:
         names = set(zf.namelist())
@@ -1224,7 +1224,7 @@ def test_certified_path_and_proof_refusals(scratch_repo: Path, bash: str, tmp: P
             assert_no_zip_written(out_dir)
             continue
         archive, = out_dir.glob("*.zip")
-        if not archive.name.endswith("-PERFORMANCE-VERIFIED.zip"):
+        if not archive.name.endswith("-Wii.zip") or "UNCERTIFIED" in archive.name:
             raise AssertionError(f"REL-01b: certified zip misnamed: {archive.name}")
         with zipfile.ZipFile(archive) as zf:
             prov = json.loads(zf.read("provenance.json"))

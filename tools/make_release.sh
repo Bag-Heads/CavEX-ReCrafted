@@ -1311,11 +1311,13 @@ if command -v cygpath >/dev/null 2>&1; then
 fi
 mkdir -p "$OUT_DIR" || { echo "[make-release] FAIL: could not create --out dir: $OUT_DIR" >&2; exit 6; }
 OUT_DIR="$(cd "$OUT_DIR" && pwd)"
-ZIP_NAME="CaveWii_${RELEASE_VERSION}-${GIT_SHA_SHORT}"
+# Public product name "CavEX: ReCrafted" (maintainer 11-03; no ':' in a file
+# name). A real-Wii-verified zip carries the plain release name; anything else
+# keeps the sha and an UNCERTIFIED tag so it can never pass for a release.
 if [ "$CERT_STATUS" = "PERFORMANCE_VERIFIED" ]; then
-	ZIP_NAME="${ZIP_NAME}-PERFORMANCE-VERIFIED"
+	ZIP_NAME="CavEX-ReCrafted-${RELEASE_VERSION}-Wii"
 else
-	ZIP_NAME="${ZIP_NAME}-UNCERTIFIED"
+	ZIP_NAME="CavEX-ReCrafted-${RELEASE_VERSION}-${GIT_SHA_SHORT}-Wii-UNCERTIFIED"
 fi
 ZIP_PATH="$OUT_DIR/${ZIP_NAME}.zip"
 rm -f "$ZIP_PATH"
