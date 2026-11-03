@@ -542,12 +542,15 @@ void render_entity_creeper(mat4 view, float headYawDeg, float bodyYawDeg, int fr
         gfx_matrix_modelview(head_mv);
     }
 
+	// Beta ModelCreeper head texOffs(0,0) addBox(-4,-8,-4,8,8,8); same addBox
+	// slotting as the biped head above [740c583 ModelRenderer.addBox:65-70].
+	// Was: back/+X swapped, top/bottom -90. Pinned by test_entity_box_uv.
 	static const UVRect creeperHeadUVs[6] = {
 		{16,  0, 8, 8}, {8,   0, 8, 8},
-		{0,   8, 8, 8}, {8,   8, 8, 8},
-		{16,  8, 8, 8}, {24,  8, 8, 8}
+		{24,  8, 8, 8}, {8,   8, 8, 8},
+		{16,  8, 8, 8}, {0,   8, 8, 8}
 	};
-	int creeperHeadDirection[6] = {-90, -90, -90, -90, -90, -90};
+	int creeperHeadDirection[6] = {0, 0, -90, -90, -90, -90};
 
 	render_entity_create_cube(
 		4, 18, 4,
@@ -718,12 +721,18 @@ static void render_entity_biped(mat4 view, float headYawDeg, float bodyYawDeg,
                               headPitchDeg, head_mv);
         gfx_matrix_modelview(head_mv);
     }
+    // Beta ModelBiped head texOffs(0,0) addBox(-4,-8,-4,8,8,8), slotted like the
+    // hardware-proven leg tables below [740c583 ModelRenderer.addBox:65-70 +
+    // TexturedQuad:19-22 + RenderLiving:42 glScalef(-1,-1,1)]: bottom faces[3]
+    // (16,0), top faces[2] (8,0), back faces[5] (24,8), front faces[4] (8,8),
+    // -X faces[0] (16,8), +X faces[1] (0,8). Was: back/+X swapped and top/bottom
+    // rotated -90 (Steve's hair/back face wrong). Pinned by test_entity_box_uv.
     static const UVRect headUV[6] = {
         {16, 0, 8, 8}, {8, 0, 8, 8},
-        {0, 8, 8, 8},  {8, 8, 8, 8},
-        {16, 8, 8, 8}, {24, 8, 8, 8}
+        {24, 8, 8, 8}, {8, 8, 8, 8},
+        {16, 8, 8, 8}, {0, 8, 8, 8}
     };
-    int headDir[6] = {-90, -90, -90, -90, -90, -90};
+    int headDir[6] = {0, 0, -90, -90, -90, -90};
     render_entity_create_cube(4, 24, 4, 8, 8, 8, headUV, headDir);
     displaylist_render_immediate(&dl, 24);
 
@@ -746,8 +755,15 @@ static void render_entity_biped(mat4 view, float headYawDeg, float bodyYawDeg,
         glm_translate(body_pose_mv, (vec3) {-neck[0], -neck[1], -neck[2]});
     }
     gfx_matrix_modelview(body_pose_mv);
+    // Beta ModelBiped bipedBody texOffs(16,16) addBox(-4,0,-2, 8,12,4)
+    // [ModelBiped.java:39-40], slotted like headUV above (addBox:65-70 with
+    // u=16 v=16 w=8 h=12 d=4): bottom faces[3] (u+d+w,v) = (28,16), top
+    // faces[2] (u+d,v) = (20,16), back faces[5] (u+2d+w,v+d) = (32,20), front
+    // faces[4] (u+d,v+d) = (20,20), -X faces[0] (u+d+w,v+d) = (28,20), +X
+    // faces[1] (u,v+d) = (16,20). Was: top/bottom swapped (ci-1101/05).
+    // Pinned by test_entity_box_uv.
     static const UVRect bodyUV[6] = {
-        {20, 16, 8, 4}, {28, 16, 8, 4},
+        {28, 16, 8, 4}, {20, 16, 8, 4},
         {32, 20, 8, 12}, {20, 20, 8, 12},
         {28, 20, 4, 12}, {16, 20, 4, 12}
     };
@@ -1255,12 +1271,16 @@ void render_entity_spider_cue(mat4 view, float headYawDeg, float bodyYawDeg,
         render_entity_head_mv(body_mv, neck, headYawDeg, bodyYawDeg, 0.0f, head_mv);
         gfx_matrix_modelview(head_mv);
     }
+    // Beta ModelSpider head texOffs(32,4) addBox(-4,-4,-8,8,8,8); addBox
+    // slotting [740c583 ModelRenderer.addBox:65-70]: back faces[5] (56,12),
+    // +X faces[1] (32,12). Was: those two swapped, top/bottom -90. Pinned by
+    // test_entity_box_uv.
     static const UVRect spiderHeadUV[6] = {
         {48, 4, 8, 8}, {40, 4, 8, 8},
-        {32,12, 8, 8}, {40,12, 8, 8},
-        {48,12, 8, 8}, {56,12, 8, 8}
+        {56,12, 8, 8}, {40,12, 8, 8},
+        {48,12, 8, 8}, {32,12, 8, 8}
     };
-    static const int spiderHeadDir[6] = {-90,-90,-90,-90,-90,-90};
+    static const int spiderHeadDir[6] = {0,0,-90,-90,-90,-90};
     // CORRECTED z0: Beta (-4,-4,-8)+(8,8,8) @rp(0,15,-3) -> v2 z0 = -3+(-8)+8 = -3
     render_entity_create_cube(4, 5, -3, 8, 8, 8, spiderHeadUV, spiderHeadDir);
     displaylist_render_immediate(&dl, 24);
@@ -1537,10 +1557,13 @@ void render_entity_pig(mat4 view, float headYawDeg, float bodyYawDeg, int frame)
         render_entity_head_mv(body_mv, neck, headYawDeg, bodyYawDeg, 0.0f, head_mv);
         gfx_matrix_modelview(head_mv);
     }
+    // Beta ModelQuadruped head texOffs(0,0) addBox(-4,-4,-8,8,8,8); addBox
+    // slotting [740c583 ModelRenderer.addBox:65-70]: back faces[5] (24,8),
+    // +X faces[1] (0,8). Was: those two swapped. Pinned by test_entity_box_uv.
     static const UVRect headUV[6] = {
         {16, 0, 8, 8}, { 8, 0, 8, 8},
-        { 0, 8, 8, 8}, { 8, 8, 8, 8},
-        {16, 8, 8, 8}, {24, 8, 8, 8}
+        {24, 8, 8, 8}, { 8, 8, 8, 8},
+        {16, 8, 8, 8}, { 0, 8, 8, 8}
     };
     static const int headDir[6] = {0, 0, -90, -90, -90, -90};
     // Beta ModelQuadruped head addBox(-4,-4,-8)@rp(0,12,-6) on the 24-map:
@@ -1618,13 +1641,18 @@ void render_entity_pig(mat4 view, float headYawDeg, float bodyYawDeg, int frame)
 /* Beta 1.7.3 ModelWolf. The boxes, rotation points and sitting rotations are
  * transcribed from the decompile; the 24-pixel Y-up map is the same conversion
  * used by the quadruped renderers above. [740c583: ModelWolf, RenderWolf] */
+/* Beta ModelRenderer.addBox UV slotting in render_entity_create_cube's face
+ * order (0 bottom, 1 top, 2 +Z back, 3 -Z front, 4 -X, 5 +X) [740c583
+ * ModelRenderer.addBox:65-70, TexturedQuad:19-22, RenderLiving:42]: the same
+ * pattern the hardware-proven biped/pig leg tables use. Every opposite pair
+ * used to be swapped (wolf drawn inside out). Pinned by test_entity_box_uv. */
 static void wolf_box_uv(UVRect uv[6], int u, int v, int w, int h, int d) {
-	uv[0] = (UVRect) {u + d, v, w, d};
-	uv[1] = (UVRect) {u + d + w, v, w, d};
-	uv[2] = (UVRect) {u + d, v + d, w, h};
-	uv[3] = (UVRect) {u + d + w + d, v + d, w, h};
-	uv[4] = (UVRect) {u, v + d, d, h};
-	uv[5] = (UVRect) {u + d + w, v + d, d, h};
+	uv[0] = (UVRect) {u + d + w, v, w, d};     /* faces[3] bottom */
+	uv[1] = (UVRect) {u + d, v, w, d};         /* faces[2] top */
+	uv[2] = (UVRect) {u + d + w + d, v + d, w, h}; /* faces[5] back */
+	uv[3] = (UVRect) {u + d, v + d, w, h};     /* faces[4] front */
+	uv[4] = (UVRect) {u + d + w, v + d, d, h}; /* faces[0] */
+	uv[5] = (UVRect) {u, v + d, d, h};         /* faces[1] */
 }
 
 static void wolf_draw_box(mat4 root, float px, float py, float pz,

@@ -9,6 +9,11 @@ TEXT for every entry below ships alongside this file under
 LICENSES/<name>.txt -- this file summarizes and points to that text; the
 LICENSES/ file is authoritative for the exact terms.
 
+The Wii library notices and licence texts below were rechecked for 0.1.1
+on 2026-11-01 against the local libogc/libdvm/FatFs sources and installed
+devkitPro headers. Newlib and GCC full texts were also compared to their
+matching upstream source versions; see DEPENDENCIES.md for the evidence.
+
 Runtime/binary assets (textures, sounds) shipped under assets/ have their
 own licenses, documented in assets/README.md (shipped alongside this file
 in the release) -- that file, not this one, is authoritative for asset
@@ -103,7 +108,11 @@ license requires attribution:
   packs/isabella-ii/gui/menu-background.png (shipped as
   texturepacks/isabella-ii/gui/menu-background.png): in-game render of
   CaveWii terrain drawn with Isabella II textures, cropped and scaled to
-  1024x576. packs/isabella-ii/mob/char.png (shipped as
+  1024x576. packs/isabella-ii/gui/nether-background.png (shipped as
+  texturepacks/isabella-ii/gui/nether-background.png): in-game render of
+  CaveWii's Nether generator drawn with Isabella II textures, cropped and
+  scaled to 1024x576 (see the adjacent nether-background.md).
+  packs/isabella-ii/mob/char.png (shipped as
   texturepacks/isabella-ii/mob/char.png): original CaveWii/Astra 64x32 player
   skin adapted to Isabella II's palette and shading; Isabella II by Bonemouse,
   CC BY 3.0 (http://creativecommons.org/licenses/by/3.0/,

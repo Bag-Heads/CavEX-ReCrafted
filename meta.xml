@@ -15,7 +15,7 @@
   in tools/meta.xml.dev.in, which the release never uses.
 -->
 <app version="1">
-	<name>CavEX: Re-Crafted Edition</name>
+	<name>CavEX: ReCrafted</name>
 	<version>0.1.0</version>
 	<release_date>20260903093236</release_date>
 	<coder>BagHeads</coder>

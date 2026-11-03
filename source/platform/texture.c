@@ -33,6 +33,8 @@
 #include "../graphics/texture_atlas.h"
 #include "../graphics/water_fx.h"
 #include "../graphics/watch_fx.h"
+#include "../network/client_world_payload.h" /* ci-1101/31: P2 view world */
+#include "time.h" /* ci-1101/31: time_get for the P2 view clock */
 #include "mem2.h"
 #include "texture.h"
 #include "texture_cache.h" /* pack-cache-0927: opt-in pre-baked textures */
@@ -122,6 +124,7 @@ struct tex_gfx texture_gui2;
 struct tex_gfx texture_icons;
 struct tex_gfx texture_gui_widgets;
 struct tex_gfx texture_controls;
+struct tex_gfx texture_nether_background;
 struct tex_gfx texture_menu_background; // optional scenic front-end backdrop
 struct tex_gfx texture_title_logo; // optional bundled title branding
 struct tex_gfx texture_menu_reception; // optional original 9-frame server status sheet
@@ -136,7 +139,8 @@ struct tex_gfx texture_moon;
 struct tex_gfx texture_shadow;
 struct tex_gfx texture_map_bg;   // held-map frame (optional asset)
 struct tex_gfx texture_map_icons;
-struct tex_gfx texture_map_live; // held-map live 128x128 surface
+struct tex_gfx texture_map_live; // held-map live 128x128 surface (viewport 0)
+struct tex_gfx texture_map_live_split; // same, split viewport 1 (ci-1101/23)
 struct tex_gfx texture_water;
 struct tex_gfx texture_dial; // TextureWatchFX dial ring (optional; see texture.h)
 
@@ -200,7 +204,6 @@ static void sign_color_init(void) {
  free(image);
 }
 
-static void tex_map_live_init(void);
 /* Raw-jar pack helpers (defined after the pack-root resolver below). */
 static bool tex_raw_jar_pack(void);
 static uint8_t* tex_raw_jar_compose(bool anim);
@@ -461,6 +464,8 @@ static bool tex_load_pack(void) {
 	/* BG-BAKE-1028/3: author art, else this pack's verified generated
 	 * backdrop, else NONE (pack dirt) -- never the bundled scenery for a
 	 * non-default pack. See tex_menu_background_load below. */
+	if(!tex_scene_background_load(true)) loaded_ok = false;
+	tex_cache_note_slot(&texture_nether_background);
 	if(!tex_menu_background_load())
 		loaded_ok = false;
 	tex_cache_note_slot(&texture_menu_background);
@@ -546,7 +551,15 @@ static bool tex_load_pack(void) {
  * CPU mirror; Wii updates require TEX_FMT_RGBA16 (RGB5A3) -- the same
  * quantization deviation the terrain atlas already carries, documented
  * with the slice. */
-static void tex_map_live_init(void) {
+static uint32_t s_map_live_generation;
+
+uint32_t tex_map_live_generation(void) { return s_map_live_generation; }
+
+void tex_map_live_init(void) {
+	/* ci-1101/23 R5: every (re)creation zero-fills both surfaces, so the
+	 * render-side per-viewport upload gate must forget what it uploaded or
+	 * an unchanged held map stays blank until its version moves. */
+	s_map_live_generation++;
 	/* OWNERSHIP: tex_gfx_load takes `zero` on every path -- the Wii
 	 * impl frees it after converting to RGB5A3, the PC impl keeps it
 	 * as the tex->data CPU mirror. The original slice freed it here
@@ -555,15 +568,20 @@ static void tex_map_live_init(void) {
 	 * boot-death, root-caused 2026-08-27 by remote content bisect:
 	 * this init block alone reproduced the no-telemetry death), and
 	 * on PC it left tex->data dangling for every later
-	 * tex_gfx_subimage mirror write. Do NOT free zero here. */
-	uint8_t* zero = calloc(1, 128 * 128 * 4);
-	if(zero) {
+	 * tex_gfx_subimage mirror write. Do NOT free zero here.
+	 *
+	 * ci-1101/23: one surface PER split viewport, created the same way
+	 * (fresh `zero` each, same ownership rule). Both viewports render in
+	 * one GX frame and an upload never waits for the other viewport's
+	 * queued draw, so sharing one surface showed P2's map in P1's hands. */
+	struct tex_gfx* surfaces[] = {&texture_map_live, &texture_map_live_split};
+	for(size_t i = 0; i < sizeof(surfaces) / sizeof(surfaces[0]); i++) {
+		uint8_t* zero = calloc(1, 128 * 128 * 4);
+		if(!zero) continue;
 #ifdef PLATFORM_WII
-		tex_gfx_load(&texture_map_live, zero, 128, 128, TEX_FMT_RGBA16,
-					 false);
+		tex_gfx_load(surfaces[i], zero, 128, 128, TEX_FMT_RGBA16, false);
 #else
-		tex_gfx_load(&texture_map_live, zero, 128, 128, TEX_FMT_RGBA32,
-					 false);
+		tex_gfx_load(surfaces[i], zero, 128, 128, TEX_FMT_RGBA32, false);
 #endif
 	}
 }
@@ -681,9 +699,8 @@ void water_fx_anim_tick(void) {
 // --- Beta 1.7.3 TextureCompassFX / TextureWatchFX item-needle FX -----------
 // (graphics/compass_fx.*, graphics/watch_fx.*). Two 16x16 sub-uploads into the
 // already-resident item atlas, once per 20Hz client tick, gated end-to-end by
-// the "gfx.item_needle_anim" config toggle (T2: opt-in, default OFF on Wii /
-// ON on PC -- see items_object.h and CLAUDE.md's T2 discipline; this has not
-// been measured on real Wii hardware, so it stays off there until it is).
+// the "gfx.item_needle_anim" config toggle (default ON on PC and Wii;
+// opt out with gfx.item_needle_anim=0).
 //
 // items.png is loaded as a PLAIN (non-atlas) 256x256, 16px-cell texture (the
 // TEX_LOAD_FILE call above, no tex_gfx_load_atlas margin/grid remap) --
@@ -701,13 +718,24 @@ void water_fx_anim_tick(void) {
 #define ITEM_NEEDLE_CLOCK_TX 6
 #define ITEM_NEEDLE_CLOCK_TY 4
 
-static struct compass_fx_state s_compass_fx_state;
-static struct watch_fx_state s_watch_fx_state;
+// ci-1101/31: one spring state PER local player (Beta has one client, one
+// player; split screen has two of each). Index = viewport = slot in
+// gstate.players. Viewport 0 keeps the pre-existing atlas-cell upload; viewport
+// 1 composites into the private pair below (see texture.h).
+static struct compass_fx_state s_compass_fx_state[CLIENT_LOCAL_PLAYERS];
+static struct watch_fx_state s_watch_fx_state[CLIENT_LOCAL_PLAYERS];
 static uint8_t s_compass_fx_base[COMPASS_FX_BYTES];
 static uint8_t s_watch_fx_base[WATCH_FX_BYTES];
 static uint8_t s_watch_fx_dial[WATCH_FX_BYTES];
 static bool s_item_needle_ready = false;      // compass+clock cells captured
 static bool s_item_needle_dial_ready = false; // + a real dial.png loaded
+// Viewport 1's private 16x16 compass / clock surfaces (1 KB RGBA8 each on PC,
+// 512 B RGB5A3 on Wii), created at init as copies of the static cells, so a
+// disabled FX or a not-yet-ticked frame shows exactly the atlas icon.
+static struct tex_gfx s_needle_split_compass;
+static struct tex_gfx s_needle_split_clock;
+static bool s_needle_split_ready = false;   // both surfaces created
+static bool s_needle_split_written = false; // an enabled tick wrote viewport 1
 
 static void item_needle_capture_cell(struct tex_gfx* tex, int cell_x,
 									 int cell_y, uint8_t* out /* *_BYTES */) {
@@ -719,16 +747,37 @@ static void item_needle_capture_cell(struct tex_gfx* tex, int cell_x,
 	}
 }
 
+// Same ownership rule as tex_map_live_init: tex_gfx_load TAKES `copy` on every
+// path (Wii frees it after the RGB5A3 convert, PC keeps it as the CPU mirror),
+// and a reload replaces the previous surface itself (both backends free the
+// old storage inside tex_gfx_load). Never free `copy` here.
+static bool item_needle_split_create(struct tex_gfx* tex,
+									 const uint8_t* base /* 16x16 RGBA8 */) {
+	uint8_t* copy = malloc(COMPASS_FX_BYTES);
+	if(!copy)
+		return false;
+	memcpy(copy, base, COMPASS_FX_BYTES);
+#ifdef PLATFORM_WII
+	return tex_gfx_load(tex, copy, 16, 16, TEX_FMT_RGBA16, false);
+#else
+	return tex_gfx_load(tex, copy, 16, 16, TEX_FMT_RGBA32, false);
+#endif
+}
+
 void item_needle_fx_init(void) {
 	s_item_needle_ready = false;
 	s_item_needle_dial_ready = false;
+	s_needle_split_ready = false;
+	s_needle_split_written = false;
 
 	if(!texture_items.data || texture_items.width != ITEM_NEEDLE_ATLAS_DIM
 	   || texture_items.height != ITEM_NEEDLE_ATLAS_DIM)
 		return; // non-vanilla atlas layout: keep the static icons, no crash.
 
-	compass_fx_state_init(&s_compass_fx_state);
-	watch_fx_state_init(&s_watch_fx_state);
+	for(unsigned v = 0; v < CLIENT_LOCAL_PLAYERS; v++) {
+		compass_fx_state_init(&s_compass_fx_state[v]);
+		watch_fx_state_init(&s_watch_fx_state[v]);
+	}
 	item_needle_capture_cell(&texture_items, ITEM_NEEDLE_COMPASS_TX,
 							 ITEM_NEEDLE_COMPASS_TY, s_compass_fx_base);
 	item_needle_capture_cell(&texture_items, ITEM_NEEDLE_CLOCK_TX,
@@ -740,21 +789,91 @@ void item_needle_fx_init(void) {
 		item_needle_capture_cell(&texture_dial, 0, 0, s_watch_fx_dial);
 		s_item_needle_dial_ready = true;
 	}
+
+	// ci-1101/31: viewport 1's private surfaces. A failed create (OOM) leaves
+	// the split path off: viewport 1 then samples the atlas cell (player 1's
+	// needle), the pre-fix behaviour, never a zeroed texture.
+	s_needle_split_ready
+		= item_needle_split_create(&s_needle_split_compass, s_compass_fx_base)
+		&& item_needle_split_create(&s_needle_split_clock, s_watch_fx_base);
 }
 
-void item_needle_fx_tick(bool enabled) {
-	if(!enabled || !s_item_needle_ready)
-		return;
+struct tex_gfx* item_needle_fx_split_texture(unsigned viewport, bool clock) {
+	if(viewport == 0 || viewport >= CLIENT_LOCAL_PLAYERS)
+		return NULL;
+	if(!s_item_needle_ready || !s_needle_split_ready || !s_needle_split_written)
+		return NULL;
+	return clock ? &s_needle_split_clock : &s_needle_split_compass;
+}
 
+// One player's view of the needle inputs Beta reads from `mc`: whether a
+// world+player exist, the dimension and the celestial angle. Viewport 0 reads
+// exactly what the pre-split code read (gstate.world.dimension,
+// daytime_get_time()) so its output stays byte-identical; viewport 1 reads
+// ITS view's world (split-dims: the guest may be in another dimension with
+// its own clock -- flag OFF, clin_world_view_enter hands back gstate's).
+struct item_needle_view {
+	bool has_target;
+	bool is_nether;
+	double celestial_angle; // valid when has_target
+	const struct entity* player;
+};
+
+static double item_needle_celestial(float raw_ticks) {
+	// [740c583: World.getCelestialAngle(1.0F)] -- the same wrapped day
+	// fraction main.c already derives for the sky renderer, via the
+	// shared daytime_celestial_angle() helper (daytime.h/.c).
+	float wrapped = fmodf(raw_ticks, (float)DAY_LENGTH_TICKS);
+	if(wrapped < 0.0F)
+		wrapped += (float)DAY_LENGTH_TICKS;
+	return (double)daytime_celestial_angle(wrapped / (float)DAY_LENGTH_TICKS);
+}
+
+static void item_needle_view_of(unsigned viewport,
+								struct item_needle_view* out) {
+	memset(out, 0, sizeof(*out));
 	// has_target mirrors Beta's `mc.theWorld != null && mc.thePlayer != null`;
 	// game_state_client_entities_active is this engine's equivalent "world is
 	// actually loaded and playable" gate (game_state.h).
-	bool has_target
-		= game_state_client_entities_active(&gstate) && gstate.players[0].local_player;
-	bool is_nether = gstate.world.dimension == WORLD_DIM_NETHER;
+	out->player = gstate.players[viewport].local_player;
+	out->has_target
+		= game_state_client_entities_active(&gstate) && out->player != NULL;
+	if(viewport == 0) {
+		out->is_nether = gstate.world.dimension == WORLD_DIM_NETHER;
+		if(out->has_target)
+			out->celestial_angle = item_needle_celestial(daytime_get_time());
+		return;
+	}
+	struct clin_view_world scope;
+	if(clin_world_view_enter(viewport, &scope)) {
+		out->is_nether = scope.dimension == WORLD_DIM_NETHER;
+		// R7: the SAME units as viewport 0 -- daytime_get_time()'s fractional
+		// tick expression over this view's clock (clin_frame_daytime returns a
+		// day FRACTION, which item_needle_celestial would wrap /24000 again).
+		if(out->has_target)
+			out->celestial_angle = item_needle_celestial(
+				(float)scope.clock.world_time
+				+ time_diff_s(scope.clock.world_time_start, time_get())
+					* 1000.0f / DAY_TICK_MS);
+		clin_world_view_leave(&scope);
+	} else {
+		out->is_nether = gstate.world.dimension == WORLD_DIM_NETHER;
+		if(out->has_target)
+			out->celestial_angle = item_needle_celestial(daytime_get_time());
+	}
+}
+
+static void item_needle_fx_tick_view(unsigned viewport,
+									 const struct item_needle_view* view,
+									 struct tex_gfx* compass_out, int compass_x,
+									 int compass_y, struct tex_gfx* clock_out,
+									 int clock_x, int clock_y) {
+	bool has_target = view->has_target;
+	bool is_nether = view->is_nether;
 	// Caller-drawn RNG for the (rare, cosmetic-only) nether spin branch -- see
 	// compass_fx.h/watch_fx.h's two-RNG-rule header comment. rand() is already
 	// used elsewhere in this codebase for non-parity client-only cosmetics.
+	// Drawn per player, so each nether compass spins on its own.
 	double nether_rand01
 		= is_nether ? (double)rand() / ((double)RAND_MAX + 1.0) : 0.0;
 
@@ -763,21 +882,20 @@ void item_needle_fx_tick(bool enabled) {
 	if(has_target) {
 		spawn_x = (double)gstate.world_spawn_x;
 		spawn_z = (double)gstate.world_spawn_z;
-		player_x = (double)gstate.players[0].local_player->pos[0];
-		player_z = (double)gstate.players[0].local_player->pos[2];
-		// [740c583: EntityPlayer.rotationYaw]. gstate.players[0].local_player->orient[0] is
+		player_x = (double)view->player->pos[0];
+		player_z = (double)view->player->pos[2];
+		// [740c583: EntityPlayer.rotationYaw]. local_player->orient[0] is
 		// ALREADY rotationYaw*PI/180 in Beta's own atan2(dz,dx) convention (see
 		// compass_fx.h's header comment + entity_boat.c's turn-toward-motion
 		// citation) -- no extra scale/offset needed here.
-		player_yaw_rad = (double)gstate.players[0].local_player->orient[0];
+		player_yaw_rad = (double)view->player->orient[0];
 	}
 
 	uint8_t compass_frame[COMPASS_FX_BYTES];
-	compass_fx_tick(&s_compass_fx_state, s_compass_fx_base, has_target,
-					is_nether, nether_rand01, spawn_x, spawn_z, player_x,
-					player_z, player_yaw_rad, compass_frame);
-	tex_gfx_subimage(&texture_items, ITEM_NEEDLE_COMPASS_TX * 16,
-					 ITEM_NEEDLE_COMPASS_TY * 16, COMPASS_FX_DIM,
+	compass_fx_tick(&s_compass_fx_state[viewport], s_compass_fx_base,
+					has_target, is_nether, nether_rand01, spawn_x, spawn_z,
+					player_x, player_z, player_yaw_rad, compass_frame);
+	tex_gfx_subimage(compass_out, compass_x, compass_y, COMPASS_FX_DIM,
 					 COMPASS_FX_DIM, compass_frame);
 
 	// Clock: skip entirely (no sim, no upload) until a real dial.png exists --
@@ -786,27 +904,39 @@ void item_needle_fx_tick(bool enabled) {
 	// "bounded, only when it can change anything" discipline this FX is gated
 	// on in the first place).
 	if(s_item_needle_dial_ready) {
-		// [740c583: World.getCelestialAngle(1.0F)] -- the same wrapped day
-		// fraction main.c already derives for the sky renderer, via the
-		// shared daytime_celestial_angle() helper (daytime.h/.c).
-		double celestial_angle = 0.0;
-		if(has_target) {
-			float raw_ticks = daytime_get_time();
-			float wrapped = fmodf(raw_ticks, (float)DAY_LENGTH_TICKS);
-			if(wrapped < 0.0F)
-				wrapped += (float)DAY_LENGTH_TICKS;
-			celestial_angle = (double)daytime_celestial_angle(
-				wrapped / (float)DAY_LENGTH_TICKS);
-		}
-
 		uint8_t clock_frame[WATCH_FX_BYTES];
-		watch_fx_tick(&s_watch_fx_state, s_watch_fx_base, s_watch_fx_dial,
-					 has_target, is_nether, nether_rand01, celestial_angle,
-					 clock_frame);
-		tex_gfx_subimage(&texture_items, ITEM_NEEDLE_CLOCK_TX * 16,
-						 ITEM_NEEDLE_CLOCK_TY * 16, WATCH_FX_DIM, WATCH_FX_DIM,
-						 clock_frame);
+		watch_fx_tick(&s_watch_fx_state[viewport], s_watch_fx_base,
+					  s_watch_fx_dial, has_target, is_nether, nether_rand01,
+					  view->celestial_angle, clock_frame);
+		tex_gfx_subimage(clock_out, clock_x, clock_y, WATCH_FX_DIM,
+						 WATCH_FX_DIM, clock_frame);
 	}
+}
+
+void item_needle_fx_tick(bool enabled) {
+	if(!enabled || !s_item_needle_ready)
+		return;
+
+	// Viewport 0: the atlas cells, exactly as before this FX went per player.
+	struct item_needle_view view;
+	item_needle_view_of(0, &view);
+	item_needle_fx_tick_view(0, &view, &texture_items,
+							 ITEM_NEEDLE_COMPASS_TX * 16,
+							 ITEM_NEEDLE_COMPASS_TY * 16, &texture_items,
+							 ITEM_NEEDLE_CLOCK_TX * 16,
+							 ITEM_NEEDLE_CLOCK_TY * 16);
+
+	// Viewport 1 (split partner): its own spring, its own surfaces. Only
+	// while that player has a body -- single player never touches them and
+	// never draws the extra rand() for a nether P2.
+	if(!s_needle_split_ready || !gstate.players[1].local_player) {
+		s_needle_split_written = false;
+		return;
+	}
+	item_needle_view_of(1, &view);
+	item_needle_fx_tick_view(1, &view, &s_needle_split_compass, 0, 0,
+							 &s_needle_split_clock, 0, 0);
+	s_needle_split_written = true;
 }
 
 // Default (bundled) texture pack. A selected pack only needs to override the
@@ -874,6 +1004,35 @@ bool tex_bundled_only(const char* filename) {
 	return false;
 }
 
+/* ci-1101/18: the release zip ships the bundled assets at BOTH sd:/assets
+ * and sd:/apps/CavEX/assets. A player who copied only apps/CavEX/ has no
+ * sd:/assets, and with a single hard-coded root the title lost its logo and
+ * subtitle and the hint rows drew the font sheet as glyphs. So the bundled
+ * roots are tried in order: the SD root first (the launcher need not start
+ * us in the app folder), then the relative "assets" -- the copy beside
+ * boot.dol when HBC did. PC keeps its one bundled root. The boot credits
+ * (main.c) walk the same list. */
+size_t tex_bundled_roots_for(bool wii, const char** roots, size_t max) {
+	static const char* const wii_roots[] = {"sd:/assets", TEX_DEFAULT_PACK};
+	static const char* const pc_roots[] = {TEX_DEFAULT_PACK};
+	const char* const* src = wii ? wii_roots : pc_roots;
+	size_t n = wii ? sizeof(wii_roots) / sizeof(wii_roots[0])
+				   : sizeof(pc_roots) / sizeof(pc_roots[0]);
+	if(n > max)
+		n = max;
+	for(size_t k = 0; k < n; k++)
+		roots[k] = src[k];
+	return n;
+}
+
+size_t tex_bundled_roots(const char** roots, size_t max) {
+#ifdef PLATFORM_WII
+	return tex_bundled_roots_for(true, roots, max);
+#else
+	return tex_bundled_roots_for(false, roots, max);
+#endif
+}
+
 /* ---- Raw-jar packs (tex_beta_compose.h). Every probe and read is reported
  * to the pack-cache observer so a cached load is invalidated when the player
  * adds, removes or edits any file the decision looked at. ---- */
@@ -931,6 +1090,37 @@ static uint8_t* tex_raw_jar_compose(bool anim) {
 	return out;
 }
 
+/* ci-1101/62: a pack's gui/gui.png that carries no button art (Isabella II
+ * ships only the hotbar + crosshair) drew every menu button as a flat grey
+ * box. Beta's button strips (y=46..106, 200 wide: disabled/idle/hover) are
+ * pasted from the bundled sheet when the pack's cells are fully transparent.
+ * Only a fully transparent block triggers it; a pack that draws any texel
+ * there keeps its own art. Scale-aware (square sheet, w/256 px per unit). */
+static void tex_gui_buttons_fallback(uint8_t* img, size_t w, size_t h,
+									 const char* bundled_root) {
+	if(!img || w < 256 || w != h || w % 256 != 0)
+		return;
+	size_t sc = w / 256, x1 = 200 * sc, y0 = 46 * sc, y1 = 106 * sc;
+	for(size_t y = y0; y < y1; y++)
+		for(size_t x = 0; x < x1; x++)
+			if(img[(y * w + x) * 4 + 3])
+				return;
+	string_t tmp;
+	string_init_printf(tmp, "%s/gui/gui.png", bundled_root);
+	size_t bw = 0, bh = 0;
+	enum tex_png_decode_status st;
+	uint8_t* def = tex_png_decode32_bounded(string_get_cstr(tmp), 1024, 1024,
+											&bw, &bh, &st);
+	string_clear(tmp);
+	if(def && bw == w && bh == h) {
+		for(size_t y = y0; y < y1; y++)
+			memcpy(img + (y * w) * 4, def + (y * w) * 4, x1 * 4);
+		fprintf(stderr, "[texture] pack gui/gui.png has no button art; "
+						"using bundled buttons\n");
+	}
+	free(def);
+}
+
 static uint8_t* tex_read_impl(const char* filename, size_t* width,
 								   size_t* height, enum tex_read_kind kind,
 								   enum tex_format type) {
@@ -949,24 +1139,24 @@ static uint8_t* tex_read_impl(const char* filename, size_t* width,
 	 * them broke "unchanged controller artwork across packs"; Astra
 	 * pack-0926 #1). Always the bundled sheets; a pack copy is ignored. */
 	bool shared_controls = tex_bundled_only(filename);
-	if(shared_controls) {
-#ifdef PLATFORM_WII
-		/* Homebrew launchers need not start us in the SD root. */
-		pack = "sd:/assets";
-#else
-		pack = TEX_DEFAULT_PACK;
-#endif
-	}
-
 	const char* candidates[2] = {pack, TEX_DEFAULT_PACK};
-	size_t count = shared_controls || strcmp(pack, TEX_DEFAULT_PACK) == 0 ? 1 : 2;
+	size_t count = strcmp(pack, TEX_DEFAULT_PACK) == 0 ? 1 : 2;
+	if(shared_controls) {
+		/* Bundled roots only (SD root, then the app-folder copy on Wii). */
+		count = tex_bundled_roots(candidates, 2);
+	}
 	for(size_t k = 0; k < count; k++) {
 		tex_load_service();
 		uint8_t* img = NULL;
 		size_t w = 0, h = 0;
-		if(s_read_observer)
-			s_read_observer(k ? 1 : shared_controls ? 2 : count == 1 ? 1 : 0,
-							filename);
+		if(s_read_observer) {
+			/* 2 = the bundled-only root (tex_root_for_tag(2): sd:/assets on
+			 * Wii, assets/ on PC), 1 = the bundled default "assets" -- which
+			 * the Wii app-folder fallback IS, so the cache hashes the exact
+			 * file it read -- 0 = the selected pack. */
+			int tag = shared_controls ? (k == 0 ? 2 : 1) : (k ? 1 : 0);
+			s_read_observer(tag, filename);
+		}
 		string_t tmp;
 		string_init_printf(tmp, "%s/%s", candidates[k], filename);
 		enum tex_png_decode_status decode_status;
@@ -974,6 +1164,8 @@ static uint8_t* tex_read_impl(const char* filename, size_t* width,
 			string_get_cstr(tmp), 1024, 1024, &w, &h, &decode_status);
 		tex_load_service();
 		string_clear(tmp);
+		if(img && k == 0 && count > 1 && strcmp(filename, "gui/gui.png") == 0)
+			tex_gui_buttons_fallback(img, w, h, candidates[1]);
 		if(img && tex_source_dimensions_valid(kind, w, h, type)) {
 			*width = w;
 			*height = h;
@@ -1283,19 +1475,19 @@ uint64_t tex_backdrop_identity(const char* pack) {
 	return h;
 }
 
-static bool bd_author_present(const char* pack) {
+static bool bd_author_present(const char* pack, bool nether) {
 	char path[700];
-	bd_path(path, sizeof(path), pack, TEX_BACKDROP_AUTHOR_FILE);
+	bd_path(path, sizeof(path), pack, nether ? "gui/nether-background.png" : TEX_BACKDROP_AUTHOR_FILE);
 	return bd_exists(path);
 }
 
 /* Public entry points (texture.h) take/return int: enum tex_backdrop_state. */
-int tex_backdrop_state_of(const char* pack) {
+int tex_scene_backdrop_state_of(const char* pack, bool nether) {
 	if(bd_is_default(pack)) return TEX_BACKDROP_BUNDLED;
-	if(bd_author_present(pack)) return TEX_BACKDROP_AUTHOR;
+	if(bd_author_present(pack, nether)) return TEX_BACKDROP_AUTHOR;
 	char id_path[700], png_path[700];
-	bd_path(id_path, sizeof(id_path), pack, TEX_BACKDROP_ID);
-	bd_path(png_path, sizeof(png_path), pack, TEX_BACKDROP_PNG);
+	bd_path(id_path, sizeof(id_path), pack, nether ? TEX_BACKDROP_DIR "/nether-background.id" : TEX_BACKDROP_ID);
+	bd_path(png_path, sizeof(png_path), pack, nether ? TEX_BACKDROP_DIR "/nether-background.png" : TEX_BACKDROP_PNG);
 	FILE* f = fopen(id_path, "rb");
 	if(!f)
 		return bd_exists(png_path) ? TEX_BACKDROP_CORRUPT : TEX_BACKDROP_MISSING;
@@ -1463,9 +1655,9 @@ static enum tex_backdrop_publish_result bd_write_png_serviced(const char* path,
 		: !closed ? TEX_BACKDROP_ERR_CLOSE : TEX_BACKDROP_PUBLISHED;
 }
 
-int tex_backdrop_publish(const char* pack, const uint8_t* rgba,
-	unsigned width, unsigned height) {
-	if(bd_is_default(pack) || bd_author_present(pack))
+int tex_scene_backdrop_publish(const char* pack, const uint8_t* rgba,
+	unsigned width, unsigned height, bool nether) {
+	if(bd_is_default(pack) || bd_author_present(pack, nether))
 		return TEX_BACKDROP_ERR_AUTHOR;
 	if(!rgba || width != BACKDROP_BAKE_OUT_W || height != BACKDROP_BAKE_OUT_H)
 		return TEX_BACKDROP_ERR_INPUT;
@@ -1474,8 +1666,8 @@ int tex_backdrop_publish(const char* pack, const uint8_t* rgba,
 	if(!bd_mkdir(dir)) return TEX_BACKDROP_ERR_DIR;
 	bd_path(dir, sizeof(dir), pack, TEX_BACKDROP_DIR);
 	if(!bd_mkdir(dir)) return TEX_BACKDROP_ERR_DIR;
-	bd_path(png_path, sizeof(png_path), pack, TEX_BACKDROP_PNG);
-	bd_path(id_path, sizeof(id_path), pack, TEX_BACKDROP_ID);
+	bd_path(png_path, sizeof(png_path), pack, nether ? TEX_BACKDROP_DIR "/nether-background.png" : TEX_BACKDROP_PNG);
+	bd_path(id_path, sizeof(id_path), pack, nether ? TEX_BACKDROP_DIR "/nether-background.id" : TEX_BACKDROP_ID);
 	snprintf(png_tmp, sizeof(png_tmp), "%s.tmp", png_path);
 	snprintf(id_tmp, sizeof(id_tmp), "%s.tmp", id_path);
 
@@ -1531,23 +1723,26 @@ int tex_backdrop_publish(const char* pack, const uint8_t* rgba,
 /* Resolve and load texture_menu_background (see the top of this section).
  * Same contract as tex_gfx_load_file: true when the slot is loaded OR
  * deliberately empty, false only when present art failed to upload. */
-bool tex_menu_background_load(void) {
-	struct tex_gfx* tex = &texture_menu_background;
+bool tex_scene_background_load(bool nether) {
+	struct tex_gfx* tex = nether ? &texture_nether_background : &texture_menu_background;
+	const char* author = nether ? "gui/nether-background.png" : TEX_BACKDROP_AUTHOR_FILE;
+	const char* id = nether ? TEX_BACKDROP_DIR "/nether-background.id" : TEX_BACKDROP_ID;
+	const char* png = nether ? TEX_BACKDROP_DIR "/nether-background.png" : TEX_BACKDROP_PNG;
 	const char* pack = config_read_path(&gstate.config_user,
 		"paths.texturepack", TEX_DEFAULT_PACK);
 	if(bd_is_default(pack))
-		return tex_gfx_load_file(tex, TEX_BACKDROP_AUTHOR_FILE, TEX_FMT_RGBA16,
+		return tex_gfx_load_file(tex, author, TEX_FMT_RGBA16,
 								 false);
 	/* texture_cache dependency record: both candidate files of this pack. */
 	if(s_read_observer) {
-		s_read_observer(0, TEX_BACKDROP_AUTHOR_FILE);
-		s_read_observer(0, TEX_BACKDROP_ID);
-		s_read_observer(0, TEX_BACKDROP_PNG);
+		s_read_observer(0, author);
+		s_read_observer(0, id);
+		s_read_observer(0, png);
 	}
 	const char* rel = NULL;
-	int st = tex_backdrop_state_of(pack);
-	if(st == TEX_BACKDROP_AUTHOR) rel = TEX_BACKDROP_AUTHOR_FILE;
-	else if(st == TEX_BACKDROP_CACHED) rel = TEX_BACKDROP_PNG;
+	int st = tex_scene_backdrop_state_of(pack, nether);
+	if(st == TEX_BACKDROP_AUTHOR) rel = author;
+	else if(st == TEX_BACKDROP_CACHED) rel = png;
 	if(rel) {
 		char path[700];
 		bd_path(path, sizeof(path), pack, rel);
@@ -1565,6 +1760,12 @@ bool tex_menu_background_load(void) {
 	tex_gfx_clear(tex);
 	return true;
 }
+
+int tex_backdrop_state_of(const char* pack) { return tex_scene_backdrop_state_of(pack, false); }
+int tex_backdrop_publish(const char* pack, const uint8_t* rgba, unsigned w, unsigned h) {
+ return tex_scene_backdrop_publish(pack, rgba, w, h, false);
+}
+bool tex_menu_background_load(void) { return tex_scene_background_load(false); }
 
 #ifdef PLATFORM_WII
 #include "wii/texture.c"

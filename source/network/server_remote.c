@@ -816,6 +816,7 @@ bool server_remote_ready_census(struct server_remote* remote, int cx, int cz,
 	out->centre_x = cx;
 	out->centre_z = cz;
 	uint32_t applied = impl->applied_epoch;
+	int cold_gate = -1; /* ci-1101/54: -1 = not read yet, 0 refuses, 1 admits */
 	for(size_t i = 0; i < REMOTE_CHUNK_ENTRY_CAPACITY; i++) {
 		const struct remote_chunk* chunk = &impl->chunks[i];
 		if(chunk->state == REMOTE_CHUNK_UNUSED)
@@ -849,6 +850,23 @@ bool server_remote_ready_census(struct server_remote* remote, int cx, int cz,
 		 * the normal path for exactly that reason. */
 		if(chunk->epoch != applied)
 			continue;
+		/* ci-1101/54: a COLD column the F4 memory gate is refusing right now
+		 * is not an obligation this screen can wait out -- the same rule M6
+		 * applied to columns past admit_radius. On hw1102b (betamc, dense
+		 * spawn) the carve fell to 1440 KB free at 67 of 81 in-radius
+		 * columns and stayed there; the 14 left over held the loading
+		 * screen for the full 30 s backstop. The gate is read lazily (it
+		 * walks the carve free list) and at most once per census. */
+		if(!chunk->installed
+		   && (chunk->state == REMOTE_CHUNK_ANNOUNCED
+			   || chunk->state == REMOTE_CHUNK_RETAINED)) {
+			if(cold_gate < 0)
+				cold_gate = remote_carve_admits_cold_column() ? 1 : 0;
+			if(cold_gate == 0) {
+				out->memory_held++;
+				continue;
+			}
+		}
 		if(chunk->state == REMOTE_CHUNK_ANNOUNCED
 		   || chunk->state == REMOTE_CHUNK_RETAINED
 		   || chunk->state == REMOTE_CHUNK_PROMOTING)

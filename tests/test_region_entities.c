@@ -19,6 +19,7 @@
 
 #include "support/test_fixture_dir.h"
 #include "cNBT/list.h"
+#include "entity/combat.h"
 #include "entity/monsters_object.h"
 #include "item/item_nbt.h"
 #include "network/entity_archive.h"
@@ -358,13 +359,13 @@ static void make_beta_arrow(nbt_node* compound) {
 		int value;
 	} fields[] = {
 		{"CaveWiiType", "Air", TAG_SHORT, 300},
-		{"CaveWiiOwnerId", "xTile", TAG_SHORT, 3},
-		{"CaveWiiAge", "yTile", TAG_SHORT, 64},
-		{"CaveWiiItemId", "zTile", TAG_SHORT, 4},
-		{"CaveWiiDamage", "inTile", TAG_BYTE, 1},
-		{"CaveWiiFromPlayer", "inData", TAG_BYTE, 0},
-		{"CaveWiiFromSkeleton", "shake", TAG_BYTE, 5},
-		{"CaveWiiStuckTicks", "player", TAG_BYTE, 0},
+		{"xTile", "xTile", TAG_SHORT, 3},
+		{"yTile", "yTile", TAG_SHORT, 64},
+		{"zTile", "zTile", TAG_SHORT, 4},
+		{"inTile", "inTile", TAG_BYTE, 1},
+		{"inData", "inData", TAG_BYTE, 0},
+		{"shake", "shake", TAG_BYTE, 5},
+		{"player", "player", TAG_BYTE, 0},
 	};
 	for(size_t i = 0; i < sizeof(fields) / sizeof(fields[0]); i++) {
 		nbt_node* n = child_named(compound, fields[i].from);
@@ -667,13 +668,68 @@ static void test_beta_mixed_opaque_arrow_and_native_item_compat(void) {
 	};
 	struct chunk_entities parsed = {0};
 	assert(chunk_entities_parse(&old_node, 0, 0, &parsed));
-	assert(parsed.count == 2); /* the pure-Beta Arrow stays runtime-opaque */
+	/* ci-1101/41 item 12: an exact pure-Beta Arrow record (no CaveWii tags)
+	 * is now admitted with Beta's reload state: EntityArrow.readEntityFromNBT
+	 * (EntityArrow.java:246-254) restores only the tile/shake/inGround/player
+	 * fields, shootingEntity and ticksInAir/ticksInGround are not persisted
+	 * (null owner, 0), and the damage/item are the bow arrow's. */
+	assert(parsed.count == 3);
+	{
+		const struct archived_arrow_state* a = &parsed.entities[2].data.arrow;
+		assert(parsed.entities[2].kind == ARCHIVED_ENTITY_ARROW);
+		assert(a->item_id == 262 && a->damage == ARROW_DAMAGE);
+		assert(a->owner_source_id == UINT32_MAX && !a->from_skeleton);
+		assert(!a->from_player && a->shake_ticks == 5 && a->in_ground);
+		assert(a->age == 0 && a->stuck_ticks == 0);
+		assert(a->stuck_block_x == 3 && a->stuck_block_y == 64
+			   && a->stuck_block_z == 4 && a->stuck_block_type == 1
+			   && a->stuck_block_meta == 0);
+	}
 	chunk_entities_free(&parsed);
 	nbt_node* arrow_exact = item_nbt_clone_lossless(list_compound_at(old_list, 2));
 	assert(arrow_exact);
+	/* A runtime that DROPPED the arrow (picked up / despawned) removes the
+	 * owned Beta row as part of the imported set, exactly like an item. */
 	struct chunk_entities snapshot = {.entities = current, .count = 2};
 	nbt_node* merged = chunk_entities_preserve(
 		&old_node, &new_node, &snapshot, false, 0, 0);
+	assert(merged && nbt_list_count(merged) == 2);
+	nbt_free(merged);
+	/* A runtime that KEPT it: the owned row is replaced by its canonical
+	 * record (never duplicated, never kept beside it). */
+	struct archived_entity current3[3] = {current[0], current[1], imported[2]};
+	current3[2].source_id = 103;
+	current3[2].data.arrow.owner_source_id = UINT32_MAX;
+	current3[2].data.arrow.shake_ticks = 5;
+	void* arena3 = NULL;
+	struct nbt_list* list3 = chunk_entities_build(
+		&(struct chunk_entities) {.entities = current3, .count = 3}, &arena3);
+	assert(list3);
+	nbt_node node3 = {
+		.type = TAG_LIST, .name = "Entities", .payload.tag_list = list3,
+	};
+	struct chunk_entities snapshot3 = {.entities = current3, .count = 3};
+	merged = chunk_entities_preserve(&old_node, &node3, &snapshot3, false, 0, 0);
+	assert(merged && nbt_list_count(merged) == 3);
+	for(size_t k = 0; k < 3; k++)
+		assert(item_nbt_equal(list_compound_at(merged->payload.tag_list, k),
+			list_compound_at(list3, k)));
+	nbt_free(merged);
+	chunk_entities_build_free(arena3);
+	/* An arrow carrying any non-Beta tag stays runtime-opaque as before. */
+	nbt_node extra = {.type = TAG_BYTE, .name = "PluginTag"};
+	struct nbt_list extra_wrap = {.data = &extra};
+	list_add_tail(&extra_wrap.entry,
+		&list_compound_at(old_list, 2)->payload.tag_compound->entry);
+	assert(chunk_entities_parse(&old_node, 0, 0, &parsed));
+	assert(parsed.count == 2);
+	chunk_entities_free(&parsed);
+	nbt_free(arrow_exact);
+	arrow_exact = item_nbt_clone_lossless(list_compound_at(old_list, 2));
+	assert(arrow_exact);
+	merged = chunk_entities_preserve(
+		&old_node, &new_node, &snapshot, false, 0, 0);
+	list_del(&extra_wrap.entry);
 	assert(merged && nbt_list_count(merged) == 3);
 	assert(item_nbt_equal(list_compound_at(merged->payload.tag_list, 0),
 		arrow_exact));
@@ -944,6 +1000,7 @@ static void assert_records(const struct chunk_entities* out) {
 	assert(arrow->data.arrow.from_skeleton && arrow->data.arrow.in_ground);
 	assert(arrow->data.arrow.age == 2000);
 	assert(arrow->data.arrow.stuck_ticks == 99);
+	assert(arrow->data.arrow.shake_ticks == 2 && !arrow->data.arrow.from_player);
 	assert(feq(arrow->fall_distance, 0.75f));
 
 	const struct archived_entity* cart = &out->entities[3];
@@ -1183,6 +1240,72 @@ static void test_unsigned_fields_round_trip(const struct chunk_entities* input) 
 	assert(parsed.entities[2].data.arrow.owner_source_id == UINT32_MAX);
 	assert(parsed.entities[3].data.minecart.last_meta == UINT8_MAX);
 	chunk_entities_free(&parsed);
+	chunk_entities_build_free(arena);
+}
+
+/* ci-1101/41 item 12: EntityArrow.writeEntityToNBT (RetroMCP
+ * EntityArrow.java:241,243) names the shake counter "shake" (byte) and the
+ * pickup flag "player" (boolean byte). The writer uses Beta's names; the
+ * reader still accepts the pre-fix CaveWiiShakeTicks (int) /
+ * CaveWiiFromPlayer (byte) pair, and such an old native record stays
+ * byte-proven deletion-safe and converges to the Beta names on rewrite. */
+static void test_arrow_beta_tag_names(const struct chunk_entities* input) {
+	struct archived_entity one = input->entities[2];
+	assert(one.kind == ARCHIVED_ENTITY_ARROW);
+	one.data.arrow.from_player = true;
+	void* arena = NULL;
+	struct nbt_list* list = chunk_entities_build(
+		&(struct chunk_entities) {.entities = &one, .count = 1}, &arena);
+	assert(list && arena);
+	nbt_node* arrow = list_compound_at(list, 0);
+	nbt_node* player = child_named(arrow, "player");
+	nbt_node* shake = child_named(arrow, "shake");
+	assert(player && player->type == TAG_BYTE && player->payload.tag_byte == 1);
+	assert(shake && shake->type == TAG_BYTE && shake->payload.tag_byte == 2);
+	assert(!child_named(arrow, "CaveWiiFromPlayer"));
+	assert(!child_named(arrow, "CaveWiiShakeTicks"));
+	nbt_node list_node = {
+		.type = TAG_LIST, .name = "Entities", .payload.tag_list = list,
+	};
+	struct chunk_entities parsed = {0};
+	assert(chunk_entities_parse(&list_node, 0, 0, &parsed));
+	assert(parsed.count == 1 && parsed.entities[0].data.arrow.from_player
+		   && parsed.entities[0].data.arrow.shake_ticks == 2);
+	chunk_entities_free(&parsed);
+	/* The generated (new-name) list, kept for the convergence check. */
+	nbt_node* generated = nbt_clone(&list_node);
+	assert(generated);
+
+	/* Rewrite it into the exact pre-fix shape, in place. */
+	player->name = (char*)"CaveWiiFromPlayer";
+	shake->name = (char*)"CaveWiiShakeTicks";
+	shake->type = TAG_INT;
+	shake->payload.tag_int = 2;
+	assert(chunk_entities_parse(&list_node, 0, 0, &parsed));
+	assert(parsed.count == 1 && parsed.entities[0].data.arrow.from_player
+		   && parsed.entities[0].data.arrow.shake_ticks == 2
+		   && parsed.entities[0].data.arrow.item_id == 262
+		   && parsed.entities[0].data.arrow.owner_source_id == 42);
+	/* Native snapshot WITHOUT the arrow: the old record is deletion-safe. */
+	struct nbt_list empty_list = {.data = &(nbt_node) {.type = TAG_COMPOUND}};
+	INIT_LIST_HEAD(&empty_list.entry);
+	nbt_node empty_node = {
+		.type = TAG_LIST, .name = "Entities", .payload.tag_list = &empty_list,
+	};
+	struct chunk_entities empty = {0};
+	nbt_node* merged = chunk_entities_preserve(
+		&list_node, &empty_node, &empty, true, 0, 0);
+	assert(merged && nbt_list_count(merged) == 0);
+	nbt_free(merged);
+	/* Native snapshot WITH the arrow: the record converges to Beta names. */
+	struct chunk_entities same = {.entities = &parsed.entities[0], .count = 1};
+	merged = chunk_entities_preserve(&list_node, generated, &same, true, 0, 0);
+	assert(merged && nbt_list_count(merged) == 1);
+	assert(item_nbt_equal(list_compound_at(merged->payload.tag_list, 0),
+						  list_compound_at(generated->payload.tag_list, 0)));
+	nbt_free(merged);
+	chunk_entities_free(&parsed);
+	nbt_free(generated);
 	chunk_entities_build_free(arena);
 }
 
@@ -1467,6 +1590,7 @@ int main(void) {
 	test_unsigned_fields_round_trip(&input);
 	test_common_fall_distance_is_single_tag(&input);
 	test_corrupt_optional_fields_are_sanitized(&input);
+	test_arrow_beta_tag_names(&input);
 	test_fire_value_clamps_to_int16_range(&input);
 	test_beta_owned_set_reconciliation();
 	test_beta_mob_fire_and_unowned_fail_closed();

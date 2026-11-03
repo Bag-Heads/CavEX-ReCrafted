@@ -67,6 +67,7 @@
  * >= 168 blocks out, >= 95% fogged) is not generated. Never inherits user
  * settings: the host applies these values and restores its own. */
 struct backdrop_bake_recipe {
+	int dimension; /* 0 Overworld, -1 Nether; generator and renderer agree. */
 	int64_t seed;
 	float eye[3];
 	float yaw_deg, pitch_deg;
@@ -79,6 +80,7 @@ struct backdrop_bake_recipe {
 	int crop_x0, crop_y0, crop_x1, crop_y1; /* in reference-frame pixels */
 };
 const struct backdrop_bake_recipe* backdrop_bake_default_recipe(void);
+const struct backdrop_bake_recipe* backdrop_bake_nether_recipe(void);
 
 enum backdrop_bake_state {
 	BACKDROP_BAKE_TERRAIN,  /* generating bake-owned terrain columns */
@@ -193,6 +195,8 @@ void backdrop_bake_register_host(const struct backdrop_bake_host* host);
  * (with *err) if one is already active, no host is registered, or create
  * refuses. */
 bool backdrop_bake_request(enum backdrop_bake_error* err);
+bool backdrop_bake_request_recipe(const struct backdrop_bake_recipe* recipe,
+	enum backdrop_bake_error* err);
 struct backdrop_bake* backdrop_bake_active(void);
 /* One step of the active bake, if any and not yet terminal. */
 void backdrop_bake_service(uint32_t budget_us);

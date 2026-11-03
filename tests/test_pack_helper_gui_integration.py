@@ -54,7 +54,7 @@ class RealGuiImportTests(unittest.TestCase):
         self.game = self.base / "scratch game destination"
         self.game.mkdir()
         # Capability fixture only: never executable and never launched.
-        (self.game / "cavewii_v2.exe").write_bytes(b"SYNTHETIC CAPABILITY FIXTURE paths.audiopack\x00")
+        (self.game / "CavEX-ReCrafted.exe").write_bytes(b"SYNTHETIC CAPABILITY FIXTURE paths.audiopack\x00")
         self.original_config = {"paths": {"texturepack": "texturepacks/previous-textures",
                                            "audiopack": "texturepacks/previous-audio"},
                                 "unrelated": {"controller": "preserve me", "volume": 37}}
@@ -156,7 +156,7 @@ class RealGuiImportTests(unittest.TestCase):
         self.assert_success(True, True, activate=False)
 
     def test_real_validation_failure_preserves_inputs_then_retry_succeeds(self):
-        executable = self.game / "cavewii_v2.exe"
+        executable = self.game / "CavEX-ReCrafted.exe"
         fixture = executable.read_bytes()
         executable.unlink()
         self.app.source.set(str(self.texture))

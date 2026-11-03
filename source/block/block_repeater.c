@@ -100,8 +100,28 @@ static void onRightClick(struct server_local* s, struct server_player* actor, st
 	int meta = b.metadata & 0x0F;
 	int delay = (meta & 12) >> 2;
 	delay = ((delay + 1) << 2) & 12; // (idx+1)<<2 & 12: advance the delay index, wrap 3 -> 0
-	b.metadata = (uint8_t)((delay | (meta & 3)) & 0x0F);
-	server_world_set_block(block_world(s), on->x, on->y, on->z, b);
+	// Beta World.setBlockMetadataWithNotify [740c583 World.java:414-423]: a metadata-only write
+	// plus the six-neighbour notify -- Chunk.setBlockMetadata, NOT setBlockIDWithMetadata, so
+	// onBlockAdded (the 2-hop notify below) does not run on a delay cycle.
+	server_world_set_block_metadata_with_notify(block_world(s), on->x, on->y, on->z,
+												(uint8_t)((delay | (meta & 3)) & 0x0F));
+}
+
+// Beta BlockRedstoneRepeater.onBlockAdded [740c583 BlockRedstoneRepeater.java:127-134]:
+// notifyBlocksOfNeighborChange(x+1 / x-1 / z+1 / z-1 / y-1 / y+1, this.blockID) -- the
+// neighbours of each of the six neighbours learn of the change with var5 = the repeater id.
+// Chunk.setBlockIDWithMetadata [Chunk.java:236-267] runs this on EVERY id write, so it fires on
+// placement and on each idle<->active swap (updateTick's setBlockAndMetadataWithNotify). It is
+// what carries the repeater's output through a solid block to the wire/torch/piston behind it
+// (HUNT-14 item 1); World.notifyBlockChange alone only reaches the solid block itself. The
+// redstone torch does the same in block_torch.c (redstone_torch_active_notify).
+static void repeater_on_added(struct server_local* s, struct block_info* info) {
+	static const int dx[6] = {1, -1, 0, 0, 0, 0};
+	static const int dy[6] = {0, 0, 0, 0, -1, 1};
+	static const int dz[6] = {0, 0, 1, -1, 0, 0};
+	const uint8_t self = info->block->type; // 93 idle or 94 active: the var5 the consumers see
+	for(int i = 0; i < 6; i++)
+		notifyNeighbours_from(s, info->x + dx[i], info->y + dy[i], info->z + dz[i], self);
 }
 
 struct block block_redstone_repeater = {
@@ -113,6 +133,7 @@ struct block block_redstone_repeater = {
 	.getDroppedItem = drop_repeater,
 	.onRandomTick = NULL,
 	.onRightClick = onRightClick,
+	.onBlockAdded = repeater_on_added, // BlockRedstoneRepeater.onBlockAdded (2-hop notify)
 	// Metadata-delayed {2,4,6,8} scheduled toggle. The block self-schedules in
 	// onNeighbourBlockChange, so the engine's constant-tick_delay auto-schedule
 	// is suppressed for it (server_world_notify_block GAP #1).
@@ -159,6 +180,7 @@ struct block block_redstone_repeater_lit = {
 	.getDroppedItem = drop_repeater,
 	.onRandomTick = NULL,
 	.onRightClick = onRightClick,
+	.onBlockAdded = repeater_on_added, // same hook: the active id's swap notifies 2 hops too
 	.onWorldTick = redstone_repeater_server_tick,
 	.onNeighbourBlockChange = redstone_repeater_server_neighbour_change,
 	.transparent = false,

@@ -341,7 +341,18 @@ static void session_observe(struct server_local* s, unsigned tick, bool dirty) {
 static void run_session(void) {
 	struct server_local* s = &SS;
 	session_open(s);
+	/* Deterministic pending-reload regression for the measured zlib-4
+	 * schedule: 88 payloads (58,867 bytes) + 4 publications fit the existing
+	 * 96-op / 512 KiB queue. Release before the first retry write at t77;
+	 * no sleep, queue-cap change or weaker byte/trace comparison. */
+	const char* zlib_level = getenv("CW_G9_SAVE_ZLIB_LEVEL");
+	bool hold_worker = region_archive_deferred_io_enabled()
+		&& zlib_level && !strcmp(zlib_level, "4");
 	for(int t = 0; t < SESSION_TICKS; t++) {
+		if(hold_worker && (t == 8 || t == 77)) {
+			region_archive_test_io_hold(t == 8);
+			printf("session zlib4 worker hold=%d tick=%d\n", t == 8, t);
+		}
 		s->player.health = MAX_PLAYER_HEALTH;
 		server_local_test_update_once(s);
 		clin_drain_discard();

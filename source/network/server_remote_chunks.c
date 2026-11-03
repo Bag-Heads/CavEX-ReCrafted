@@ -140,6 +140,11 @@ static bool remote_carve_can_hold_column(void) {
 		>= (size_t)REMOTE_VOXEL_COLUMN_BYTES + remote_mesh_reserve_bytes();
 }
 
+/* ci-1101/54. Contract in server_remote_internal.h. */
+bool remote_carve_admits_cold_column(void) {
+	return remote_carve_can_hold_column();
+}
+
 /* REL-MP-LOADHANG (hw1021f, tmp/jobs/hw1021f/LOADHANG-RCA.md): what a
  * re-send of an ALREADY-INSTALLED column costs the carve.
  *  - a partial head is applied onto the installed voxels: no new voxel
@@ -156,8 +161,9 @@ static bool remote_carve_can_hold_column(void) {
  * whole session: an endless loading screen, and every server block update
  * to an installed column parked forever. */
 static bool remote_body_is_full_column(const struct mp_map_chunk* wire);
+static bool remote_body_applies_full_column(const struct mp_map_chunk* wire);
 static bool remote_carve_can_replace_installed(const struct remote_chunk* chunk) {
-	if(!remote_body_is_full_column(&chunk->wire))
+	if(!remote_body_applies_full_column(&chunk->wire))
 		return true;
 	size_t free_bytes = remote_carve_free_bytes();
 	return free_bytes == SIZE_MAX
@@ -222,7 +228,7 @@ static void remote_body_free(void* body) {
 #define REMOTE_COLUMN_RAW_BYTES \
 	(REMOTE_COLUMN_CELLS + 3u * REMOTE_COLUMN_NIBBLES)
 _Static_assert(REMOTE_COLUMN_RAW_BYTES == 81920u,
-			   "a full remote column re-encodes to MP_CHUNK_INFLATED_CAP bytes");
+			   "a full remote column re-encodes to 81920 bytes");
 /* The deflate DESTINATION cannot be the body itself: the body's exact length
  * is only known once deflate has finished, and W2's reservation wants bodies
  * allocated at their true size (not at compressBound). So the fixed scratch
@@ -233,7 +239,9 @@ _Static_assert(REMOTE_COLUMN_RAW_BYTES == 81920u,
  * allocation for the whole connection, never one per demotion.
  * compressBound(81920) is 81958 on zlib's formula; +1024 is headroom, and
  * remote_demote_scratch_locked asserts the real bound fits. */
-#define REMOTE_DEMOTE_STAGE_BYTES (REMOTE_COLUMN_RAW_BYTES + 1024u)
+/* Also stages inflated Packet51 regions during folding: a 130-high wire
+ * buffer is larger than the 128-high column it applies to. */
+#define REMOTE_DEMOTE_STAGE_BYTES (MP_CHUNK_INFLATED_CAP + 1024u)
 #define REMOTE_DEMOTE_SCRATCH_BYTES \
 	(REMOTE_COLUMN_RAW_BYTES + REMOTE_DEMOTE_STAGE_BYTES)
 /* zlib level 6 == Z_DEFAULT_COMPRESSION's ratio, which is what a Beta server
@@ -866,6 +874,16 @@ static bool remote_body_is_full_column(const struct mp_map_chunk* wire) {
 		&& wire->z % 16 == 0 && wire->inflated_length == REMOTE_COLUMN_RAW_BYTES;
 }
 
+/* A padded 130-high snapshot covers the same playable column. Keep this
+ * semantic test separate from the exact 81920-byte raw inflate shape above:
+ * budgets and genuine-snapshot provenance use coverage; raw buffers do not. */
+static bool remote_body_applies_full_column(const struct mp_map_chunk* wire) {
+	return wire->compressed && wire->sx == 16 && wire->sy >= 128
+		&& wire->sy <= 130 && wire->sz == 16 && wire->y == 0
+		&& wire->x % 16 == 0 && wire->z % 16 == 0
+		&& wire->inflated_length == (size_t)16 * wire->sy * 16 * 5 / 2;
+}
+
 /* Inflate one body completely into `out`. 1 = decoded exactly
  * inflated_length bytes with the stream fully consumed; 0 = corrupt
  * (terminal); -1 = zlib could not allocate its state (Z_MEM_ERROR from
@@ -910,9 +928,15 @@ static bool remote_column_apply_region(uint8_t* ids, uint8_t* const planes[3],
 	int64_t z0 = (int64_t)wire->z - (int64_t)chunk_z * 16;
 	int64_t y0 = wire->y;
 	if(!wire->sx || !wire->sy || !wire->sz || x0 < 0 || z0 < 0 || y0 < 0
-	   || x0 + wire->sx > 16 || z0 + wire->sz > 16 || y0 + wire->sy > 128)
+	   || x0 + wire->sx > 16 || z0 + wire->sz > 16 || y0 + wire->sy > 130)
 		return false;
-	size_t stripe = wire->sy, half = (size_t)wire->sy / 2u;
+	/* Beta World.getChunkData / setChunkData clamp BEFORE the plane walks
+	 * (CFR World.java:1740; RetroMCP client World.java:2204-2230). Packed
+	 * stripes use the clamped height; unused bytes trail the whole payload. */
+	if(y0 >= 128)
+		return true;
+	size_t stripe = y0 + wire->sy > 128 ? (size_t)(128 - y0) : wire->sy;
+	size_t half = stripe / 2u;
 	size_t columns = (size_t)wire->sx * wire->sz;
 	if(columns * stripe + 3u * columns * half > wire->inflated_length)
 		return false;
@@ -1011,8 +1035,10 @@ remote_chunk_fold_locked(struct server_remote_impl* remote,
 	 * Air, metadata/block light 0, sky light 15 [ChunkProviderClient.java:40
 	 * prepareChunk]. An installed column's base is its voxels. */
 	bool base_full = remote_body_is_full_column(&chunk->wire);
-	bool synthetic = chunk->synthetic_base || !base_full;
-	if(!base_full && (chunk->installed || (!chunk->wire.compressed && !incoming))) {
+	bool covers_full = remote_body_applies_full_column(&chunk->wire);
+	bool synthetic = chunk->synthetic_base || !covers_full;
+	if(!covers_full
+	   && (chunk->installed || (!chunk->wire.compressed && !incoming))) {
 		assert(!"synthetic base for an installed or bodyless column");
 		remote_fold_fail_locked(remote, chunk,
 								"remote Packet51 partial column has no base "
@@ -1045,9 +1071,9 @@ remote_chunk_fold_locked(struct server_remote_impl* remote,
 			continue; /* bodyless: the base and `incoming` only */
 		if(!body)
 			break; /* NULL incoming: the chain alone */
-		if(remote_body_is_full_column(body))
+		if(remote_body_applies_full_column(body))
 			synthetic = false; /* a real snapshot overwrote the base */
-		r = remote_body_inflate(body, stage, REMOTE_COLUMN_RAW_BYTES);
+		r = remote_body_inflate(body, stage, MP_CHUNK_INFLATED_CAP);
 		if(r < 0) {
 			remote->fold.zlib_alloc_failures++;
 			return REMOTE_FOLD_NOMEM;
@@ -1089,7 +1115,7 @@ remote_chunk_fold_locked(struct server_remote_impl* remote,
 	/* A pre-chunk base is anchored at the load (residency_seq), not at the
 	 * first partial: an older edit outside every region must stay newer than
 	 * the folded head, or the drain would shadow it. */
-	uint64_t stamp = base_full ? chunk->arrival : chunk->residency_seq;
+	uint64_t stamp = covers_full ? chunk->arrival : chunk->residency_seq;
 	struct mp_map_chunk folded = {
 		.x = chunk->chunk_x * 16,
 		.y = 0,
@@ -1171,7 +1197,7 @@ remote_fold_gate_locked(const struct server_remote_impl* remote, size_t index,
 	/* A partial head on installed voxels: the pump installs it (the base it
 	 * lands on) and frees a chain slot. REL-MP-FIX2b: with no voxels it folds
 	 * onto the pre-chunk, as Beta applies it [NetClientHandler.java:294]. */
-	if(!remote_body_is_full_column(&chunk->wire) && chunk->installed) {
+	if(!remote_body_applies_full_column(&chunk->wire) && chunk->installed) {
 		*cause = REMOTE_FOLD_WAIT_PARTIAL_HEAD;
 		return REMOTE_FOLD_GATE_WAIT;
 	}
@@ -1472,6 +1498,16 @@ bool remote_pre_chunk_locked(struct server_remote_impl* remote,
 	/* The newest Packet50 mode owns the final state. unload -> load -> unload
 	 * before a pump must not preserve the middle load's reload intent. */
 	chunk->reload_after_unload = false;
+	/* Publication dispatches CRPC_CHUNK synchronously under this lock and
+	 * sets installed before releasing it. With promotion cancelled above,
+	 * !installed has no body handed to the main thread and no world unload
+	 * to wait for. Retire it here so consecutive teleports cannot accumulate
+	 * dead entries while the pump is idle or the client is in recovery. */
+	if(!chunk->installed) {
+		memset(chunk, 0, sizeof(*chunk));
+		if(remote->retained_entries > 0)
+			remote->retained_entries--;
+	}
 	return true;
 }
 
@@ -1939,7 +1975,7 @@ static bool remote_start_promotion_locked(struct server_remote_impl* remote) {
 		    * new chunks before releasing the old column (world.c), i.e.
 		    * another 81,920 B -- that one keeps the cap and carve gate (its
 		    * fold wait is edit order or scratch, not promotion). */
-		   && !remote_body_is_full_column(&remote->chunks[wait_index].wire)
+		   && !remote_body_applies_full_column(&remote->chunks[wait_index].wire)
 		   && !remote->chunks[wait_index].unload_pending
 		   && remote->chunks[wait_index].epoch == remote->applied_epoch) {
 			best = wait_index;
@@ -2198,7 +2234,19 @@ static bool remote_finish_promotion_locked(struct server_remote_impl* remote) {
 		remote->promotion_publish_waits++;
 		return true;
 	}
-	struct mp_map_chunk* wire = &chunk->wire;
+	/* Preserve the advertised length for zlib/ownership, but apply Beta's
+	 * clamped packed geometry to both the slot and the client RPC. */
+	struct mp_map_chunk applied = chunk->wire;
+	if((uint32_t)applied.y + applied.sy > 128)
+		applied.sy = applied.y < 128 ? (uint16_t)(128 - applied.y) : 0;
+	if(!applied.sy) {
+		remote_promotion_cancel_locked(remote, true);
+		chunk->state = remote_chunk_shift_queued_locked(remote, chunk)
+			? REMOTE_CHUNK_RETAINED
+			: chunk->installed ? REMOTE_CHUNK_RESIDENT : REMOTE_CHUNK_ANNOUNCED;
+		return true;
+	}
+	const struct mp_map_chunk* wire = &applied;
 	size_t cells = (size_t)wire->sx * wire->sy * wire->sz;
 	size_t nibble = cells / 2;
 	for(size_t i = 0; i < cells; i++) {

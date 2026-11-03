@@ -62,11 +62,16 @@ static bool can_provide_power(int id) {
 }
 
 // Beta Block.canProvidePower over ALL ids -- can_provide_power above deliberately excludes
-// the wire and the repeaters (its caller handles them via dedicated branches); this public
-// helper is the complete set for notify-source gating (BlockDoor's var5 check).
+// the wire (its caller handles it via a dedicated branch); this public helper is the complete
+// set for notify-source gating (BlockDoor.onNeighborBlockChange:141 `var5 > 0 &&
+// Block.blocksList[var5].canProvidePower()`, and the same gate in BlockTrapDoor, BlockTNT,
+// BlockDispenser, BlockNote). The REPEATERS are NOT in it: BlockRedstoneRepeater.canProvidePower
+// [740c583 BlockRedstoneRepeater.java:113-115] returns false even though isPoweringTo emits
+// power, so a repeater aimed straight at a door powers it but never makes it re-read that
+// power (HUNT-14 item 3). Redstone wire still connects to repeaters through the wire-id /
+// repeater-id branches of is_power_provider_or_wire, which is a different (connection) question.
 bool redstone_id_can_provide_power(int id) {
-	return id == RSP_WIRE_ID || id == RSP_REPEATER_IDLE_ID
-		|| id == RSP_REPEATER_ACTIVE_ID || can_provide_power(id);
+	return id == RSP_WIRE_ID || can_provide_power(id);
 }
 
 static bool is_power_provider_or_wire(const struct redstone_power_world* w, int x, int y, int z,

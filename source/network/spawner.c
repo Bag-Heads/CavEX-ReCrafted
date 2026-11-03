@@ -110,7 +110,23 @@ int spawner_burst(struct random_gen* rng, w_coord_t sx, w_coord_t sy, w_coord_t 
 		w_coord_t x = (w_coord_t)floor(px);
 		w_coord_t y = (w_coord_t)floor(py);
 		w_coord_t z = (w_coord_t)floor(pz);
-		if(!spawner_spot_ok(get, get_ctx, x, y, z))
+		/* ci-1101/45 (HUNT-14 #2b): Beta's spawner gate is getCanSpawnHere
+		 * alone [TileEntityMobSpawner.java:76] -- for EntityMob: light rolls
+		 * [EntityMob.java:73-84] && EntityCreature path weight
+		 * [EntityCreature.java:163] && EntityLiving's AABB clear / no block
+		 * box / no liquid [EntityLiving.java:781-783]; no floor, no air-cell
+		 * test. The box test is ops->spot_ok (live server). Order note: Beta
+		 * rolls light first, then the box; both are draw-free on the WORLD
+		 * stream and the member Random is discarded per member, so testing
+		 * the box first is unobservable. getBlockPathWeight (0.5F -
+		 * getLightBrightness >= 0, EntityMob.java:57-59) is implied by the
+		 * rolls: they pass only if the thunder-adjusted var4 <= 7, so block
+		 * light <= 7 and the normal value <= max(15 - 5, 7) = 10 (thunder
+		 * forces rain+thunder darkening, subtract >= 5), and brightness(10)
+		 * <= 0.5 in both providers' tables (overworld/nether pass up to 12
+		 * /11) -- so it can never refuse a member the rolls accepted. */
+		if(ops->spot_ok ? !ops->spot_ok(ctx, px, py, pz)
+						: !spawner_spot_ok(get, get_ctx, x, y, z))
 			continue;
 		// Beta TileEntityMobSpawner.updateEntity gates each burst member on
 		// getCanSpawnHere() -- for the 3 dungeon-spawnable mobs (Skeleton/

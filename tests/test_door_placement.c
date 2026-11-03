@@ -106,6 +106,16 @@ static bool place_wood_door(int x, int z, float yaw) {
 	return item_door_wood.onItemPlace(&s, &s.player, &it, &where, &on, SIDE_TOP);
 }
 
+/* Place a wood door at an explicit door-plane Y (the y>=127 case needs one). */
+static bool place_wood_door_at(int x, int y, int z, float yaw) {
+	s.player.rx = yaw;
+	struct block_info on = info_at(x, y - 1, z);
+	struct block_info where = {
+		.block = NULL, .neighbours = NULL, .x = x, .y = y, .z = z};
+	struct item_data it = {.id = ITEM_DOOR_WOOD, .durability = 0, .count = 1};
+	return item_door_wood.onItemPlace(&s, &s.player, &it, &where, &on, SIDE_TOP);
+}
+
 static bool place_iron_door(int x, int z, float yaw) {
 	s.player.rx = yaw;
 	struct block_info on = info_at(x, YF, z);
@@ -220,6 +230,42 @@ int main(void) {
 		assert(0 && "solid-neighbour hinge flip diverges from Beta");
 	}
 	printf("  solid-neighbour flip: meta=%d (dir 0 | OPEN) OK\n", wall_flip);
+
+	// (5) canPlaceBlockAt gate: the roof cell (y=127) is refused, a door needs
+	// an air/replaceable UPPER cell, and the support below must be a normal cube
+	// [decompile 740c583: BlockDoor.canPlaceBlockAt:185 ->
+	// `var3 >= 127 ? false : isBlockNormalCube(x,y-1,z) &&
+	//  super.canPlaceBlockAt(x,y,z) && super.canPlaceBlockAt(x,y+1,z)`, with
+	//  Block.canPlaceBlockAt:444-447 = `id == 0 || material.func_27090_g()`
+	//  (Material.snow is the only func_27089_f() material)].
+	{
+		// (a) y >= 127 is refused even with a solid floor below and air around.
+		for(int x = 40; x <= 55; x++)
+			for(int z = 14; z <= 20; z++)
+				set(x, 126, z, BLOCK_STONE, 0);
+		assert(!place_wood_door_at(45, 127, 16, 0.0F));
+		// (y=128 is outside the 0..127 world height, so get() cannot read it.)
+		assert(get(45, 127, 16) == BLOCK_AIR);
+
+		// (b) a NON-replaceable solid block in the UPPER cell is refused.
+		set(46, Y + 1, 16, BLOCK_STONE, 0);
+		assert(!place_wood_door(46, 16, 0.0F));
+		assert(get(46, Y, 16) == BLOCK_AIR); // lower half never placed
+		set(46, Y + 1, 16, BLOCK_AIR, 0);
+
+		// (c) a NON-normal-cube support below is refused (snow layer: air-like
+		// material, not opaque, not a cube).
+		set(47, YF, 16, BLOCK_SNOW, 0);
+		assert(!place_wood_door_at(47, Y, 16, 0.0F));
+		assert(get(47, Y, 16) == BLOCK_AIR);
+		set(47, YF, 16, BLOCK_STONE, 0);
+
+		// Control: the same cell places fine once every gate is satisfied.
+		assert(place_wood_door(48, 16, 0.0F));
+		assert(get(48, Y, 16) == BLOCK_DOOR_WOOD);
+		assert(get(48, Y + 1, 16) == BLOCK_DOOR_WOOD);
+	}
+	printf("  canPlaceBlockAt gate (y>=127, upper cell, support) OK\n");
 
 	// (4) Refusal: a non-TOP click never places a door [decompile 740c583:
 	// `if (var7 != 1) return false;`], independently confirmed by mc173's

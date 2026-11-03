@@ -310,6 +310,32 @@ static void check(bool ok, const char* what, size_t w, size_t h) {
 }
 
 int main(void) {
+	struct tex_atlas_grid npot_grid;
+	assert(tex_atlas_grid_init(&npot_grid, 768, 768));
+	assert(tex_atlas_mip_levels(&npot_grid) == 1);
+	assert(tex_gx_atlas_bytes(768, 768) == 0);
+	uint8_t sentinel = 0x5a;
+	assert(!tex_gx_encode_atlas(&sentinel, 768, 768, &npot_grid, &sentinel));
+	assert(sentinel == 0x5a);
+
+	/* RGB5A3 decode (the Wii tex_gfx_lookup path used by the compass/clock
+	 * FX): every texel value re-encodes to itself, so a captured cell is
+	 * written back unchanged. */
+	tex_gx_luts_init();
+	for(uint32_t v = 0; v < 0x10000; v++) {
+		uint8_t rgba[4];
+		tex_gx_rgb5a3_decode((uint16_t)v, rgba);
+		uint16_t back = tex_gx_rgb5a3(rgba);
+		/* A3=7 opaque is stored in the 0x8000 form, so only compare it there. */
+		if((v & 0x8000) || ((v >> 12) & 7) != 7)
+			if(back != (uint16_t)v) {
+				fprintf(stderr, "rgb5a3 v=%04x rgba=%d,%d,%d,%d back=%04x\n", (unsigned)v,
+					   rgba[0], rgba[1], rgba[2], rgba[3], back);
+				assert(back == (uint16_t)v);
+			}
+	}
+	puts("PASS rgb5a3 decode round-trips every texel through tex_gx_rgb5a3");
+
 	lut_gen(3, lut_3);
 	lut_gen(4, lut_4);
 	lut_gen(5, lut_5);
@@ -391,18 +417,23 @@ int main(void) {
 		uint16_t* r = ref_tex_build_mip_chain_rgba16(img, w, w, &grid,
 													 &ref_total);
 		size_t total = tex_gx_atlas_bytes(w, w);
-		if(!r) {
-			check(total == 0, "atlas chain refusal agrees", w, w);
+		/* Keep the historical four-level reference untouched. The new cap
+		 * must equal its first two levels byte-for-byte; unpadded/odd-pitch
+		 * packs now deliberately decline the chain. */
+		if(w == 128 || w == 336) {
+			check(total == 0, "unsafe grid declines mip chain", w, w);
 		} else {
+			assert(r);
 			uint8_t* out = malloc(total ? total : 1);
 			assert(out);
-			check(total == ref_total
+			check(total == w * w * 2 + (w / 2) * (w / 2) * 2
+					  && total < ref_total
 					  && tex_gx_encode_atlas(img, w, w, &grid, out)
 					  && same16(r, out, total / 2),
-				  "atlas 4-LOD chain", w, w);
+				  "atlas isolated two-level reference prefix", w, w);
 			free(out);
-			free(r);
 		}
+		free(r);
 		free(img);
 	}
 

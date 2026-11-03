@@ -586,7 +586,17 @@ static bool commit_final_player(struct level_archive* level,
 			   NULL, journal->final_dimension)
 		&& level_archive_write_inventory(level, &empty)
 		&& level_archive_write_player_health(level, health)
-		&& level_archive_write_player_fall_distance(level, fall_distance);
+		&& level_archive_write_player_fall_distance(level, fall_distance)
+		/* ci-1101/41 item 11: the load now restores Fire/Air, so the
+		 * recovered respawn must carry the FRESH body's values
+		 * (server_local_respawn_fresh_body), never the dying body's burn or
+		 * empty lungs left by the last ordinary checkpoint. Written after
+		 * the health pair (see server_local_write_level_state). */
+		&& level_archive_write_player_entity_state(
+			level, &(struct level_player_entity_state) {
+				.fire = -PLAYER_FIRE_RESISTANCE,
+				.air = MAX_OXYGEN,
+			});
 	if(player_ok && journal->final_player_spawn_known)
 		player_ok = level_archive_write_player_spawn(
 			level, journal->final_has_player_spawn,

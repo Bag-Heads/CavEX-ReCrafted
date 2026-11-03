@@ -27,6 +27,7 @@
 #include "../platform/input_glyph.h"
 #include "../platform/input_inventory.h"
 #include "../platform/input_owner.h"
+#include "beta_text_color.h"
 #include "gfx_settings.h"
 #include "gui_util.h"
 #include "render_block.h"
@@ -55,6 +56,40 @@ static bool gutil_pc_cell(int cell) {
 static struct tex_gfx* gutil_glyph_texture(int cell) {
 	return (cell < 42 || gutil_pc_cell(cell)) && texture_approved_controls.data ?
 		&texture_approved_controls : &texture_controls;
+}
+/* ci-1101/18: the sheet to DRAW a cell from, or NULL when it never loaded.
+ * The Wii tex_gfx_bind keeps the previously bound texture for an empty one
+ * (valid GP state), so drawing through an unloaded sheet sampled whatever
+ * was bound last -- the FONT sheet -- as glyph art (garbled glyphs on an
+ * install without sd:/assets). Never sample a sheet that is not there:
+ * skip the cell, keep the advance (the text labels stay put) and say once
+ * which file is missing. */
+static struct tex_gfx* gutil_glyph_sheet(int cell) {
+	struct tex_gfx* sheet = gutil_glyph_texture(cell);
+	if(sheet->data)
+		return sheet;
+	static bool reported;
+	if(!reported) {
+		reported = true;
+		fprintf(stderr,
+				"[gui] no controller glyph sheet loaded (%s missing%s); "
+				"button cells are not drawn\n",
+				sheet == &texture_approved_controls ? "gui/approved-controls.png"
+													 : "controls.png",
+				texture_approved_controls.data || texture_controls.data
+					? ""
+					: ", controls.png and gui/approved-controls.png both");
+	}
+	return NULL;
+}
+/* Bind `sheet` and draw one 32x32 (or wide) cell; nothing when it is NULL. */
+static void gutil_glyph_quad(struct tex_gfx* sheet, int x, int y, int cell,
+							 bool wide, int size, uint8_t gray) {
+	if(!sheet)
+		return;
+	gfx_bind_texture(sheet);
+	gutil_texquad_col(x, y, (cell % 8) * 32, (cell / 8) * 32, wide ? 64 : 32,
+					  32, wide ? 2 * size : size, size, gray, gray, gray, 255);
 }
 /* The cell actually drawn: a PC cell on the fallback atlas becomes 42/43. */
 static int gutil_glyph_drawn_cell(int cell) {
@@ -139,9 +174,7 @@ static void gutil_keycap_overlay(int x, int y, int size, int cell,
 static int gutil_glyph_cell(int x, int y, int size, int cell, uint8_t gray) {
 	int drawn = gutil_glyph_drawn_cell(cell);
 	bool wide = gutil_glyph_wide(cell);
-	gfx_bind_texture(gutil_glyph_texture(cell));
-	gutil_texquad_col(x, y, (drawn % 8) * 32, (drawn / 8) * 32, wide ? 64 : 32,
-					  32, wide ? 2 * size : size, size, gray, gray, gray, 255);
+	gutil_glyph_quad(gutil_glyph_sheet(cell), x, y, drawn, wide, size, gray);
 	return wide ? 2 * size : size;
 }
 
@@ -163,17 +196,15 @@ int gutil_prompt_glyph_gray(int x, int y, int size, int glyph, uint8_t gray) {
 		return w;
 	}
 	if(modifier >= 0) {
-		gfx_bind_texture(gutil_glyph_texture(modifier));
-		gutil_texquad_col(x, y, (modifier % 8) * 32, (modifier / 8) * 32, 32, 32,
-					  size, size, gray, gray, gray, 255);
+		gutil_glyph_quad(gutil_glyph_sheet(modifier), x, y, modifier, false,
+						 size, gray);
 		gutil_keycap_overlay(x, y, size, modifier, gray);
 		x += size;
 		gutil_text_rgb(x, y + size / 4, "+", size / 2, true, gray, gray, gray);
 		x += size / 2;
 	}
-	gfx_bind_texture(gutil_glyph_texture(button));
-	gutil_texquad_col(x, y, (button % 8) * 32, (button / 8) * 32, 32, 32, size,
-				  size, gray, gray, gray, 255);
+	gutil_glyph_quad(gutil_glyph_sheet(button), x, y, button, false, size,
+					 gray);
 	gutil_keycap_overlay(x, y, size, button, gray);
 	return x + size - start;
 }
@@ -397,6 +428,45 @@ static int hint_glyph_width(int glyph, int size) {
 	return gutil_prompt_glyph_width(glyph, size); /* wide PC caps: 2x */
 }
 
+/* Exclusive alpha right edges measured from the bundled 32 px cells.
+ * PC wide cap includes both cells. Tests rescan the real PNGs so asset edits
+ * cannot silently stale these metrics. Match the active A glyph's visible gap,
+ * rounding to the nearest screen pixel (at most half a pixel of error). */
+int gutil_hint_label_gap(int glyph) {
+	static const uint8_t fallback[INPUT_GLYPH_CELLS] = {
+		29, 29, 29, 29, 30, 29, 29, 29,
+		29, 29, 29, 29, 29, 29, 29, 29,
+		11, 29, 29, 29, 11, 11, 29, 29,
+		32, 11, 11, 11, 11, 11, 11, 11,
+		31, 29, 30, 25, 31, 31, 31, 30,
+		31, 31, 29, 29, 11, 11, 11, 11,
+		11, 11, 11, 11, 11, 11, 11, 11,
+		11, 11, 11, 11, 11, 11, 11, 11,
+	};
+	static const uint8_t approved[INPUT_GLYPH_CELLS] = {
+		26, 26, 26, 26, 26, 26, 26, 26,
+		29, 26, 26, 26, 26, 26, 32, 32,
+		29, 32, 32, 32, 0, 0, 32, 32,
+		32, 32, 32, 32, 32, 32, 23, 32,
+		31, 29, 30, 25, 31, 31, 31, 30,
+		31, 31, 29, 29, 32, 64, 32, 29,
+		29, 29, 11, 11, 11, 11, 11, 11,
+		11, 11, 11, 11, 11, 11, 11, 11,
+	};
+	int modifier, button;
+	if(!input_glyph_cells(glyph, &modifier, &button))
+		return GUTIL_HINT_LABEL_GAP;
+	const uint8_t* edges = gutil_glyph_texture(button) == &texture_approved_controls
+		? approved : fallback;
+	int cell = gutil_glyph_drawn_cell(button);
+	if(!edges[cell])
+		return GUTIL_HINT_LABEL_GAP; /* no visible art */
+	int padding = (gutil_glyph_wide(button) ? 64 : 32) - edges[cell];
+	int a_padding = 32 - (texture_approved_controls.data ? approved[0] : fallback[0]);
+	return GUTIL_HINT_LABEL_GAP
+		+ (int)floorf((a_padding - padding) * GUTIL_HINT_GLYPH / 32.0F + 0.5F);
+}
+
 /* Measures items[k] into `cell` with content starting at x = 0. Returns the
  * item's width, 0 when none of its roles has a drawable glyph. */
 static int hint_measure(const struct input_player_frame* input,
@@ -424,7 +494,7 @@ static int hint_measure(const struct input_player_frame* input,
 	if(!cell->glyph_count)
 		return 0;
 	cell->label_w = gutil_font_width(cell->label, GUTIL_HINT_TEXT);
-	cell->label_x = at + GUTIL_HINT_LABEL_GAP;
+	cell->label_x = at + gutil_hint_label_gap(cell->glyph[cell->glyph_count - 1]);
 	return cell->label_x + cell->label_w;
 }
 
@@ -1118,35 +1188,23 @@ const uint8_t* gutil_font_glyph_widths(void) {
 	return font_char_width;
 }
 
+/* Beta colour codes (beta_text_color.h): 0xA7 skips itself and the next
+ * char [FontRenderer.java:190-191 getStringWidth]; a lone trailing 0xA7
+ * adds nothing. */
 int gutil_font_width(const char* str, int scale) {
 	int x = 0;
 
-	int skip = 0;
-
-	while(*str) {
-		if(*str == '\247')
-			skip = 2;
-
-		if(skip > 0) {
-			skip--;
-		} else {
-			x += (font_char_width[(unsigned char)*str] + 1) * scale / 8;
+	for(; *str; str++) {
+		if(*str == BETA_TEXT_SECTION) {
+			if(str[1])
+				str++;
+			continue;
 		}
-
-		str++;
+		x += (font_char_width[(unsigned char)*str] + 1) * scale / 8;
 	}
 
 	return x;
 }
-
-static const uint8_t chat_colors[16][3] = {
-	{0x00, 0x00, 0x00}, {0x00, 0x00, 0xAA}, {0x00, 0xAA, 0x00},
-	{0x00, 0xAA, 0xAA}, {0xAA, 0x00, 0x00}, {0xAA, 0x00, 0xAA},
-	{0xFF, 0xAA, 0x00}, {0xAA, 0xAA, 0xAA}, {0x55, 0x55, 0x55},
-	{0x55, 0x55, 0xFF}, {0x55, 0xFF, 0x55}, {0x55, 0xFF, 0xFF},
-	{0xFF, 0x55, 0x55}, {0xFF, 0x55, 0xFF}, {0xFF, 0xFF, 0x55},
-	{0xFF, 0xFF, 0xFF},
-};
 
 void gutil_text_rgba(int x, int y, const char* str, int scale, bool shadow,
 					 uint8_t r, uint8_t g, uint8_t b, uint8_t a) {
@@ -1155,27 +1213,34 @@ void gutil_text_rgba(int x, int y, const char* str, int scale, bool shadow,
 					  scale + (shadow ? scale / 8 : 0));
 	gfx_bind_texture(&texture_font);
 
-	int skip = 0;
 	uint8_t cr = r, cg = g, cb = b;
+	/* Shadow of the explicit base colour: (c & 0xFC) >> 2
+	 * [FontRenderer.java:127-131]. */
+	uint8_t sr = beta_text_shadow_channel(r), sg = beta_text_shadow_channel(g),
+			sb = beta_text_shadow_channel(b);
 
-	while(*str) {
-		if(*str == '\247')
-			skip = 2;
-
-		if(skip > 0) {
-			skip--;
-
-			int col = -1;
-			if(*str >= '0' && *str <= '9')
-				col = *str - '0';
-
-			if(*str >= 'a' && *str <= 'f')
-				col = *str - 'a' + 10;
-
-			if(col >= 0) {
-				cr = chat_colors[col][0];
-				cg = chat_colors[col][1];
-				cb = chat_colors[col][2];
+	/* [FontRenderer.java:147-161 renderString]: while a 0xA7 has a next
+	 * char, it and its selector switch colour (upper case selects too, an
+	 * unknown selector is 15/white) and draw nothing. The shadow pass calls
+	 * list index + 16 (its own table entry, :83-106 -- gold's shadow gets no
+	 * boost). The lists are glColor3f, which sets alpha to 1.0, so text after
+	 * a code is opaque whatever `a` the caller faded to. A lone trailing 0xA7
+	 * is not in font.txt and draws nothing. */
+	for(; *str; str++) {
+		if(*str == BETA_TEXT_SECTION) {
+			if(str[1]) {
+				int code = beta_text_code_index(str[1]);
+				uint8_t rgb[3];
+				beta_text_code_rgb(code, false, rgb);
+				cr = rgb[0];
+				cg = rgb[1];
+				cb = rgb[2];
+				beta_text_code_rgb(code, true, rgb);
+				sr = rgb[0];
+				sg = rgb[1];
+				sb = rgb[2];
+				a = 0xFF;
+				str++;
 			}
 		} else {
 			/* The atlas is byte-indexed; signed char must never index it. */
@@ -1191,11 +1256,8 @@ void gutil_text_rgba(int x, int y, const char* str, int scale, bool shadow,
 								 x + scale + scale / 8, y + scale / 8, -2,
 								 x + scale + scale / 8, y + scale + scale / 8,
 								 -2, x + scale / 8, y + scale + scale / 8, -2},
-					(uint8_t[]) {
-						cr / 4, cg / 4, cb / 4, a, cr / 4,
-						cg / 4, cb / 4, a,
-						cr / 4, cg / 4, cb / 4, a, cr / 4,
-						cg / 4, cb / 4, a},
+					(uint8_t[]) {sr, sg, sb, a, sr, sg, sb, a,
+								 sr, sg, sb, a, sr, sg, sb, a},
 					(uint16_t[]) {tex_x, tex_y, tex_x + 16, tex_y, tex_x + 16,
 								  tex_y + 16, tex_x, tex_y + 16});
 			}
@@ -1211,8 +1273,6 @@ void gutil_text_rgba(int x, int y, const char* str, int scale, bool shadow,
 
 			x += width;
 		}
-
-		str++;
 	}
 }
 
@@ -1222,7 +1282,7 @@ void gutil_text_rgb(int x, int y, const char* str, int scale, bool shadow,
 }
 
 void gutil_text(int x, int y, const char* str, int scale, bool shadow) {
-	// White base = chat_colors[15], the old hardcoded default.
+	// White base = Beta colour 15 (beta_text_color.h), the old hardcoded default.
 	gutil_text_rgb(x, y, str, scale, shadow, 0xFF, 0xFF, 0xFF);
 }
 

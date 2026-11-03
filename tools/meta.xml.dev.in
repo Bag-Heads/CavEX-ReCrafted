@@ -15,7 +15,7 @@
   author date in HBC release_date form, YYYYMMDDHHMMSS (or --date override).
 -->
 <app version="1">
-	<name>CavEX: Re-Crafted Edition</name>
+	<name>CavEX: ReCrafted</name>
 	<version>@CW_VERSION@</version>
 	<release_date>@CW_RELEASE_DATE@</release_date>
 	<coder>CaveWii_v2 contributors; upstream ByteBit/xtreme8000, yyy257, jilleb</coder>

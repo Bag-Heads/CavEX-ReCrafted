@@ -9,8 +9,7 @@
  * Production-linked: the real source/platform/pc/texture.c is compiled into
  * this test, and the GL 1.1 entry points it calls are replaced by a recorder,
  * so the assertions read the actual sampler/upload state texture.c requested.
- * Non-terrain textures (particles atlas, plain linear/nearest loads) must keep
- * their existing filters. */
+ * Both atlases follow render.mipmaps; plain texture filters stay unchanged. */
 
 #include <assert.h>
 #include <stdio.h>
@@ -18,6 +17,8 @@
 #include <string.h>
 
 #include "../source/platform/pc/texture.c"
+
+struct game_state gstate;
 
 struct tex_gfx texture_terrain;
 struct tex_gfx texture_particles;
@@ -133,27 +134,27 @@ static void expect_beta_nearest(const struct tex_gfx* t, const char* path) {
 		printf("PASS: %s terrain = NEAREST/NEAREST, level 0 only\n", path);
 }
 
-static void expect_particles_unchanged(const struct tex_gfx* t,
-									   const char* path) {
-	/* Today's atlas policy for a 256px non-terrain atlas: 4 LODs (0..3),
-	 * trilinear min, linear mag. Unchanged by G3. */
+static void expect_mipmaps(const struct tex_gfx* t, const char* path) {
+	/* Opt-in: one isolated downsample, nearest magnification. */
 	const struct rec_tex* r = &rec[t->id];
 	int before = failures;
 	CHECK(r->min_filter == GL_LINEAR_MIPMAP_LINEAR,
 		  "%s: particles MIN 0x%x changed", path, (unsigned)r->min_filter);
-	CHECK(r->mag_filter == GL_LINEAR, "%s: particles MAG 0x%x changed", path,
+	CHECK(r->mag_filter == GL_NEAREST, "%s: particles MAG 0x%x changed", path,
 		  (unsigned)r->mag_filter);
-	CHECK(r->base_level == 0 && r->max_level == 3,
+	CHECK(r->base_level == 0 && r->max_level == 1,
 		  "%s: particles levels %d..%d changed", path, r->base_level,
 		  r->max_level);
-	CHECK(r->levels_uploaded == 0xFu, "%s: particles level mask 0x%x changed",
+	CHECK(r->levels_uploaded == 3u, "%s: particles level mask 0x%x changed",
 		  path, r->levels_uploaded);
 	if(failures == before)
-		printf("PASS: %s particles atlas keeps trilinear/linear, 4 LODs\n",
+		printf("PASS: %s atlas uses isolated trilinear/nearest, 2 LODs\n",
 			   path);
 }
 
 int main(void) {
+	gstate.config_user.root = json_value_init_object();
+	assert(gstate.config_user.root);
 	/* Fresh load (platform/texture.c tex_init -> tex_gfx_load_atlas). */
 	assert(load_atlas(&texture_terrain, 256));
 	expect_beta_nearest(&texture_terrain, "fresh load");
@@ -168,15 +169,45 @@ int main(void) {
 	/* Pack-cache restore (texture_cache.c -> tex_gfx_restore, atlas=true). */
 	assert(restore_atlas(&texture_terrain, 256));
 	expect_beta_nearest(&texture_terrain, "cache restore");
-	/* Cache record flags/lods stay as before so the cache format is unchanged. */
-	CHECK(texture_terrain.lods == 1 && texture_terrain.linear,
-		  "terrain cache metadata (lods=1, linear=1) unchanged");
+	/* PC stores level zero; its sampler flag records the default policy. */
+	CHECK(texture_terrain.lods == 1 && !texture_terrain.linear,
+		  "unmipped terrain cache metadata (lods=1, linear=0)");
 
-	/* Non-terrain: particles atlas keeps today's filtering on load + restore. */
+	/* The particles atlas shares the default nearest policy. */
 	assert(load_atlas(&texture_particles, 256));
-	expect_particles_unchanged(&texture_particles, "fresh load");
+	expect_beta_nearest(&texture_particles, "fresh load");
 	assert(restore_atlas(&texture_particles, 256));
-	expect_particles_unchanged(&texture_particles, "cache restore");
+	expect_beta_nearest(&texture_particles, "cache restore");
+
+	JSON_Object* config = json_object(gstate.config_user.root);
+	assert(json_object_dotset_boolean(config, "render.mipmaps", 1)
+		   == JSONSuccess);
+	assert(load_atlas(&texture_terrain, 256));
+	expect_mipmaps(&texture_terrain, "enabled terrain");
+	assert(restore_atlas(&texture_terrain, 512));
+	expect_mipmaps(&texture_terrain, "enabled terrain cache restore");
+	assert(load_atlas(&texture_particles, 256));
+	expect_mipmaps(&texture_particles, "enabled particles");
+	assert(restore_atlas(&texture_particles, 256));
+	expect_mipmaps(&texture_particles, "enabled particles cache restore");
+	assert(load_atlas(&texture_terrain, 128));
+	expect_beta_nearest(&texture_terrain, "unpadded pack");
+	assert(load_atlas(&texture_terrain, 320));
+	expect_beta_nearest(&texture_terrain, "noncanonical even-pitch pack");
+	assert(load_atlas(&texture_terrain, 768));
+	expect_beta_nearest(&texture_terrain, "non-power-of-two native grid");
+	assert(restore_atlas(&texture_terrain, 768));
+	expect_beta_nearest(&texture_terrain, "non-power-of-two cache restore");
+	assert(load_atlas(&texture_terrain, 336));
+	expect_beta_nearest(&texture_terrain, "odd cell-pitch pack");
+	assert(json_object_dotset_boolean(config, "render.mipmaps", 0)
+		   == JSONSuccess);
+	assert(restore_atlas(&texture_terrain, 256));
+	expect_beta_nearest(&texture_terrain, "disabled after enabled restore");
+	assert(json_object_dotset_string(config, "render.mipmaps", "true")
+		   == JSONSuccess);
+	assert(load_atlas(&texture_terrain, 256));
+	expect_beta_nearest(&texture_terrain, "non-boolean stays off");
 
 	/* Non-terrain plain loads (GUI/font/items/entities) keep their flag. */
 	struct tex_gfx lin = {0}, near = {0};
@@ -194,6 +225,7 @@ int main(void) {
 	tex_gfx_clear(&texture_terrain);
 	tex_gfx_clear(&texture_particles);
 
+	json_value_free(gstate.config_user.root);
 	if(failures) {
 		printf("test_grass_filter: %d failure(s)\n", failures);
 		return 1;

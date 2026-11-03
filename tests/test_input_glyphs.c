@@ -259,7 +259,69 @@ static void test_pc_glyphs(void) {
 		   bound);
 }
 
+/* Scan actual sheet alpha, independently of the production edge tables. */
+static int alpha_right(const unsigned char* pixels, int cell, int span) {
+	int right = 0;
+	for(int y = 0; y < 32; y++)
+		for(int x = 0; x < span; x++)
+			if(pixels[((cell / 8 * 32 + y) * 256 + cell % 8 * 32 + x) * 4 + 3]
+			   && x + 1 > right)
+				right = x + 1;
+	return right;
+}
+
+static void test_hint_visible_gaps(void) {
+	unsigned char *fallback, *approved;
+	unsigned w, h;
+	assert(!lodepng_decode32_file(&fallback, &w, &h, "assets/controls.png"));
+	assert(w == 256 && h == 256);
+	assert(!lodepng_decode32_file(&approved, &w, &h, "assets/gui/approved-controls.png"));
+	assert(w == 256 && h == 256);
+	texture_controls.data = fallback;
+	for(int sheet = 0; sheet < 2; sheet++) {
+		texture_approved_controls.data = sheet ? approved : NULL;
+		for(int glyph = 0; glyph < 50; glyph++) {
+			/* Cell 46 is the second half of the wide cap, never a glyph. */
+			if(glyph == 46) continue;
+			bool pc = glyph >= 44;
+			const unsigned char* pixels = sheet && (glyph < 42 || pc) ? approved : fallback;
+			int cell = !sheet && pc ? (glyph >= 47 ? 43 : 42) : glyph;
+			int span = sheet && glyph == 45 ? 64 : 32;
+			int right = alpha_right(pixels, cell, span);
+			if(!right) continue; /* unused blank cells */
+			int target32 = GUTIL_HINT_LABEL_GAP * 32
+				+ (32 - alpha_right(sheet ? approved : fallback, 0, 32)) * GUTIL_HINT_GLYPH;
+			/* Single, chord, and pair: only the final button controls the gap. */
+			for(int form = 0; form < 3; form++) {
+				if(form == 1 && pc) continue; /* PC has no encoded chords. */
+				struct input_player_frame in = {0};
+				in.glyphs[IB_GUI_CLICK] = form == 1 ? INPUT_GLYPH_CELLS + glyph : glyph;
+				in.glyphs[IB_GUI_UP] = 0;
+				struct gutil_hint_item item = {{IB_GUI_CLICK}, 1, "Move", 0, true};
+				if(form == 2) {
+					item.roles[0] = IB_GUI_UP; item.roles[1] = IB_GUI_CLICK; item.role_count = 2;
+				}
+				struct gutil_hint_row row;
+				assert(gutil_hint_row_layout(&in, 0, 0, 640, 480, false,
+					GUTIL_HINT_ALIGN_LEFT, &item, 1, &row));
+				const struct gutil_hint_cell* c = &row.cells[0];
+				int last = c->glyph_count - 1;
+				int gap32 = (c->label_x - c->glyph_x[last] - c->glyph_w[last]) * 32
+					+ (span - right) * GUTIL_HINT_GLYPH;
+				assert(abs(gap32 - target32) <= 16);
+				assert(c->rect.x + c->rect.width == c->label_x + c->label_w);
+				assert(gutil_hint_row_hit(&row, c->label_x, row.text_y) == 0);
+			}
+		}
+		printf("PASS hint visible gaps: %s sheet, D-pad vs A and all populated glyph cells (<=0.5px), singles/chords/pairs\n",
+			sheet ? "approved" : "fallback");
+	}
+	texture_controls.data = texture_approved_controls.data = NULL;
+	free(fallback); free(approved);
+}
+
 int main(void) {
+	test_hint_visible_gaps();
 	test_pc_glyphs();
 	struct config config;
 	assert(config_create(&config, "config_wii.json"));
@@ -285,6 +347,9 @@ int main(void) {
 	assert(
 		!lodepng_decode32_file(&atlas, &width, &height, "assets/controls.png"));
 	assert(width == 256 && height == 256);
+	/* The painters draw only from a LOADED sheet (ci-1101/18); the rig
+	 * holds the real controls.png like an installed game does. */
+	texture_controls.data = atlas;
 	int map[IB_COUNT][INPUT_BINDINGS_PER_ACTION] = {{0}};
 	size_t lengths[IB_COUNT] = {0};
 	for(size_t k = 0; k < sizeof(used) / sizeof(used[0]); k++) {
@@ -420,6 +485,30 @@ int main(void) {
 	texture_approved_controls.data = NULL;
 	puts("PASS approved art: exact controller source regions, original colors, "
 		 "approved button atlas and PC fallback through production painters");
+
+	/* ci-1101/18: NEITHER sheet loaded (a Wii with only the apps/ copy of
+	 * assets before the root fallback, or a stripped install). The painter
+	 * must bind nothing and draw no cell -- the Wii tex_gfx_bind keeps the
+	 * PREVIOUS texture for an empty one, so the old code sampled the font
+	 * sheet as glyph art. The advance is kept so hint rows keep their layout
+	 * and the text labels stay where they were. */
+	texture_controls.data = NULL;
+	bound = &texture_font;
+	cell_count = 0;
+	assert(gutil_prompt_glyph(0, 0, 24, 32) == 24);
+	assert(cell_count == 0 && bound == &texture_font
+		   && "an unloaded glyph sheet was bound/drawn");
+	cell_count = 0;
+	assert(gutil_prompt_glyph(0, 0, 24, 43) == 24);
+	assert(cell_count == 0 && bound == &texture_font);
+	/* A modifier glyph (Classic ZL + A, 208204) still advances the full
+	 * width and still draws its "+" through the font. */
+	plus_count = 0;
+	cell_count = 0;
+	int combo_w = gutil_prompt_glyph(0, 0, 24, p1.glyphs[IB_GUI_CLICK]);
+	assert(combo_w == gutil_prompt_glyph_width(p1.glyphs[IB_GUI_CLICK], 24));
+	assert(cell_count == 0 && plus_count == 2); /* plus shadow + face */
+	puts("PASS no glyph sheets: no cell bound or drawn, advance kept");
 
 	/* ---- DIRECTIONAL D-pad CELLS (build spec 15 A.1, brief 26 item 1b) ----
 	 * input_glyph_key answers cell 24 -- the WHOLE D-pad -- for all four

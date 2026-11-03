@@ -243,6 +243,267 @@ static bool round_trip(struct server_world* w) {
 }
 
 /* ---- case: faults --------------------------------------------------------- */
+static uint32_t read_be32(const uint8_t* p) {
+	return (uint32_t)p[0] << 24 | (uint32_t)p[1] << 16
+		| (uint32_t)p[2] << 8 | p[3];
+}
+
+/* Inspect the physical header before a recovery open can salvage it. */
+static void check_pending_index(void) {
+	char path[256];
+	snprintf(path, sizeof path, "%s/region/r.0.0.mcr", s_root);
+	FILE* f = fopen(path, "rb");
+	assert(f);
+	assert(!fseek(f, 0, SEEK_END));
+	long size = ftell(f);
+	assert(size >= 2 * REGION_SECTOR_SIZE);
+	rewind(f);
+	uint8_t header[REGION_SECTOR_SIZE];
+	assert(fread(header, sizeof header, 1, f) == 1);
+	for(size_t i = 0; i < REGION_SECTOR_SIZE / 4; i++) {
+		uint32_t entry = read_be32(header + i * 4);
+		if(!entry) continue;
+		uint32_t start = entry >> 8, sectors = entry & 255;
+		bool valid = start >= 2 && sectors && (uint64_t)start * REGION_SECTOR_SIZE + 5 <= (uint64_t)size;
+		check(valid, "physical index points inside complete payload framing");
+		if(!valid) continue;
+		uint8_t framing[5];
+		assert(!fseek(f, (long)start * REGION_SECTOR_SIZE, SEEK_SET));
+		assert(fread(framing, sizeof framing, 1, f) == 1);
+		uint32_t len = read_be32(framing);
+		check(len > 1 && len <= sectors * REGION_SECTOR_SIZE - 4
+			&& (uint64_t)start * REGION_SECTOR_SIZE + 4 + len <= (uint64_t)size
+			&& framing[4] == 2, "physical index never names a partial record");
+		for(size_t j = 0; j < i; j++) {
+			uint32_t prev = read_be32(header + j * 4);
+			if(prev) check(start >= (prev >> 8) + (prev & 255)
+				|| (prev >> 8) >= start + sectors, "indexed sectors never overlap");
+		}
+	}
+	assert(!fclose(f));
+}
+
+/* ci-1101/42: a clean chunk still owns its pending non-evicting save.
+ * Eviction must transfer that ownership before freeing its arrays. */
+static void fail_pending_publication(void) {
+	region_archive_test_rio_fail_next(2);
+}
+
+static void check_old_pending_revision(void) {
+	g9io_copy_tree(s_root, s_copy);
+	uint8_t rev[NTRACK];
+	(void)reopen_once(s_copy, rev, "unpublished index stays OLD");
+	check(rev[0] == T[0].acked,
+		"unpublished NEW bytes never replace the durable OLD index");
+	test_fixture_rm_rf(s_copy);
+}
+
+static void pending_clean_eviction(unsigned mode) {
+	unsigned failures_before = failures;
+	g9io_arm(2);
+	struct server_world w;
+	char id[64];
+	snprintf(id, sizeof id, "g9io_pending_clean_evict_%u", mode);
+	open_fixture(id, &w);
+	bump(&w, 0);
+	assert(server_world_checkpoint_chunks(&w));
+	assert(server_world_sync_regions(&w));
+	verify(&w, true, "pending eviction durable OLD");
+
+	region_archive_test_io_hold(true);
+	server_world_save_batch_begin(&w);
+	bump(&w, 0);
+	assert(server_world_save_chunk(&w, false, T[0].x, T[0].z));
+	struct server_chunk* sc = load(&w, T[0].x, T[0].z);
+	assert(!sc->modified && sc->save_pending);
+	if(mode == 5)
+		assert(server_world_save_batch_end(&w));
+	if(mode == 3) {
+		size_t bytes = w.retiring_bytes;
+		w.retiring_bytes = SERVER_WORLD_RETIRING_MAX_BYTES;
+		bool evicted = server_world_save_chunk(&w, true, T[0].x, T[0].z);
+		check(!evicted, "a full retry ring refuses clean pending eviction");
+		sc = dict_server_chunks_get(w.chunks, S_CHUNK_ID(T[0].x, T[0].z));
+		check(sc && !sc->modified && sc->save_pending,
+			"ring admission failure preserves the resident pending owner");
+		w.retiring_bytes = bytes;
+		if(!sc) sc = load(&w, T[0].x, T[0].z);
+	}
+	assert(server_world_save_chunk(&w, true, T[0].x, T[0].z));
+	check(server_world_retiring_active(&w) == 1,
+		"clean pending eviction transfers retry ownership");
+	if(mode == 1 || mode == 4) {
+		sc = load(&w, T[0].x, T[0].z);
+		check(sc->ids[REV_CELL] == REV_BASE + T[0].mem,
+			"pending retained reload sees the NEWER content");
+		check(!sc->modified && sc->save_pending,
+			"retained reload transfers the exact pending job without a rewrite");
+		if(mode == 4) bump(&w, 0); /* supersede the consumed retry owner */
+		assert(server_world_save_chunk(&w, true, T[0].x, T[0].z));
+		check(server_world_retiring_active(&w) == 1,
+			"second clean eviction transfers ownership back to the pipeline");
+	}
+	check_pending_index();
+	verify(&w, false, "held pending eviction preserves OLD index");
+	check_old_pending_revision();
+	uint32_t warnings = region_save_failure_count();
+	if(mode == 1)
+		region_archive_test_fail_next(REGION_ARCHIVE_TEST_FAIL_INDEX_FLUSH);
+	else
+		region_archive_test_rio_fail_next(2);
+	if(mode == 2)
+		region_archive_test_payload_hook(fail_pending_publication);
+	region_archive_test_io_hold(false);
+	(void)server_world_save_batch_end(&w);
+	check(!server_world_sync_regions(&w), "publication failure is reported");
+	check_pending_index();
+	verify(&w, false, "pending eviction failed publication");
+	if(mode == 2) {
+		check_old_pending_revision();
+		for(unsigned attempt = 0; attempt < 3; attempt++) {
+			uint32_t before = w.retiring_retries;
+			check(!server_world_sync_regions(&w), "persistent failure returns to caller");
+			check(w.retiring_retries - before <= 2,
+				"each barrier bounds retries to two single-entry ring walks");
+			check(server_world_retiring_active(&w) == 1 && !w.retiring_dropped,
+				"exhausted barrier retries preserve the newest payload owner");
+			check_pending_index();
+		}
+		region_archive_test_payload_hook(NULL);
+		(void)server_world_sync_regions(&w); /* report the last failed attempt */
+	}
+	check(region_save_failure_count() > warnings,
+		"publication failure reaches the visible save-fail warning path");
+	check(server_world_sync_regions(&w), "pending eviction retry publishes");
+	check_pending_index();
+	uint8_t rev[NTRACK];
+	/* Inspect an isolated crash-image copy, as verify() does, instead
+	 * of reopening the active region a second time. */
+	g9io_copy_tree(s_root, s_copy);
+	(void)reopen_once(s_copy, rev, "pending eviction recovered NEW");
+	test_fixture_rm_rf(s_copy);
+	check(rev[0] == T[0].mem,
+		"NEWER clean-evicted content survives publication failure and reopen");
+	check(server_world_retiring_active(&w) == 0 && !w.retiring_dropped,
+		"confirmed publication releases retry ownership without drops");
+	printf("%s pending-clean-eviction mode=%u OLD=%u NEW=%u reopened=%u "
+		"retries=%u warnings=%u owners=%zu dropped=%u\n",
+		failures == failures_before ? "PASS" : "FAIL", mode, T[0].acked,
+		T[0].mem, rev[0], w.retiring_retries,
+		region_save_failure_count() - warnings,
+		server_world_retiring_active(&w), w.retiring_dropped);
+	close_fixture(&w);
+}
+
+/* ci-1101/58: the shipping helper may finish publication INSIDE the pending
+ * record copy's region_io_wait. Hold it before index publication, then release
+ * only once the server actually waits; no sleep determines the interleaving. */
+static unsigned s_publish_held, s_publish_release, s_publish_saw_wait;
+static uint32_t s_publish_waits_before;
+static void pending_publish_hold(int op, const char* path, uint64_t a, uint64_t b) {
+	(void)path; (void)a; (void)b;
+	if(op != RT_SYNC_REGION) return;
+	__atomic_store_n(&s_publish_held, 1, __ATOMIC_RELEASE);
+	while(!__atomic_load_n(&s_publish_release, __ATOMIC_ACQUIRE))
+		thread_msleep(1);
+}
+static void* pending_publish_release(void* arg) {
+	(void)arg;
+	ptime_t start = time_get();
+	uint32_t stats[24];
+	do {
+		region_archive_journal_stats(stats);
+		if(stats[22] != s_publish_waits_before) {
+			__atomic_store_n(&s_publish_saw_wait, 1, __ATOMIC_RELEASE);
+			break;
+		}
+		thread_msleep(1);
+	} while(time_diff_ms(start, time_get()) < 5000);
+	/* Timeout only prevents a hung test; missing the wait is a failure. */
+	__atomic_store_n(&s_publish_release, 1, __ATOMIC_RELEASE);
+	return NULL;
+}
+static void pending_helper_eviction(unsigned mode) {
+	unsigned failures_before = failures;
+	g9io_arm(1); /* shipping default: deferred IO OFF, async publication ON */
+	struct server_world w;
+	char id[64];
+	snprintf(id, sizeof id, "g9io_helper_evict_%u", mode);
+	open_fixture(id, &w);
+	bump(&w, 0);
+	assert(server_world_checkpoint_chunks(&w));
+	assert(server_world_sync_regions(&w));
+	verify(&w, true, "helper eviction durable OLD");
+	server_world_save_batch_begin(&w);
+	bump(&w, 0);
+	assert(server_world_save_chunk(&w, false, T[0].x, T[0].z));
+	struct server_chunk* sc = load(&w, T[0].x, T[0].z);
+	assert(!sc->modified && sc->save_pending);
+	uint64_t job = sc->save_job;
+	struct region_archive* ra = server_world_chunk_region(&w, T[0].x, T[0].z);
+	assert(ra);
+	__atomic_store_n(&s_publish_held, 0, __ATOMIC_RELEASE);
+	__atomic_store_n(&s_publish_release, 0, __ATOMIC_RELEASE);
+	__atomic_store_n(&s_publish_saw_wait, 0, __ATOMIC_RELEASE);
+	region_archive_test_trace(pending_publish_hold);
+	assert(server_world_save_batch_end(&w));
+	ptime_t start = time_get();
+	while(!__atomic_load_n(&s_publish_held, __ATOMIC_ACQUIRE)
+		&& time_diff_ms(start, time_get()) < 5000)
+		thread_msleep(1);
+	assert(__atomic_load_n(&s_publish_held, __ATOMIC_ACQUIRE));
+	assert(region_archive_save_state(ra, job) == REGION_SAVE_PENDING);
+	if(mode == 1)
+		region_archive_test_fail_next(REGION_ARCHIVE_TEST_FAIL_INDEX_FLUSH);
+	if(mode == 2) bump(&w, 0); /* newer unsaved edit than the publishing job */
+	uint32_t stats[24];
+	region_archive_journal_stats(stats);
+	s_publish_waits_before = stats[22];
+	uint32_t warnings = region_save_failure_count();
+	struct thread release;
+	assert(thread_create(&release, pending_publish_release, NULL, 64));
+	bool evicted = server_world_save_chunk(&w, true, T[0].x, T[0].z);
+	thread_join(&release);
+	region_archive_test_trace(NULL);
+	check(__atomic_load_n(&s_publish_saw_wait, __ATOMIC_ACQUIRE),
+		"helper stays held until eviction waits for publication");
+	sc = dict_server_chunks_get(w.chunks, S_CHUNK_ID(T[0].x, T[0].z));
+	if(mode == 1) {
+		check(region_archive_save_state(ra, job) == REGION_SAVE_FAILED,
+			"injected publication really failed");
+		check(!evicted && sc && sc->save_pending,
+			"failed pending copy refuses eviction and keeps the resident owner");
+		check(region_save_failure_count() > warnings,
+			"real failed copy still reports save failure");
+	} else {
+		check(evicted && !sc, "publication completing during eviction permits eviction");
+		check(region_archive_save_state(ra, job) == REGION_SAVE_DURABLE,
+			"the exact pending job became durable");
+		check(region_save_failure_count() == warnings,
+			"benign publication completion never bumps save_fail_n");
+		if(mode == 0)
+			check(!server_world_retiring_active(&w),
+				"already durable eviction needs no retry record");
+	}
+	/* A failed job is recovered through its resident owner; a newer dirty
+	 * revision must also survive, rather than evicting against the older job. */
+	(void)server_world_sync_regions(&w); /* surface the injected async error */
+	assert(server_world_checkpoint_chunks(&w));
+	assert(server_world_sync_regions(&w));
+	verify(&w, true, "helper eviction final barrier");
+	g9io_copy_tree(s_root, s_copy);
+	uint8_t rev[NTRACK];
+	(void)reopen_once(s_copy, rev, "helper eviction recovered NEW");
+	test_fixture_rm_rf(s_copy);
+	check(rev[0] == T[0].mem, "newest revision survives eviction and reopen");
+	printf("%s helper-pending-eviction mode=%u waited=%u evicted=%u "
+		"warnings=%u newest=%u reopened=%u\n",
+		failures == failures_before ? "PASS" : "FAIL", mode,
+		__atomic_load_n(&s_publish_saw_wait, __ATOMIC_ACQUIRE), (unsigned)evicted,
+		region_save_failure_count() - warnings, T[0].mem, rev[0]);
+	close_fixture(&w);
+}
+
 struct fault {
 	const char* name;
 	int stage; /* region_archive_test_fail_stage, or 0 */
@@ -1619,9 +1880,18 @@ int main(int argc, char** argv) {
 	if(!strcmp(which, "kw_resume"))
 		return kw_resume(argc, argv);
 	if(!strcmp(which, "faults")) {
+		for(unsigned mode = 0; mode < 3; mode++) pending_helper_eviction(mode);
+		pending_clean_eviction(0);
+		pending_clean_eviction(1);
+		pending_clean_eviction(2);
+		pending_clean_eviction(3);
+		pending_clean_eviction(4);
+		pending_clean_eviction(5);
 		run_faults_arm(0);
 		run_faults_arm(2);
 		stress_caller(true);
+	} else if(!strcmp(which, "helper_evict")) {
+		for(unsigned mode = 0; mode < 3; mode++) pending_helper_eviction(mode);
 	} else if(!strcmp(which, "stalls")) {
 		stress_caller(false);
 		preserve_read_stall(PRESERVE_PUBLISHED);

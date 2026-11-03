@@ -304,6 +304,7 @@ bool column_backing_init(void) {
 	unsigned n = 0;
 	while(n < COLUMN_BACKING_LOCK_STRIPES && thread_mutex_init(&s_backing_locks[n])) {
 		thread_stripe_register(&s_backing_locks[n], n);
+		thread_stripe_set_name(&s_backing_locks[n], "column_backing");
 		n++;
 	}
 	bool ok = n == COLUMN_BACKING_LOCK_STRIPES
@@ -1542,7 +1543,13 @@ static void server_world_light_drain_record(
 		.seeds_address = s_light_seeds_address,
 		.slice_min_us = s_light_slice_min_us,
 		.slice_max_us = s_light_slice_max_us,
+		.wait_us = waits.wait_us,
+		.wait_mutex = waits.wait_mutex,
+		.wait_holder_id = waits.wait_holder_id,
+		.wait_holder_tag = waits.wait_holder_tag,
+		.wait_stripe = waits.wait_stripe,
 	};
+	memcpy(r.wait_mutex_name, waits.wait_mutex_name, sizeof r.wait_mutex_name);
 	s_light_drain_last = r;
 	if(!window) {
 		/* the checkpoint's trial drain (R5 point 3: real work, attributed) */
@@ -1558,6 +1565,17 @@ static void server_world_light_drain_record(
 	s_light_drain_hb.pops_total[k] += (uint32_t)pops;
 	if(us >= s_light_drain_hb.win[k].us)
 		s_light_drain_hb.win[k] = r;
+	/* ci-1101/37: keep the window's longest >= 10 ms drain mutex wait and its
+	 * lock, regardless of which drain carried it. */
+	if(r.wait_us > s_light_drain_hb.wait_attrib.wait_us) {
+		s_light_drain_hb.wait_attrib.wait_us = r.wait_us;
+		s_light_drain_hb.wait_attrib.mutex = r.wait_mutex;
+		s_light_drain_hb.wait_attrib.holder_id = r.wait_holder_id;
+		s_light_drain_hb.wait_attrib.holder_tag = r.wait_holder_tag;
+		s_light_drain_hb.wait_attrib.stripe = r.wait_stripe;
+		memcpy(s_light_drain_hb.wait_attrib.name, r.wait_mutex_name,
+			   sizeof s_light_drain_hb.wait_attrib.name);
+	}
 	thread_mutex_unlock(&s_light_drain_hb_lock);
 	g9_capture_record_return();
 }
@@ -1572,6 +1590,7 @@ void server_world_light_drain_hb_take(
 	*out = s_light_drain_hb;
 	memset(s_light_drain_hb.win, 0, sizeof s_light_drain_hb.win);
 	memset(&s_light_drain_hb.ckpt, 0, sizeof s_light_drain_hb.ckpt);
+	memset(&s_light_drain_hb.wait_attrib, 0, sizeof s_light_drain_hb.wait_attrib);
 	thread_mutex_unlock(&s_light_drain_hb_lock);
 }
 static void server_world_light_ckpt_max(uint32_t* slot, uint32_t us) {
@@ -3896,10 +3915,14 @@ static bool server_world_load_chunk_impl(struct server_world* w, w_coord_t x, w_
 		if(ra && chunk_exists) {
 			if(!region_archive_get_chunk(ra, x, z, &tmp, te_sink, entity_sink))
 				return server_world_gen_attempt_failed(w); /* disk remains authoritative */
-			/* S2: this id had a retained, not-yet-durable record; the
-			 * resident chunk now carries the retry responsibility. */
-			if(from_retiring)
-				tmp.modified = true;
+			/* Transfer the pending job without rewriting its bytes. Beta
+			 * ChunkLoader.storeChunkInCompound stamps LastUpdate from world
+			 * time; re-dirtying this unchanged reload would restamp it. The
+			 * retiring entry survives until the complete restore succeeds. */
+			if(from_retiring) {
+				tmp.save_job = retiring_entry->save_job;
+				tmp.save_pending = true;
+			}
 			/* Stored light is kept as saved, Nether included: Beta writes
 			 * Nether skylight (Chunk.java:242-276 -> func_339_g has no Nether
 			 * guard) and reloads it unchanged (ChunkLoader.java:163-185).
@@ -4852,6 +4875,8 @@ static void quad_populate_tx_rollback(struct quad_populate_tx* tx) {
 		server_local_math_random_restore(&tx->math_rng_before);
 		tx->world->scheduled_tick_head = tx->scheduled_head_before;
 		tx->world->scheduled_tick_count = tx->scheduled_count_before;
+		/* ci-1101/39: the containment set must forget the rolled-back entries. */
+		server_world_scheduled_ticks_resync(tx->world);
 		tx->world->scheduled_tick_drops = tx->scheduled_drops_before;
 	}
 	for(size_t i = 0; i < tx->drop_count; i++)
@@ -7389,8 +7414,15 @@ static void server_world_reconcile_retiring_ex(struct server_world* w,
 			server_world_retiring_release(w, r);
 			continue;
 		}
-		if(allow_open)
+		if(allow_open) {
+			region_save_failure_note("archive_publish");
+			fprintf(stderr,
+				"[chunk_save] result=fail chunk=(%d,%d) stage=archive_publish "
+				"job=%llu retry_owner=retiring\n",
+				(int)S_CHUNK_X(r->id), (int)S_CHUNK_Z(r->id),
+				(unsigned long long)r->save_job);
 			(void)server_world_retiring_retry(w, r, NULL);
+		}
 	}
 }
 
@@ -7402,7 +7434,8 @@ static void server_world_reconcile_retiring(struct server_world* w) {
  * retained record in flight. If its record FAILED, re-append it first so the
  * in-memory offsets (which region_archive_get_chunk reads through) name the
  * NEWEST bytes; then hand retry responsibility to the resident chunk by
- * returning true (the loader marks it modified) and drop the entry. */
+ * transferring its pending job to the resident chunk and drop the entry
+ * only after the complete load succeeds. No rewrite or LastUpdate change. */
 static enum server_world_retiring_load server_world_retiring_consume_for_load(
 	struct server_world* w, struct region_archive* ra, w_coord_t x,
 	w_coord_t z, struct server_world_retiring** out_entry) {
@@ -7496,6 +7529,52 @@ static bool server_world_save_chunk_obj_impl(struct server_world* w,
 		failure_stage = "evict_retire_deferred";
 		write_required = false; /* skip the write; save_succeeded stays false */
 		save_succeeded = false;
+	}
+	/* A clean chunk can still own an unpublished non-evicting save. Move
+	 * the EXACT pending payload into the bounded retry ring before freeing
+	 * the resident arrays. Refuse eviction on pressure/read/rollback: the
+	 * resident owner survives and the next seam resolves its pending job. */
+	if(erase && save_succeeded && c->save_pending) {
+		struct region_archive* ra = server_world_chunk_region(w, x, z);
+		enum region_save_state state = ra
+			? region_archive_save_state(ra, c->save_job) : REGION_SAVE_FAILED;
+		if(state == REGION_SAVE_DURABLE) {
+			c->save_pending = false;
+		} else {
+			save_succeeded = false;
+			struct server_world_retiring* slot = server_world_retiring_free_slot(w);
+			if(!slot) {
+				server_world_reconcile_retiring_ex(w, false);
+				slot = server_world_retiring_free_slot(w);
+			}
+			struct buffer record = BUFFER_INIT;
+			if(slot && ra && region_archive_copy_pending_record(
+				   ra, x, z, c->save_job, &record)) {
+				assert(!server_world_retiring_find(w, S_CHUNK_ID(x, z)));
+				if(record.cap > record.len) {
+					unsigned char* tight = realloc(record.data, record.len);
+					if(tight) { record.data = tight; record.cap = record.len; }
+				}
+				*slot = (struct server_world_retiring){
+					.id = S_CHUNK_ID(x, z), .save_job = c->save_job,
+					.record = record, .active = true};
+				w->retiring_active++;
+				w->retiring_bytes += record.len;
+				save_succeeded = true;
+			} else if(slot && ra
+				&& region_archive_save_state(ra, c->save_job)
+					== REGION_SAVE_DURABLE) {
+				/* The copy waits for async publication before reading. If the
+				 * exact job completed there, no pending record remains to copy.
+				 * Only this clean/no-write path may use that durable result;
+				 * FAILED or still PENDING must retain the resident owner. */
+				c->save_pending = false;
+				save_succeeded = true;
+			} else {
+				if(!slot) w->retiring_refused++;
+				failure_stage = slot ? "pending_record" : "retiring_reserve";
+			}
+		}
 	}
 	if(write_required && gathered) {
 		//  load region archive into cache

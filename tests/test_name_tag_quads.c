@@ -274,6 +274,51 @@ static void test_sneak_distance_cap(void) {
 	assert(n_sneaking_close == 4);
 }
 
+// ci-1101/30: Beta colour codes in a player name. [mcb173-retromcp
+// RenderLiving.java:197-208] the label is getStringWidth-centred and drawn
+// twice through FontRenderer.drawString: 553648127 (0x20FFFFFF) with depth
+// test off, then -1 (opaque white) depth-tested; RenderPlayer.java:92 draws
+// a sneaking name once at 0x20FFFFFF. [FontRenderer.java:142,147-161] the
+// base colour is glColor4f(r,g,b,a) but a code calls the colour list, a
+// glColor3f -- which sets alpha to 1.0 -- so text after a code is the code's
+// colour at FULL alpha in every pass (the dim through-walls pass included).
+static void test_colour_codes(void) {
+	vec3 entity_pos = {10.0f, 64.0f, 20.0f};
+	vec3 camera_pos = {10.0f, 64.0f, 25.0f};
+	struct name_tag_vertex text[NAME_TAG_MAX_TEXT_VERTS];
+	struct name_tag_vertex bg[NAME_TAG_BG_VERTS];
+
+	// "X\247cX": glyphs X, X only; width 16 (codes 0) -> pen_x -8.
+	size_t n = name_tag_build_quads("X\247cX", entity_pos, camera_pos, 0.0f,
+									(float) M_PI / 2.0f, g_width, false, text, bg);
+	assert(n == 8);
+	assert(fabsf(text[0].x - (entity_pos[0] + 8.0f * NAME_TAG_SCALE)) < 1e-4f);
+	assert(fabsf(text[4].x - entity_pos[0]) < 1e-4f); // 2nd X at local 0
+	assert(fabsf(bg[0].x - (entity_pos[0] + 9.0f * NAME_TAG_SCALE)) < 1e-4f);
+
+	uint8_t c[4];
+	// Uncoded glyph: the pass's own colour (white at the pass alpha).
+	name_tag_text_color(&text[0], 32, c);
+	assert(c[0] == 255 && c[1] == 255 && c[2] == 255 && c[3] == 32);
+	name_tag_text_color(&text[0], 255, c);
+	assert(c[0] == 255 && c[1] == 255 && c[2] == 255 && c[3] == 255);
+	// Coded glyph: colour 12 (255,85,85) at alpha 255 in BOTH passes.
+	for(int k = 4; k < 8; k++) {
+		name_tag_text_color(&text[k], 32, c);
+		assert(c[0] == 255 && c[1] == 85 && c[2] == 85 && c[3] == 255);
+		name_tag_text_color(&text[k], 255, c);
+		assert(c[0] == 255 && c[1] == 85 && c[2] == 85 && c[3] == 255);
+	}
+
+	// A 16-char name whose codes push the byte count past 16 keeps every
+	// visible char: "\2476" + 14 X = 16 bytes -> 14 glyphs.
+	n = name_tag_build_quads("\2476XXXXXXXXXXXXXX", entity_pos, camera_pos,
+							 0.0f, (float) M_PI / 2.0f, g_width, false, text, bg);
+	assert(n == 14 * 4);
+	name_tag_text_color(&text[0], 32, c);
+	assert(c[0] == 255 && c[1] == 170 && c[2] == 0 && c[3] == 255);
+}
+
 int main(void) {
 	init_widths();
 
@@ -284,6 +329,7 @@ int main(void) {
 	test_billboard_yaw();
 	test_glyph_uv();
 	test_sneak_distance_cap();
+	test_colour_codes();
 
 	printf("test_name_tag_quads: all assertions passed\n");
 	return 0;

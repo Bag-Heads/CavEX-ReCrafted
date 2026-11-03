@@ -1089,6 +1089,7 @@ bool svin_rpc_send_from(struct server_rpc_source source, struct server_rpc* call
 				   || (call->type != SRPC_PLAYER_POS
 					   && call->type != SRPC_HOTBAR_SLOT
 					   && call->type != SRPC_DROP_ITEM
+					   && call->type != SRPC_CREATIVE_GIVE
 					   && call->type != SRPC_USE_ITEM
 					   && call->type != SRPC_BLOCK_DIG
 					   && call->type != SRPC_BLOCK_PLACE

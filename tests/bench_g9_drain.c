@@ -564,6 +564,10 @@ static void* wait_test_holder(void* unused) {
 }
 static void test_wait_attribution(void) {
 	assert(thread_mutex_init(&s_wait_test_mutex));
+	/* ci-1101/37: register the contended mutex as a named stripe so the long
+	 * wait is attributed with its identity, not just its address. */
+	thread_stripe_register(&s_wait_test_mutex, 3);
+	thread_stripe_set_name(&s_wait_test_mutex, "wait_test_mutex");
 	struct thread holder;
 	assert(thread_create(&holder, wait_test_holder, NULL, 64));
 	while(!__atomic_load_n(&s_wait_test_ready, __ATOMIC_ACQUIRE)) thread_msleep(1);
@@ -571,11 +575,25 @@ static void test_wait_attribution(void) {
 	thread_drain_wait_begin();
 	thread_mutex_lock(&s_wait_test_mutex);
 	thread_mutex_unlock(&s_wait_test_mutex);
+	/* A later SHORT (uncontended) acquisition in the same window must not
+	 * overwrite the recorded long wait. */
+	thread_mutex_lock(&s_wait_test_mutex);
+	thread_mutex_unlock(&s_wait_test_mutex);
 	thread_drain_recovery_sleep();
 	struct thread_drain_waits waits;
 	thread_drain_wait_end(&waits);
 	assert(waits.lock_us >= 1000 && waits.recovery_us >= 500);
 	assert(waits.lock_us + waits.recovery_us <= time_diff_us(start, time_get()));
+	/* ci-1101/37: the >= 10 ms wait is attributed with the contended mutex
+	 * (address low 32 bits, its stripe index and name) and its holder. The
+	 * holder thread claims no stripe role, so tag stays OTHER (0). */
+	assert(waits.wait_us >= THREAD_DRAIN_WAIT_ATTRIB_US);
+	assert(waits.wait_us <= waits.lock_us);
+	assert(waits.wait_mutex == (uint32_t)(uintptr_t)&s_wait_test_mutex);
+	assert(waits.wait_stripe == 3);
+	assert(strcmp(waits.wait_mutex_name, "wait_test_mutex") == 0);
+	assert(waits.wait_holder_id != 0);
+	assert(waits.wait_holder_tag == THREAD_STRIPE_OTHER);
 	assert(!thread_drain_wait_active());
 	thread_join(&holder);
 	thread_mutex_destroy(&s_wait_test_mutex);

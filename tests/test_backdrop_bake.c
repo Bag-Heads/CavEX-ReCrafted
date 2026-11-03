@@ -26,6 +26,8 @@
 
 #include "game/gui/backdrop_bake.h"
 #include "platform/mem2.h"
+#include "network/server_world.h"
+#include "worldgen/worldgen.h"
 
 /* Stubbed externals worldgen.c/populate.c link against (find_lake /
  * test_worldgen precedent): blocks[] NULL -> the sky pass leaves the column
@@ -487,8 +489,26 @@ static void test_admission_after_quit(void) {
 		 "bake; owned world / remote / unfinished teardown / off-title refuse");
 }
 
+static void test_nether_recipe(void) {
+ struct backdrop_bake_recipe r=small_recipe(); r.dimension=-1;
+ struct fake f; fake_init(&f); struct backdrop_bake_host h=host_for(&f);
+ enum backdrop_bake_error err;
+ size_t initial=mem2_live(); uint64_t hash=0;
+ for(int i=0;i<2;i++) {
+  fake_init(&f); struct backdrop_bake* b=backdrop_bake_create(&h,&r,&err);
+  assert(b && run(b,100000)==BACKDROP_BAKE_DONE);
+  if(i) assert(hash==f.scene_hash); else hash=f.scene_hash;
+  backdrop_bake_pixels_free(backdrop_bake_take_pixels(b)); backdrop_bake_destroy(b);
+  assert(mem2_live()==initial && f.begins==f.ends);
+ }
+ r.dimension=1; assert(!backdrop_bake_create(&h,&r,&err));
+ assert(err==BACKDROP_BAKE_ERR_SCENE);
+ puts("PASS Nether recipe: deterministic generator/population, complete retirement, invalid dimension refused");
+}
+
 int main(void) {
 	mem2_init();
+	test_nether_recipe();
 	test_admission_after_quit();
 	test_nearest();
 	test_refusals();

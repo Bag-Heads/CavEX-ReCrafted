@@ -11,6 +11,10 @@
 #include <stddef.h>
 #include <stdint.h>
 
+/* One downsampled level fits the packed atlas gutter; deeper levels can
+ * overlap the next tile inside its sampled UV rectangle. */
+#define TEX_ATLAS_MIP_LEVELS 2
+
 /* Pixel geometry produced by texture_atlas.c. The first cell begins after the
  * atlas' leading margin; cell_pitch includes the duplicated edge border. */
 struct tex_atlas_grid {
@@ -24,9 +28,16 @@ struct tex_atlas_grid {
 bool tex_atlas_grid_init(struct tex_atlas_grid* grid, size_t width,
 						 size_t height);
 
+/* Linear sampling needs a gutter and exact scaling of the native grid
+ * used by terrain UVs, and GX requires power-of-two dimensions.
+ * Other packs stay nearest level zero on both platforms. */
+unsigned tex_atlas_mip_levels(const struct tex_atlas_grid* grid);
+
 /* Box-filter one mip level from the original RGBA8 atlas. Samples are clamped
  * to the logical atlas cell containing each output pixel, so an unaligned cell
- * boundary cannot pull pixels from its neighbour. Caller owns the result. */
+ * boundary cannot pull pixels from its neighbour. Uploaders must also honor
+ * tex_atlas_mip_levels: cell clamping alone does not isolate sampled UVs.
+ * Caller owns the result. */
 uint8_t* tex_mip_downsample_rgba8(const uint8_t* src, size_t src_w,
 								  size_t src_h,
 								  const struct tex_atlas_grid* grid,

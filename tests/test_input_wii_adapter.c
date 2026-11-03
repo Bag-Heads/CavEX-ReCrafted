@@ -4585,6 +4585,9 @@ static void test_plug_unplug_stress(void) {
 }
 
 int main(void) {
+	/* Draw recorder: represent a loaded fallback sheet; graphics calls are wrapped. */
+	static uint8_t controls_texel[4];
+	texture_controls.data = controls_texel;
 	assert(config_create(&gstate.config_user, "config_wii.json"));
 	texture_font.width = texture_font.height = 256;
 	gutil_reset_font(&texture_font);

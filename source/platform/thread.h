@@ -65,6 +65,12 @@ struct thread_channel {
 struct thread_mutex {
 	pthread_mutex_t native;
 	bool initialized;
+	/* ci-1101/37 diagnostic: the stripe_thread_id() of the thread that holds
+	 * this mutex (0 when free). Set on every acquisition, cleared on release;
+	 * a plain store, no syscall. Read once by the drain owner just before it
+	 * blocks (and never after, when it would read itself), so a long drain
+	 * wait can name the holder. */
+	uint32_t owner;
 };
 
 struct thread_cond {
@@ -97,6 +103,8 @@ struct thread_channel {
 struct thread_mutex {
 	mutex_t native;
 	bool initialized;
+	/* ci-1101/37 diagnostic; see the PC arm above. */
+	uint32_t owner;
 };
 
 struct thread_cond {
@@ -272,6 +280,10 @@ struct thread_stripe_breadcrumb {
 	uint32_t holder_state, uncertain;
 };
 void thread_stripe_register(struct thread_mutex* mutex, unsigned stripe);
+/* Stable operator-facing name for a stripe-registered mutex's long-wait
+ * attribution (ci-1101/37); borrowed, must outlive the mutex. Call once after
+ * thread_stripe_register. */
+void thread_stripe_set_name(struct thread_mutex* mutex, const char* name);
 void thread_stripe_phase(enum thread_stripe_tag tag, uint32_t phase);
 void thread_stripe_lock(struct thread_mutex* mutex);
 void thread_stripe_unlock(struct thread_mutex* mutex);
@@ -300,8 +312,30 @@ void thread_yield(void);
 
 /* Temporary G9 elapsed attribution. One drain owner; other threads never
  * write its counters. These are elapsed intervals, NOT scheduler CPU time.
- * Recovery sleeps exclude stripe reacquisition (counted as mutex wait). */
-struct thread_drain_waits { uint64_t lock_us, recovery_us; };
+ * Recovery sleeps exclude stripe reacquisition (counted as mutex wait).
+ *
+ * ci-1101/37 (hw1101c: one 71,206 us lock_us inside the server tick's light
+ * drain, with no way to name the contended lock): while the drain owner waits
+ * >= THREAD_DRAIN_WAIT_ATTRIB_US in thread_mutex_lock, the LONGEST such wait of
+ * the current heartbeat window is attributed here -- the owner's exact elapsed
+ * us, the contended mutex (address low 32 bits + its registered stripe index
+ * and name when one exists) and the HOLDING thread's id/tag, sampled from the
+ * mutex's owner field BEFORE the wait (0 = free or unknown). Both lock
+ * implementations record it with ONE extra compare on the wait path and
+ * nothing when the wait is short: no allocation, no syscall, no lock-path
+ * printf. A long wait on an UNREGISTERED mutex has no stripe, so index and
+ * name stay 0/"" with wait_us > 0 -- the miss is explicit. */
+#define THREAD_DRAIN_WAIT_ATTRIB_US 10000u
+#define THREAD_DRAIN_WAIT_MUTEX_NAME_MAX 24u
+struct thread_drain_waits {
+	uint64_t lock_us, recovery_us;
+	uint32_t wait_us;         /* longest >= 10 ms wait this window, 0 if none */
+	uint32_t wait_mutex;      /* contended mutex address low 32 bits */
+	uint32_t wait_holder_id;  /* holder stripe_thread_id(), 0 free/unknown */
+	uint32_t wait_holder_tag; /* enum thread_stripe_tag of the holder, 0 other */
+	uint32_t wait_stripe;     /* thread_stripe_register index, 0 unregistered */
+	char wait_mutex_name[THREAD_DRAIN_WAIT_MUTEX_NAME_MAX];
+};
 bool thread_drain_wait_active(void);
 void thread_drain_wait_begin(void);
 void thread_drain_wait_end(struct thread_drain_waits* out);

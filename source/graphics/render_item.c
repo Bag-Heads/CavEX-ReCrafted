@@ -26,9 +26,11 @@
 #include "../platform/displaylist.h"
 #include "../platform/gfx.h"
 #include "../platform/texture.h" /* texture_map_bg / texture_map_live */
+#include "../game/game_state.h" /* gstate.players: held-map owner -> viewport */
 #include "gui_util.h"
 #include "gfx_settings.h"
 #include "render_item.h"
+#include "render_model.h"
 #include "render_block.h" // direct include (was transitive via blocks.h pre-split)
 #include "../item/items.h" // direct include (was transitive via blocks.h pre-split)
 
@@ -62,11 +64,44 @@ void render_item_update_light(uint8_t light) {
 	memset(vertex_light, light, sizeof(vertex_light));
 }
 
+/* ci-1101/31: which split viewport the frame is drawing right now. main.c sets
+ * it at the top of each viewport pass and back to 0 after the loop; every
+ * item draw inside that pass (hotbar, held item, inventory, container) then
+ * picks that player's compass/clock needle. Single player never leaves 0. */
+static unsigned s_render_viewport = 0;
+
+void render_item_set_viewport(unsigned viewport) {
+	s_render_viewport = viewport < CLIENT_LOCAL_PLAYERS ? viewport : 0;
+}
+
+unsigned render_item_viewport(void) {
+	return s_render_viewport;
+}
+
+uint8_t render_item_flat_uv(uint8_t origin, int cell, int k) {
+	assert(cell == 16 || cell == 256);
+	assert(k >= 0 && k <= 16);
+	// Far tile edge in the u8 texcoord pipeline (review fix 2026-06-11): both
+	// backends normalize u8 texcoords over 256 (PC /256.0, GX 8-frac u8), so
+	// the outer edge of atlas row/column 15 -- 15*16 + 16 = 256 -- does not
+	// fit in a uint8_t: it silently wrapped to 0 and smeared the whole atlas
+	// across the tile. The Beta music records (texture_y 15) were the first
+	// items ever registered on the last row. Clamp the edge to 255: a 1/256
+	// sub-texel shave on that tile's outer edge (invisible at item scale),
+	// not a wrap. The GUI/inventory path is immune (uint16 texquads); the
+	// terrain atlas is immune by layout (14 cols x 18 px, max 253).
+	// ci-1101/31 R7: a private 16x16 needle surface (cell 256) steps 16 per
+	// strip so the extrusion sides sample the whole icon, not one texel.
+	int v = (int)origin + k * (cell / 16);
+	return (uint8_t)(v > 255 ? 255 : v);
+}
+
 void render_item_flat(struct item* item, struct item_data* stack, mat4 view,
 					  bool fullbright, enum render_item_env env) {
 	assert(item && stack && view);
 
 	uint8_t s, t;
+	int cell = 16; /* texcoord extent of one icon (atlas cell or whole surface) */
 
 	if(item_is_block(stack)) {
 		struct block* b = blocks[stack->id];
@@ -98,28 +133,34 @@ void render_item_flat(struct item* item, struct item_data* stack, mat4 view,
 		s = item->render_data.item.texture_x * 16;
 		t = item->render_data.item.texture_y * 16;
 
-		gfx_bind_texture(&texture_items);
+		/* ci-1101/31: in split viewport 1 the compass/clock come from THAT
+		 * player's private 16x16 needle texture (texture.h), drawn whole,
+		 * instead of the atlas cell player 1's needle is written into.
+		 * Viewport 0 / single player: NULL, the atlas cell as always. */
+		struct tex_gfx* needle = NULL;
+		if(stack->id == ITEM_COMPASS || stack->id == ITEM_CLOCK)
+			needle = item_needle_fx_split_texture(s_render_viewport,
+												  stack->id == ITEM_CLOCK);
+		if(needle) {
+			s = t = 0;
+			cell = 256; /* u16 texcoord: the whole 16x16 surface */
+			gfx_bind_texture(needle);
+		} else {
+			gfx_bind_texture(&texture_items);
+		}
 	}
 
 	if(env == R_ITEM_ENV_INVENTORY) {
 		gfx_matrix_modelview(view);
-		gutil_texquad(0, 0, s, t, 16, 16, 16 * GFX_GUI_SCALE, 16 * GFX_GUI_SCALE);
+		gutil_texquad(0, 0, s, t, cell, cell, 16 * GFX_GUI_SCALE, 16 * GFX_GUI_SCALE);
 	} else {
 		displaylist_reset(&dl);
 
 		uint8_t light = fullbright ? *vertex_light_inv : *vertex_light;
 
-		// Far tile edge in the u8 texcoord pipeline (review fix 2026-06-11): both
-		// backends normalize u8 texcoords over 256 (PC /256.0, GX 8-frac u8), so
-		// the outer edge of atlas row/column 15 -- 15*16 + 16 = 256 -- does not
-		// fit in a uint8_t: it silently wrapped to 0 and smeared the whole atlas
-		// across the tile. The Beta music records (texture_y 15) were the first
-		// items ever registered on the last row. Clamp the edge to 255: a 1/256
-		// sub-texel shave on that tile's outer edge (invisible at item scale),
-		// not a wrap. The GUI/inventory path is immune (uint16 texquads); the
-		// terrain atlas is immune by layout (14 cols x 18 px, max 253).
-		uint8_t s1 = (uint8_t)((int)s + 16 > 255 ? 255 : s + 16);
-		uint8_t t1 = (uint8_t)((int)t + 16 > 255 ? 255 : t + 16);
+		// Far edge: see render_item_flat_uv (the 256 -> 255 clamp story).
+		uint8_t s1 = render_item_flat_uv(s, cell, 16);
+		uint8_t t1 = render_item_flat_uv(t, cell, 16);
 
 		#ifdef GFX_3D_ELEMENTS
 			// left layer
@@ -162,11 +203,12 @@ void render_item_flat(struct item* item, struct item_data* stack, mat4 view,
 				for(int k = 0; k < 16; k++) {
 					// Same 256 -> 255 edge clamp as s1/t1 above: at k == 15 the
 					// k+1 coordinate reaches the unrepresentable 256 on a row/
-					// column-15 tile.
-					uint8_t sk = (uint8_t)(s + k);
-					uint8_t tk = (uint8_t)(t + k);
-					uint8_t sk1 = (uint8_t)((int)s + k + 1 > 255 ? 255 : s + k + 1);
-					uint8_t tk1 = (uint8_t)((int)t + k + 1 > 255 ? 255 : t + k + 1);
+					// column-15 tile. One strip = one icon texel: 1 atlas unit,
+					// or 16 units on a private 16x16 needle surface (R7).
+					uint8_t sk = render_item_flat_uv(s, cell, k);
+					uint8_t tk = render_item_flat_uv(t, cell, k);
+					uint8_t sk1 = render_item_flat_uv(s, cell, k + 1);
+					uint8_t tk1 = render_item_flat_uv(t, cell, k + 1);
 					// front
 					displaylist_pos(&dl, 256 - (k + 1) * 16, 256, 0);
 					displaylist_color(&dl, DIM_LIGHT(light, level_table_080));
@@ -442,19 +484,35 @@ void render_item_block(struct item* item, struct item_data* stack, mat4 view,
  * .renderItemInFirstPerson:154-220]: (its own swing/equip chain) -> scale
  * 0.38 -> rotY 90 -> rotZ 180 -> translate(-1,-1,0) -> scale 1/64 -> the
  * misc/mapbg.png frame quad at (-7..135)^2 map pixels -> MapItemRenderer
- * .renderMap's live 128x128 colour texture. This port composes that
- * map-local chain on top of the engine's OWN generic in-hand base matrix
- * (`view`) instead of transcribing Beta's per-frame swing/equip terms --
- * DOCUMENTED FRAMING DEVIATION (docs/deviations.md, held-map entry): the
- * map content, frame, proportions and orientation are Beta's; the exact
- * hand/swing framing (and the drawFirstPersonHand pair + map name label)
- * remain deferred. Player icons use MapItemRenderer's own transform below.
+ * .renderMap's live 128x128 colour texture. screen_ingame dispatches maps
+ * BEFORE the generic held-item pose, with the acting owner's explicit
+ * pitch/swing/equip inputs. Both hands use RenderPlayer.drawFirstPersonHand.
+ * The map name label remains deferred; player icons are drawn below.
  *
  * The live surface re-uploads ONLY when the client mirror's version moved
  * (change-gated vs Beta's every-frame full upload -- the transport commit's
  * documented perf deviation; output-identical because the mirror only
- * versions on real byte change). */
-bool render_item_map_upload(int32_t map_id) {
+ * versions on real byte change).
+ *
+ * ci-1101/23: ONE live surface and ONE change gate PER split viewport. Both
+ * viewports render inside the same GX frame; tex_gfx_subimage on Wii is
+ * DCStoreRange + GX_InvalidateTexAll, which never waits for the FIFO, so a
+ * shared surface let P2's upload overwrite P1's still-queued draw (P1 showed
+ * P2's map) and re-converted 64 KB twice every frame. Single player and the
+ * existing test entry point stay on viewport 0 / texture_map_live. */
+struct tex_gfx* render_item_map_live_texture(unsigned viewport) {
+	return viewport == 0 ? &texture_map_live : &texture_map_live_split;
+}
+
+/* Viewport index of a held-map owner: its slot in gstate.players, 0 for any
+ * owner outside that array (tests, single player stand-ins). */
+static unsigned render_item_map_viewport_of(const struct client_session* owner) {
+	for(unsigned v = 0; v < CLIENT_LOCAL_PLAYERS; v++)
+		if(owner == &gstate.players[v]) return v;
+	return 0;
+}
+
+bool render_item_map_upload_viewport(unsigned viewport, int32_t map_id) {
 	/* Upload on mirror change. HEAP scratch, allocated once on first
 	 * held-map render -- deliberately NOT a static: as a 64KB .bss array
 	 * this buffer grew .bss by 0x10080 and shifted __Arena1Lo (and every
@@ -464,10 +522,25 @@ bool render_item_map_upload(int32_t map_id) {
 	 * identified 2026-08-27 by readelf layout diff after -fstack-usage
 	 * refuted the stack-frame class. Heap placement leaves the static
 	 * layout byte-identical to the proven-booting baseline. Render thread
-	 * only, one held-map texture at a time. */
+	 * only; the scratch is consumed by tex_gfx_subimage before return, so
+	 * one buffer serves every viewport. The change gate is per viewport. */
 	static uint8_t* map_rgba = NULL;
-	static uint32_t uploaded_version = 0;
-	static int32_t uploaded_id = INT32_MIN;
+	static uint32_t uploaded_version[CLIENT_LOCAL_PLAYERS];
+	static int32_t uploaded_id[CLIENT_LOCAL_PLAYERS]
+		= {INT32_MIN, INT32_MIN};
+	static uint32_t uploaded_generation = 0;
+	assert(viewport < CLIENT_LOCAL_PLAYERS);
+	if(viewport >= CLIENT_LOCAL_PLAYERS) viewport = 0;
+	/* R5: a texture-pack reload / cache restore recreates BOTH surfaces
+	 * zero-filled (tex_map_live_init). Forget every viewport's upload so the
+	 * unchanged map is re-uploaded instead of drawing blank until its
+	 * version moves. */
+	uint32_t generation = tex_map_live_generation();
+	if(uploaded_generation != generation) {
+		for(unsigned v = 0; v < CLIENT_LOCAL_PLAYERS; v++)
+			uploaded_id[v] = INT32_MIN;
+		uploaded_generation = generation;
+	}
 	if(!map_rgba) {
 		map_rgba = malloc(128 * 128 * 4);
 		if(!map_rgba) return false;
@@ -477,14 +550,19 @@ bool render_item_map_upload(int32_t map_id) {
 		= clin_held_map_colors(map_id, &version);
 	/* [740c583 MapData.colors, MapItemRenderer.renderMap]: lookup/OOM
 	 * misses draw the blank checkerboard, never a previous map's terrain. */
-	if(uploaded_id != map_id || uploaded_version != version) {
+	if(uploaded_id[viewport] != map_id || uploaded_version[viewport] != version) {
 		item_map_colors_to_rgba(colors, map_rgba);
-		tex_gfx_subimage(&texture_map_live, 0, 0, 128, 128, map_rgba);
-		uploaded_id = map_id;
-		uploaded_version = version;
+		tex_gfx_subimage(render_item_map_live_texture(viewport), 0, 0, 128, 128,
+			map_rgba);
+		uploaded_id[viewport] = map_id;
+		uploaded_version[viewport] = version;
 	}
 
 	return true;
+}
+
+bool render_item_map_upload(int32_t map_id) {
+	return render_item_map_upload_viewport(0, map_id);
 }
 
 /* MapItemRenderer.java:81-103. Twice Beta's map coordinates, inverted Y. */
@@ -507,8 +585,56 @@ void render_item_map_marker_transform(const struct item_map_marker* marker,
 	memcpy(uv, coords, sizeof(coords));
 }
 
+void render_item_map_transforms(float pitch, float swing, float equip,
+	mat4 surface, mat4 hands[2]) {
+	/* RetroMCP src_original ItemRenderer.java:154-203, in OpenGL order. */
+	float root = sinf(sqrtf(swing) * GLM_PI);
+	float tilt = glm_clamp(1.0F - pitch / 45.0F + 0.1F, 0, 1);
+	tilt = -cosf(tilt * GLM_PI) * 0.5F + 0.5F;
+	mat4 base = GLM_MAT4_IDENTITY_INIT;
+	glm_translate(base, (vec3){-root * 0.4F,
+		sinf(sqrtf(swing) * GLM_PI * 2.0F) * 0.2F,
+		-sinf(swing * GLM_PI) * 0.2F});
+	glm_translate(base, (vec3){0,
+		-(1.0F - equip) * 1.2F - tilt * 0.5F + 0.04F, -0.9F * 0.8F});
+	glm_rotate_y(base, glm_rad(90.0F), base);
+	glm_rotate_z(base, glm_rad(tilt * -85.0F), base);
+	for(unsigned i = 0; i < 2; i++) {
+		int sign = (int)i * 2 - 1;
+		glm_mat4_copy(base, hands[i]);
+		glm_translate(hands[i], (vec3){0, -0.6F, 1.1F * sign});
+		glm_rotate_x(hands[i], glm_rad(-45.0F * sign), hands[i]);
+		glm_rotate_z(hands[i], glm_rad(-90.0F), hands[i]);
+		glm_rotate_z(hands[i], glm_rad(59.0F), hands[i]);
+		glm_rotate_y(hands[i], glm_rad(-65.0F * sign), hands[i]);
+		/* RenderPlayer.drawFirstPersonHand -> ModelBiped right arm:
+		 * pivot(-5,2,0), age=0 roll=.1 rad, box(-3,-2,-2)..(1,10,2).
+		 * render_model_box {4,4,12} emits (X,height,depth) with Y up;
+		 * convert (u,v,w) to Java (u-3,10-v,2-w), preserving skin UVs. */
+		glm_scale_uni(hands[i], 1.0F / 16.0F);
+		glm_translate(hands[i], (vec3){-5, 2, 0});
+		glm_rotate_z(hands[i], 0.1F, hands[i]);
+		glm_translate(hands[i], (vec3){-3, 10, 2});
+		glm_rotate_x(hands[i], glm_rad(180.0F), hands[i]);
+	}
+	glm_mat4_copy(base, surface);
+	glm_rotate_y(surface, glm_rad(-sinf(swing * swing * GLM_PI) * 20.0F), surface);
+	glm_rotate_z(surface, glm_rad(-root * 20.0F), surface);
+	glm_rotate_x(surface, glm_rad(-root * 80.0F), surface);
+	glm_scale_uni(surface, 0.38F);
+	glm_rotate_y(surface, glm_rad(90.0F), surface);
+	glm_rotate_z(surface, glm_rad(180.0F), surface);
+	glm_translate(surface, (vec3){-1, -1, 0});
+	glm_scale_uni(surface, 1.0F / 64.0F);
+	/* Display lists emit twice the map pixels, inverted Y, divided by
+	 * 256 by both backends. Convert that representation to Java pixels. */
+	glm_translate(surface, (vec3){0, 128, 0});
+	glm_scale(surface, (vec3){128, -128, 128});
+}
+
 void render_item_map(struct item* item, struct item_data* stack, mat4 view,
-					 bool fullbright, enum render_item_env env) {
+	bool fullbright, enum render_item_env env, const struct client_session* owner,
+	float pitch, float swing, float equip) {
 	assert(item && stack && view);
 
 	if(env != R_ITEM_ENV_FIRSTPERSON) {
@@ -517,45 +643,40 @@ void render_item_map(struct item* item, struct item_data* stack, mat4 view,
 		return;
 	}
 
-	if(!render_item_map_upload((int16_t)stack->durability)) {
+	assert(owner);
+	unsigned viewport = render_item_map_viewport_of(owner);
+	if(!render_item_map_upload_viewport(viewport, (int16_t)stack->durability)) {
 		render_item_flat(item, stack, view, fullbright, env);
 		return;
 	}
 
-	/* FRAMING (documented deviation, docs/deviations.md held-map entry):
-	 * Beta replaces the whole generic in-hand transform with its own chain;
-	 * this port draws the map in the ENGINE's generic held-item footprint
-	 * instead -- the flat path's own first-person env model (composed
-	 * view x model exactly as render_item_flat does), with the map quad
-	 * emitted over the same 0..256 span the flat item quad uses. Content,
-	 * frame border ratio (7/128) and orientation are Beta's; only the
-	 * framing base differs. */
-	mat4 model = GLM_MAT4_IDENTITY_INIT;
-	glm_translate_make(model, (vec3) {0.5F, 0.2F, 0.5F});
-#ifdef GFX_3D_ELEMENTS
-	glm_scale_uni(model, 1.5F);
-	glm_rotate_y(model, glm_rad(50.0F), model);
-	glm_rotate_z(model, glm_rad(335.0F), model);
-	glm_translate(model, (vec3) {1.0F / 16.0F - 1.0F, -1.0F / 16.0F, 0.0F});
-#else
-	glm_scale_uni(model, 0.5F);
-#endif
-	mat4 modelview;
+	/* The current skin asset is shared; pose inputs are owner-local. */
+	mat4 model, hands[2], modelview;
+	render_item_map_transforms(pitch, swing, equip, model, hands);
+	uint8_t light = fullbright ? *vertex_light_inv : *vertex_light;
+	gfx_lighting(false);
+	gfx_bind_texture(&texture_mob_char);
+	for(unsigned i = 0; i < 2; i++) {
+		mat4 arm;
+		glm_mat4_mul(view, hands[i], arm);
+		render_model_box(arm, (vec3){0, 0, 0}, (vec3){0, 0, 0},
+			(vec3){0, 0, 0}, (ivec2){44, 20}, (ivec3){4, 4, 12},
+			0.0F, false, gfx_lookup_light(light));
+	}
+	/* Arms submit direct RGBA; map display lists submit one light index.
+	 * Restore INDEX8 before those bytes reach GX, then restore HUD direct. */
+	gfx_lighting(true);
 	glm_mat4_mul(view, model, modelview);
 	gfx_matrix_modelview(modelview);
-
-	uint8_t light = fullbright ? *vertex_light_inv : *vertex_light;
 
 	/* Frame quad: Beta's 7-map-pixel border [ItemRenderer: byte var20 = 7]
 	 * scaled to the 0..256 footprint (7 * 2 = 14 pos units). Full 0..1 UVs
 	 * via the engine's u8 edge idiom (256 -> clamp 255, the documented
 	 * 1/256 outer-edge shave). Optional asset: absent mapbg draws nothing
-	 * (texture.c precedent). Drawn at z=0, the live surface at z=-8
-	 * (1/32 model unit toward the eye) so they never z-fight. */
-	/* Each quad is emitted in BOTH windings (the flat path's left/right
-	 * layer precedent): the env model's rotY(50)+rotZ(335) can face a
-	 * single-winding quad away from the camera, where backface culling
-	 * silently eats it -- the exact symptom this fixes. */
+	 * (texture.c precedent). Drawn at z=0; the live surface uses Beta's
+	 * -0.01 map-pixel depth below. */
+	/* Retain the existing two-winding display list; backface culling selects
+	 * the visible winding after converting the inverted map Y axis. */
 	if(texture_map_bg.data) {
 		gfx_bind_texture(&texture_map_bg);
 		displaylist_reset(&dl);
@@ -590,39 +711,52 @@ void render_item_map(struct item* item, struct item_data* stack, mat4 view,
 	/* The live colour surface: map row 0 (north) at the TOP, so V=0 maps to
 	 * the top edge. u8 texcoords at scale 256/128 = 2 with the 256->255
 	 * edge clamp. */
-	gfx_bind_texture(&texture_map_live);
+	mat4 live;
+	glm_mat4_copy(modelview, live);
+	glm_translate(live, (vec3){0, 0, -0.01F / 128.0F});
+	gfx_matrix_modelview(live);
+	gfx_blending(MODE_BLEND);
+	gfx_alpha_test(false);
+	gfx_bind_texture(render_item_map_live_texture(viewport));
 	displaylist_reset(&dl);
-	displaylist_pos(&dl, 0, 256, -8);
+	displaylist_pos(&dl, 0, 256, 0);
 	displaylist_color(&dl, light);
 	displaylist_texcoord(&dl, 0, 0);
-	displaylist_pos(&dl, 256, 256, -8);
+	displaylist_pos(&dl, 256, 256, 0);
 	displaylist_color(&dl, light);
 	displaylist_texcoord(&dl, 255, 0);
-	displaylist_pos(&dl, 256, 0, -8);
+	displaylist_pos(&dl, 256, 0, 0);
 	displaylist_color(&dl, light);
 	displaylist_texcoord(&dl, 255, 255);
-	displaylist_pos(&dl, 0, 0, -8);
+	displaylist_pos(&dl, 0, 0, 0);
 	displaylist_color(&dl, light);
 	displaylist_texcoord(&dl, 0, 255);
 	/* reversed winding */
-	displaylist_pos(&dl, 0, 0, -8);
+	displaylist_pos(&dl, 0, 0, 0);
 	displaylist_color(&dl, light);
 	displaylist_texcoord(&dl, 0, 255);
-	displaylist_pos(&dl, 256, 0, -8);
+	displaylist_pos(&dl, 256, 0, 0);
 	displaylist_color(&dl, light);
 	displaylist_texcoord(&dl, 255, 255);
-	displaylist_pos(&dl, 256, 256, -8);
+	displaylist_pos(&dl, 256, 256, 0);
 	displaylist_color(&dl, light);
 	displaylist_texcoord(&dl, 255, 0);
-	displaylist_pos(&dl, 0, 256, -8);
+	displaylist_pos(&dl, 0, 256, 0);
 	displaylist_color(&dl, light);
 	displaylist_texcoord(&dl, 0, 0);
 	displaylist_render_immediate(&dl, 8);
+	gfx_alpha_test(true);
+	gfx_blending(MODE_OFF);
 
 	/* RetroMCP MapItemRenderer.java:81-103: translate(x/2+64,y/2+64),
 	 * rotate(rotation*360/16), scale(4,4,3), translate(-1/8,+1/8).
 	 * Our map footprint is twice Beta's, with map Y inverted. */
 	if(texture_map_icons.data) {
+		mat4 marker_view;
+		glm_mat4_copy(modelview, marker_view);
+		/* The legacy icon helper includes a -9/256 depth bias. Convert it
+		 * to MapItemRenderer's -0.02 pixel depth in the new map frame. */
+		glm_translate(marker_view, (vec3){0, 0, 9.0F / 256.0F - 0.02F / 128.0F});
 		struct item_map_marker markers[ITEM_MAP_MAX_MARKERS];
 		size_t count = clin_held_map_markers((int16_t)stack->durability, markers);
 		gfx_bind_texture(&texture_map_icons);
@@ -630,7 +764,7 @@ void render_item_map(struct item* item, struct item_data* stack, mat4 view,
 			const struct item_map_marker* marker = &markers[i];
 			mat4 icon;
 			uint8_t uv[4][2];
-			render_item_map_marker_transform(marker, modelview, icon, uv);
+			render_item_map_marker_transform(marker, marker_view, icon, uv);
 			gfx_matrix_modelview(icon);
 			const int16_t xy[4][2] = {{-256,-256},{256,-256},{256,256},{-256,256}};
 			displaylist_reset(&dl);
@@ -647,4 +781,5 @@ void render_item_map(struct item* item, struct item_data* stack, mat4 view,
 	}
 
 	gfx_matrix_modelview(GLM_MAT4_IDENTITY);
+	gfx_lighting(false);
 }

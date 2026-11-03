@@ -1451,15 +1451,150 @@ bool level_archive_write_player_health(struct level_archive* la,
 		la, level_archive_health_to_beta(units), units);
 }
 
+/* ci-1101/41 item 11 helpers. A fresh named scalar, or a fresh named
+ * TAG_LIST of three doubles; NULL on OOM (nothing leaked). */
+static nbt_node* level_new_scalar(const char* name, nbt_type type) {
+	nbt_node* node = calloc(1, sizeof(*node));
+	size_t n = strlen(name) + 1;
+	char* node_name = malloc(n);
+	if(!node || !node_name) {
+		free(node);
+		free(node_name);
+		return NULL;
+	}
+	memcpy(node_name, name, n);
+	node->type = type;
+	node->name = node_name;
+	return node;
+}
+
+static nbt_node* level_new_double3(const char* name) {
+	nbt_node* list = level_new_scalar(name, TAG_LIST);
+	if(!list)
+		return NULL;
+	list->payload.tag_list = calloc(1, sizeof(struct nbt_list));
+	if(!list->payload.tag_list) {
+		free(list->name);
+		free(list);
+		return NULL;
+	}
+	INIT_LIST_HEAD(&list->payload.tag_list->entry);
+	list->payload.tag_list->data = calloc(1, sizeof(nbt_node));
+	if(!list->payload.tag_list->data) {
+		nbt_free(list);
+		return NULL;
+	}
+	list->payload.tag_list->data->type = TAG_DOUBLE; /* element type */
+	for(int k = 0; k < 3; k++) {
+		struct nbt_list* e = malloc(sizeof(*e));
+		nbt_node* d = calloc(1, sizeof(*d));
+		if(!e || !d) {
+			free(e);
+			free(d);
+			nbt_free(list);
+			return NULL;
+		}
+		d->type = TAG_DOUBLE;
+		e->data = d;
+		list_add_tail(&e->entry, &list->payload.tag_list->entry);
+	}
+	return list;
+}
+
+enum { LEVEL_ENTITY_STATE_TAGS = 6 };
+
+bool level_archive_write_player_entity_state(
+	struct level_archive* la, const struct level_player_entity_state* st) {
+	assert(la && la->data && st);
+	nbt_node* player = level_player_compound(la);
+	if(!player)
+		return false;
+	static const char* const names[LEVEL_ENTITY_STATE_TAGS] = {
+		"Motion", "Fire", "Air", "OnGround", "Sleeping", "SleepTimer",
+	};
+	static const nbt_type types[LEVEL_ENTITY_STATE_TAGS] = {
+		TAG_LIST, TAG_SHORT, TAG_SHORT, TAG_BYTE, TAG_BYTE, TAG_SHORT,
+	};
+	nbt_node* existing[LEVEL_ENTITY_STATE_TAGS] = {0};
+	nbt_node* fresh[LEVEL_ENTITY_STATE_TAGS] = {0};
+	struct nbt_list* wraps[LEVEL_ENTITY_STATE_TAGS] = {0};
+	bool ok = true;
+	/* Phase 1: classify each tag and allocate everything a (re)creation
+	 * needs. Nothing in the tree is touched until all of it succeeded. */
+	for(int k = 0; k < LEVEL_ENTITY_STATE_TAGS; k++) {
+		char path[48];
+		snprintf(path, sizeof path, ".Data.Player.%s", names[k]);
+		nbt_node* n = nbt_find_by_path(la->data, path);
+		bool usable = n && n->type == types[k]
+			&& (types[k] != TAG_LIST || vector_shape_valid(n, TAG_DOUBLE, 3));
+		if(usable) {
+			existing[k] = n;
+			continue;
+		}
+		fresh[k] = types[k] == TAG_LIST ? level_new_double3(names[k])
+										: level_new_scalar(names[k], types[k]);
+		wraps[k] = malloc(sizeof(*wraps[k]));
+		if(!fresh[k] || !wraps[k])
+			ok = false;
+	}
+	if(!ok) {
+		for(int k = 0; k < LEVEL_ENTITY_STATE_TAGS; k++) {
+			if(fresh[k])
+				nbt_free(fresh[k]);
+			free(wraps[k]);
+		}
+		return false;
+	}
+	/* Phase 2: replace wrong-type tags, link new ones, write values. */
+	for(int k = 0; k < LEVEL_ENTITY_STATE_TAGS; k++) {
+		if(existing[k])
+			continue;
+		level_player_remove_child(player, names[k]);
+		wraps[k]->data = fresh[k];
+		list_add_tail(&wraps[k]->entry, &player->payload.tag_compound->entry);
+		existing[k] = fresh[k];
+	}
+	size_t i = 0;
+	struct list_head* cur;
+	list_for_each(cur, &existing[0]->payload.tag_list->entry) {
+		nbt_node* d = list_entry(cur, struct nbt_list, entry)->data;
+		double v = i < 3 ? st->motion[i] : 0.0;
+		d->payload.tag_double = isfinite(v) ? v : 0.0;
+		i++;
+	}
+	existing[1]->payload.tag_short = st->fire;
+	existing[2]->payload.tag_short = st->air;
+	existing[3]->payload.tag_byte = st->on_ground ? 1 : 0;
+	existing[4]->payload.tag_byte = st->sleeping ? 1 : 0;
+	existing[5]->payload.tag_short = st->sleep_timer;
+	la->modified = true;
+	return true;
+}
+
+void level_archive_read_player_fire_air(struct level_archive* la, int* fire,
+										int* air) {
+	assert(la && la->data && fire && air);
+	nbt_node* n = nbt_find_by_path(la->data, ".Data.Player.Fire");
+	if(n && n->type == TAG_SHORT)
+		*fire = n->payload.tag_short;
+	n = nbt_find_by_path(la->data, ".Data.Player.Air");
+	if(n && n->type == TAG_SHORT)
+		*air = n->payload.tag_short;
+}
+
 /* Units of a MARKER-LESS (pre-fix) Player.Health. Provenance is read from
  * the Player compound itself, because CaveWii edits the parsed tree in place
  * (unknown tags survive) while Beta rebuilds it from scratch:
  *   - Beta 1.7.3 ALWAYS writes Sleeping + SleepTimer (EntityPlayer.java:330-
  *     331, unconditional) and Score (EntityPlayerSP.java:100); pre-1.3 Beta
  *     and Alpha still write Score. No CaveWii level template (every revision
- *     since world creation landed in a4b192b5c, 2026-05-31) and no CaveWii
- *     writer ever emits any of the three. So "has a Beta-client tag" = the
- *     compound was born in Beta; "has none" = born in a CaveWii template.
+ *     since world creation landed in a4b192b5c, 2026-05-31) emits any of the
+ *     three, and no CaveWii writer did before ci-1101/41. So "has a
+ *     Beta-client tag" = the compound was born in Beta; "has none" = born in
+ *     a CaveWii template. Since ci-1101/41 the host checkpoint also writes
+ *     Sleeping/SleepTimer, but ONLY after the consistent Health/CaveWiiHealth
+ *     pair in the same checkpoint (server_local_write_level_state), so such a
+ *     record always carries the marker and never reaches this classifier.
  *   - CaveWii* Data tags are NOT used: a pre-fix import is stamped with
  *     CaveWiiSaveVersion at load whether or not a checkpoint followed, and
  *     pre-June-2026 CaveWii worlds carry no tag at all.
@@ -1621,9 +1756,14 @@ bool level_archive_read_player(struct level_archive* la, vec3 position,
 		rotation[1] = parsed_rotation[1];
 	}
 
-	// ensures output is valid dimension
+	/* ci-1101/41 item 12: Beta's World constructor (RetroMCP
+	 * World.java:186-190) chooses the Hell provider ONLY for Dimension -1 and
+	 * the surface provider for every other value (0, the unreachable sky 1,
+	 * garbage). CaveWii writers only ever store 0 or -1, so no CaveWii save
+	 * changes; a foreign value now loads in the Overworld as in Beta instead
+	 * of dropping an overworld-coordinate player into the Nether. */
 	if(dimension)
-		*dimension = (dim == 0) ? WORLD_DIM_OVERWORLD : WORLD_DIM_NETHER;
+		*dimension = (dim == -1) ? WORLD_DIM_NETHER : WORLD_DIM_OVERWORLD;
 
 	return true;
 }

@@ -4,8 +4,12 @@
 #include "game/game_state.h"
 #include "network/client_world_payload.h"
 #include "network/level_archive.h"
+#include "graphics/texture_atlas.h"
+#include "platform/texture.h"
+#include "game/gui/loading_tips.h"
 #include <assert.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 /* Capture the actual production status renderer without a GPU. */
@@ -22,6 +26,93 @@ static int missing, pending, radius=1, scanned_radius, scanned_cx, scanned_cz;
 static const char* archive_name;
 static unsigned archive_opens, archive_discards, census_calls, import_calls;
 static bool converting;
+/* Optional PC preview command stream, rasterized with each real pack by
+ * the job script. Normal tests retain their fixed headless font metrics. */
+static bool preview;
+static uint8_t preview_font_widths[256];
+struct tex_gfx texture_terrain, texture_menu_background, texture_nether_background;
+static struct tex_gfx* bound_texture;
+static unsigned terrain_quads, menu_quads, dirt_calls, scene_quads;
+static struct tex_gfx* scene_texture = &texture_nether_background;
+void tex_gfx_clear(struct tex_gfx* tex) { (void)tex; assert(!"portal freed a resident texture"); }
+void gfx_wait_idle(void) { assert(!"portal waited for GPU"); }
+/* This focused executable links the production episode owner too. */
+#include "../source/game/gui/loading_tips.c"
+
+static uint8_t netherrack_cell = 103;
+void gfx_bind_texture(struct tex_gfx* tex) { bound_texture=tex; }
+uint8_t tex_atlas_lookup(enum tex_atlas_entry entry) {
+	assert(entry==TEXAT_NETHERRACK); return netherrack_cell;
+}
+void gutil_bg(void) { dirt_calls++; }
+void gfx_draw_quads_flt(size_t count,const float* v,const uint8_t* c,const float* uv) {
+	assert(count==4);
+	if(preview && bound_texture==scene_texture) {
+		printf("{\"kind\":\"scene\",\"shade\":%u}\n",c[0]); return;
+	}
+	if(preview) {
+		printf("{\"kind\":\"tile\",\"rect\":[%.0f,%.0f,%.0f,%.0f],\"uv\":[%g,%g,%g,%g],\"shade\":%u}\n",
+			v[0],v[1],v[6]-v[0],v[7]-v[1],uv[0],uv[1],uv[4],uv[5],c[0]);
+		return;
+	}
+	if(bound_texture==&texture_terrain) {
+		terrain_quads++;
+		assert(v[0]>=0 && v[1]>=0 && v[6]<=854 && v[7]<=480);
+		assert(c[0]==c[1] && c[1]==c[2] && c[3]==255);
+		assert(c[0]==64 || c[0]==96);
+		assert(uv[0]==(netherrack_cell%16)/16.0f);
+		assert(uv[1]==(netherrack_cell/16)/16.0f);
+		assert(uv[4]<=uv[0]+1/16.0f && uv[5]<=uv[1]+1/16.0f);
+	} else if(bound_texture==scene_texture) { scene_quads++; }
+	else { assert(bound_texture==&texture_menu_background); menu_quads++; }
+}
+static void portal_scene_lifecycle(void) {
+ loading_tips_reset();
+ texture_nether_background=(struct tex_gfx){.data=(void*)1,.width=1024,.height=576};
+ loading_reason_begin(0,PORTAL_IN);
+ lworld_draw_loading_backdrop(PORTAL_IN,640,480,0,1); assert(scene_quads==1);
+ loading_reason_begin(1,PORTAL_OUT);
+ loading_reason_end(0);
+ lworld_draw_loading_backdrop(PORTAL_OUT,640,240,0,1); assert(scene_quads==2);
+ assert(loading_reason_get(1)==PORTAL_OUT);
+ loading_reason_end(1); loading_tips_reset();
+ assert(texture_nether_background.data==(void*)1);
+ texture_nether_background=(struct tex_gfx){0};
+ quad_count=0;
+}
+static void portal_backdrops(void) {
+	/* No Nether bake/image exists: both portal directions must immediately
+	 * use the active atlas. Normal reasons retain the existing landscape. */
+	texture_terrain.data=(void*)1;
+	texture_terrain.width=texture_terrain.height=256;
+	texture_menu_background.data=(void*)1;
+	texture_menu_background.width=1024; texture_menu_background.height=576;
+	for(int reason=NEW_WORLD;reason<=UNKNOWN;reason++) {
+		terrain_quads=menu_quads=0; quad_count=0;
+		lworld_draw_loading_backdrop(reason,640,480,0,1);
+		bool portal=reason==PORTAL_IN || reason==PORTAL_OUT;
+		assert(terrain_quads==(portal?80u:0u));
+		assert(menu_quads==(portal?0u:1u));
+	}
+	/* Atlas remap and HD pack dimensions cannot change the normalized cell. */
+	netherrack_cell=19; texture_terrain.width=texture_terrain.height=1024;
+	terrain_quads=0;
+	lworld_draw_loading_backdrop(PORTAL_OUT,854,240,0,2);
+	assert(terrain_quads==56);
+	/* Default/unknown legacy style cannot disable the portal fallback. */
+	for(int style=0;style<=3;style+=3) {
+		terrain_quads=menu_quads=quad_count=0;
+		lworld_draw_loading_backdrop(PORTAL_IN,640,480,0,style);
+		assert(terrain_quads==80 && !menu_quads);
+	}
+	texture_terrain.data=NULL; menu_quads=quad_count=0;
+	lworld_draw_loading_backdrop(PORTAL_IN,640,480,0,1);
+	assert(menu_quads==1);
+	texture_menu_background.data=NULL;
+	lworld_draw_loading_backdrop(PORTAL_OUT,640,480,0,1);
+	assert(dirt_calls==1);
+	netherrack_cell=103;
+}
 static uint32_t import_percent;
 bool server_local_import_progress(uint32_t* out) {
 	import_calls++; *out=import_percent; return converting;
@@ -55,15 +146,39 @@ bool level_archive_read(struct level_archive* la,struct level_archive_tag tag,
 }
 void level_archive_discard(struct level_archive* la) { (void)la; archive_discards++; }
 void gfx_texture(bool enable) { (void)enable; }
-int gutil_font_width(const char* s,int size) { return (int)strlen(s)*size/2; }
+int gutil_font_width(const char* s,int size) {
+	if(!preview) return (int)strlen(s)*size/2;
+	int width=0;
+	for(;*s;s++) width+=(preview_font_widths[(unsigned char)*s]+1)*size/8;
+	return width;
+}
 void gutil_texquad_col(int x,int y,int tx,int ty,int sx,int sy,int w,int h,
 	uint8_t r,uint8_t g,uint8_t b,uint8_t a) {
+	if(!preview && bound_texture==&texture_terrain) {
+		/* hw1102c: the netherrack fallback uses gutil_bg's padded-atlas
+		 * texcoords (the float-UV path tiled the whole atlas on Wii). */
+		terrain_quads++;
+		assert(x>=0 && y>=0 && x+w<=854 && y+h<=480);
+		assert(r==g && g==b && a==255 && (r==64 || r==96));
+		assert(tx==(netherrack_cell % 14) * 18 + 3); /* TEX_OFFSET(TEXTURE_X()) */
+		assert(ty==(netherrack_cell / 14) * 18 + 3); /* TEX_OFFSET(TEXTURE_Y()) */
+		assert(sx>0 && sx<=16 && sy>0 && sy<=16);
+		return;
+	}
 	(void)tx; (void)ty; (void)sx; (void)sy;
-	assert(a==255 && quad_count<16);
+	if(preview) {
+		printf("{\"kind\":\"solid\",\"rect\":[%d,%d,%d,%d],\"rgba\":[%u,%u,%u,%u]}\n",x,y,w,h,r,g,b,a);
+		return;
+	}
+	assert((a==255 || a==72) && quad_count<16);
 	quads[quad_count++]=(struct quad){x,y,w,h,(unsigned)r<<16|(unsigned)g<<8|b};
 }
 void gutil_text_rgb(int x,int y,const char* s,int size,bool shadow,
 	uint8_t r,uint8_t g,uint8_t b) {
+	if(preview) {
+		printf("{\"kind\":\"text\",\"x\":%d,\"y\":%d,\"size\":%d,\"text\":\"%s\"}\n",x,y,size,s);
+		return;
+	}
 	assert(text_count<3 && shadow && r==255 && g==255 && b==255);
 	assert(x==(viewport_width-gutil_font_width(s,size))/2);
 	snprintf(texts[text_count],sizeof texts[0],"%s",s);
@@ -287,7 +402,36 @@ static void split_name_and_tip_bounds(void) {
 	}
 	viewport_width=640;
 }
-int main(void) {
+static void portal_titles(void) {
+	/* Minecraft.usePortal: entering -1 / leaving for 0. Same approved art. */
+	const char* headings[] = {"Entering the Nether", "Leaving the Nether"};
+	for(int remote=0;remote<2;remote++) for(int split=0;split<2;split++)
+		for(int direction=0;direction<2;direction++) {
+			clear();
+			lworld_draw_loading_status(remote,640,split?240:480,0,
+				headings[direction],"World","Loading level",42);
+			assert(!strcmp(texts[0],headings[direction]));
+		}
+}
+int main(int argc,char** argv) {
+	if(argc==5 && !strcmp(argv[1],"--preview")) {
+		FILE* f=fopen(argv[3],"rb"); assert(f);
+		assert(fread(preview_font_widths,1,256,f)==256); fclose(f);
+		preview=true;
+		texture_terrain.data=(void*)1;
+		texture_terrain.width=texture_terrain.height=256;
+		int direction=atoi(argv[4]);
+		if(atoi(argv[2])==3) {
+		 texture_nether_background=(struct tex_gfx){.data=(void*)1,.width=1024,.height=576};
+		}
+		lworld_draw_loading_backdrop(direction?PORTAL_OUT:PORTAL_IN,640,480,0,atoi(argv[2])==3?1:atoi(argv[2]));
+		lworld_draw_loading_status(false,640,480,0,
+			direction?"Leaving the Nether":"Entering the Nether","World","Loading level",42);
+		return 0;
+	}
+	portal_scene_lifecycle();
+	portal_backdrops();
+	portal_titles();
 	remote_unchanged();
 	measured_progress();
 	normal_load_gate();

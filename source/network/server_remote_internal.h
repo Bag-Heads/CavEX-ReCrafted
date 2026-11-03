@@ -94,12 +94,13 @@ _Static_assert(REMOTE_QUEUE_CAPACITY == SERVER_REMOTE_EVENT_QUEUE_CAPACITY,
  * a decoded Packet255 keeps its authority and a graceful local quit is
  * never latched as a failure (remote_write_fail_locked). */
 #define SERVER_REMOTE_END_SEND 7u
-/* Beta's default maximum server view is 21x21 = 441 columns. 576 entries leave
- * a complete extra edge ring plus allocator/scheduling headroom without copying
- * McBetaCpp's unmeasured 768. The
- * independent 12 MiB byte ceiling bounds compressed ownership even for hostile
- * but individually valid Packet51 bodies. */
-#define REMOTE_CHUNK_ENTRY_CAPACITY 576
+/* Beta PlayerManager.java:31-38 permits radius 15 (31x31 = 961 columns).
+ * Its move loop (:121-147) loads before unloading; installed old entries
+ * wait for the main-thread unload, so reserve two views plus 126 entries.
+ * Measured with devkitPPC/PPC32: 208 B/entry, 425,984 B total, +306,176 B
+ * over 576 entries. Compressed bodies retain their independent byte budget.
+ * No read-thread wait: a wait would also stall decoding later keep-alives. */
+#define REMOTE_CHUNK_ENTRY_CAPACITY 2048
 /* Matches SIGN_SIZE/MP_SIGN_LINE_COUNT (item/inventory.h's SIGN_SIZE 64 over
  * mp_codec.h's 4 lines): 16 cells per line in the local sign-edit buffer. */
 #define SIGN_EDIT_COLS 16
@@ -1424,6 +1425,13 @@ void remote_emit_pending_unloads_locked(struct server_remote_impl* remote);
  * never demand a disk the gate is not filling. Call with impl->lock held. */
 bool remote_admission_centre_locked(const struct server_remote_impl* remote,
 									int32_t* out_cx, int32_t* out_cz);
+/* ci-1101/54: the F4 memory gate's answer for a COLD (not yet installed)
+ * column right now -- the same remote_carve_can_hold_column test
+ * remote_start_promotion_locked applies. The readiness census uses it so the
+ * loading screen never waits on a column the gate is refusing (the M6
+ * radius/census disagreement, for memory instead of radius). Takes the mem2
+ * mutex; impl->lock may be held (the pump's own order). */
+bool remote_carve_admits_cold_column(void);
 /* Feed the centre. `authoritative` = the value came from a server position
  * packet (0x0D/0x0B correction, or a respawn's position); false = the weaker
  * login/respawn SPAWN hint (Packet6), which may seed a centre but must never

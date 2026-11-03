@@ -437,7 +437,8 @@ void gutil_button_draw_dwell(int x, int y, int w_units, const char* label,
  * on a black strip at alpha 120 that is 28 px tall (2 px above and below the
  * glyph) and pads its content 8 px left and right. Inside an item a pair of
  * glyphs (L+R "Category") is 4 px apart and the label starts 5 px after the
- * last glyph; items are 14 px apart.
+ * last glyph for A, adjusted for other cells' visible right edge; items are
+ * 14 px apart.
  *
  * Placement, inside the frame x,y,width,height the caller hands over (the
  * whole screen, or one split pane):
@@ -471,6 +472,8 @@ void gutil_button_draw_dwell(int x, int y, int w_units, const char* label,
 #define GUTIL_HINT_PAD 8
 #define GUTIL_HINT_PAIR_GAP 4
 #define GUTIL_HINT_LABEL_GAP 5
+/* Cell-to-label gap matching A's visible spacing on the selected sheet. */
+int gutil_hint_label_gap(int glyph);
 #define GUTIL_HINT_GAP 14
 #define GUTIL_HINT_GAP_TIGHT 8
 #define GUTIL_HINT_BOTTOM_FULL 24

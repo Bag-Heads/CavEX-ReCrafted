@@ -7139,6 +7139,45 @@ bool region_archive_set_chunk_retain(struct region_archive* ra, w_coord_t x,
 											 out_record, NULL, NULL);
 }
 
+bool region_archive_copy_pending_record(struct region_archive* ra, w_coord_t x,
+    w_coord_t z, uint64_t job, struct buffer* out_record) {
+	assert(ra && out_record);
+	region_archive_assert_owner(ra);
+	*out_record = BUFFER_INIT;
+	bool exists = false;
+	/* Verify the expected job after obtaining the readable index. A settled
+	 * rollback can name OLD bytes, which must never become NEW's retry copy. */
+	if(!region_archive_contains(ra, x, z, &exists) || !exists
+	   || region_archive_save_state(ra, job) != REGION_SAVE_PENDING
+	   || region_archive_chunk_job(ra, x, z) != job)
+		return false;
+	uint32_t value = ra->offsets[(x & (REGION_SIZE - 1))
+		+ (z & (REGION_SIZE - 1)) * REGION_SIZE];
+	const struct region_io_op* queued = s_rio_enabled
+		? rio_find_write(ra, value) : NULL;
+	if(queued) {
+		unsigned char* bytes = malloc(queued->data.len);
+		if(!bytes) return false;
+		memcpy(bytes, queued->data.data, queued->data.len);
+		*out_record = (struct buffer){bytes, queued->data.len, queued->data.len};
+		return true;
+	}
+	uint8_t* bytes = NULL;
+	uint32_t length = 0;
+	uint8_t type = 0;
+	FILE* file = rio_record_file(ra, value >> 8,
+		(size_t)(value & 255) * REGION_SECTOR_SIZE);
+	bool ok = file && region_read_record(file, value >> 8, value & 255,
+		&bytes, &length, &type);
+	if(!rio_record_file_close(ra, file)) ok = false;
+	/* Pending CaveWii records are zlib; recommit_record supplies that framing. */
+	if(!ok || type != 2) { free(bytes); return false; }
+	memmove(bytes, bytes + 5, length - 1);
+	*out_record = (struct buffer){bytes, length - 1,
+		(size_t)(value & 255) * REGION_SECTOR_SIZE};
+	return true;
+}
+
 bool region_archive_recommit_record(struct region_archive* ra, w_coord_t x,
 									w_coord_t z, const struct buffer* record) {
 	assert(ra && record);

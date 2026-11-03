@@ -1239,6 +1239,7 @@ static void options_adjust(int row, int direction) {
 	*value = (roundf(*value * 100.0F) + direction * 5) / 100.0F;
 	if(*value < 0.0F) *value = 0.0F;
 	if(*value > 1.0F) *value = 1.0F;
+	save_failed = false;
 	options_refresh_labels();
 }
 
@@ -1331,6 +1332,13 @@ bool screen_options_split_flush(void) {
 }
 
 static void options_leave(void) {
+	/* Second Back after a failed save: discard the draft and leave. The
+	 * failed options_commit already restored and re-applied the old values;
+	 * any further edit clears save_failed and re-arms the save-on-Back path. */
+	if(save_failed) {
+		screen_set(options_return);
+		return;
+	}
 	if(options_commit())
 		screen_set(options_return);
 	else
@@ -1452,8 +1460,10 @@ static void screen_options_update(struct screen* s, float dt) {
 			audio_play_ui(SOUND_RANDOM_CLICK, 1.0F, 1.0F);
 		} else if(row == OC_SPLIT
 		   && (input_pressed(IB_GUI_LEFT) || input_pressed(IB_GUI_RIGHT))
-		   && split_ui_set(step > 0))
+		   && split_ui_set(step > 0)) {
+			save_failed = false;
 			audio_play_ui(SOUND_RANDOM_CLICK, 1.0F, 1.0F);
+		}
 		else if(row == OC_VIDEO || row == OC_DIFFICULTY)
 			/* W1F: Left/Right walk the two halves of the row; only a
 			 * fresh activation changes the value (Beta's click cycle). A
@@ -1478,10 +1488,12 @@ static void screen_options_update(struct screen* s, float dt) {
 				d.target == OT_MUSIC_PLUS || d.target == OT_SOUND_PLUS ? 1 : -1);
 		else if(row == OC_SPLIT) {
 			int shown = split_row_state == SPLIT_ROW_PENDING ? split_pending_want : split_value;
+			save_failed = false;
 			split_ui_set(!shown);
 		} else if(row == OC_DIFFICULTY) {
 			/* GuiOptions.actionPerformed -> setOptionValue(DIFFICULTY, 1):
 			 * difficulty = difficulty + 1 & 3 (GameSettings.java:125). */
+			save_failed = false;
 			difficulty_apply(difficulty_cycle(difficulty_value, 1));
 			options_refresh_labels();
 		} else if(row == OC_VIDEO) {
@@ -1537,7 +1549,9 @@ static void screen_options_render2D(struct screen* s, int width, int height) {
 		fep_outline(options_target_rect(OC_SPLIT), opt_px(2), 48, 48, 48, 255);
 	/* Preserve readable helper text below the label. The first line ends
 	 * before the toggle; the second lies below it inside the paper panel. */
-	if(save_failed) opt_text(60, 390, 14, 520, "Could not save options", true);
+	if(save_failed)
+		opt_text(60, 390, 14, 520,
+			"Could not save. Press Back again to leave without saving", true);
 	else if(selected == OC_SPLIT || split_row_state != SPLIT_ROW_SETTLED || split_status[0]) {
 		const char *line1, *line2;
 		split_helper_lines(&line1, &line2);

@@ -97,7 +97,10 @@ def production_harness():
                      r'TEX_FMT_RGBA32,\s*false\)', texture)
     assert "tex_cache_note_slot(&texture_title_logo);" in texture
     assert "tex_gfx_clear(tex);" in function(texture, "tex_gfx_load_file")
-    assert 'pack = "sd:/assets";' in function(texture, "tex_read_impl")
+    # ci-1101/18: bundled-only files walk the bundled roots (Wii: sd:/assets,
+    # then the app-folder assets/), never the pack.
+    assert "count = tex_bundled_roots(candidates, 2);" in function(texture, "tex_read_impl")
+    assert '{"sd:/assets", TEX_DEFAULT_PACK}' in function(texture, "tex_bundled_roots_for")
     assert "title_draw_wordmark(&c, width);" in title
     assert "title_draw_splash(&c);" in title
     # The logo slot needed policy v2; later slots (DC-GRASS overlay) bump it further.
@@ -132,6 +135,7 @@ PRELUDE = r'''
 #include <string.h>
 #include "platform/texture.h"
 #include "platform/tex_gx_conv.h"
+#include "graphics/beta_text_color.h"
 #ifdef NDEBUG
 #error "title logo assertions must be enabled"
 #endif
@@ -183,12 +187,16 @@ static void gutil_text_rot_zoom(int x, int y, const char* str, int font,
                                 float angle, float zoom, bool shadow,
                                 uint8_t r, uint8_t g, uint8_t b) {
     const float pulses[5] = {1.0F, 0.96464466F, 0.95F, 0.96464466F, 1.0F};
-    assert(angle == -9.0F && fabsf(zoom-pulses[pulse_phase]) < 0.000001F);
+    /* Beta GuiMainMenu: a long splash is scaled down to fit (never cut), so
+     * zoom = pulse * fit with 0 < fit <= 1. */
+    float fit = zoom / pulses[pulse_phase];
+    assert(angle == -9.0F && fit > 0.0F && fit <= 1.000001F);
     assert(font == 14 && shadow && r == 255 && g == 255 && b == 160);
     if(texture_title_logo.data) {
         assert(x == (screen_width-640)/2+551 && y == 157);
     } else {
-        assert(x == (screen_width-640)/2+592-gutil_font_width(str,font)/2 && y == 136);
+        int want = (screen_width-640)/2+592-(int)(gutil_font_width(str,font)*fit)/2;
+        assert(abs(x - want) <= 1 && y == 136);
     }
     real_text_rot_zoom(x, y, str, font, angle, zoom, shadow, r, g, b);
 }

@@ -1,0 +1,63 @@
+{
+  "format": "CWNSMAP1 (zlib)",
+  "size": [
+    1024,
+    576
+  ],
+  "sha256": "fc66c89946b9ffe38a330793d8688670dddea556b3a92ae36a183b603a2fbc11",
+  "bytes": 682679,
+  "uncompressed_bytes": 3370034,
+  "palette_entries": 110462,
+  "layer_samples": [
+    589824,
+    1772,
+    298
+  ],
+  "recipe": {
+    "seed": 42,
+    "eye": [
+      -59.5,
+      36.62,
+      100.5
+    ],
+    "yaw": 90,
+    "polar_pitch": 78,
+    "animation_frame": 0
+  },
+  "capture_inputs": {
+    "engine_sha256": "5ed49cbaa0ac99b37ce641a6b16b230b152c495b19d1f9d5e24f0d195ad63d0c",
+    "shader_sha256": "7d1724afac44321f1a3479e34932bcd2498c86078c013bd30c7a0fe2fc738e65",
+    "config": {
+      "debug": {
+        "overlay": "off",
+        "hw_overlay": 0,
+        "backdrop_bake_selftest": 1,
+        "nether_bake": 1,
+        "nether_seed": 42,
+        "nether_x": -60,
+        "nether_y": 36,
+        "nether_z": 100,
+        "nether_yaw": 90,
+        "nether_pitch": 78
+      },
+      "experimental": {
+        "local_splitscreen": 0
+      }
+    }
+  },
+  "capture_sha256": {
+    "layer0-ids.png": "5165f1ee59a1c1f2ab5eedc920cbf3fa168c49d1e1b118ec0debc0948e7ab8c6",
+    "layer0-black.png": "5b5fb422880700d3161a5d5d440196f3492aa5ecfe7d873b69fa868bbab809b6",
+    "layer0-white.png": "cc9378364484ed09b8c269749f42876fb5398680568b5c7307e2176c61a6b66f",
+    "layer0-depth.png": "3e288c1e62cfeee712a8f4f38ff027bdaa9476926f4ef3620450fccabf52130f",
+    "layer1-ids.png": "25deb3e7cf0ef633db448252a5e106c42da87a0c7ec499d6003d1b0f6b4fe98e",
+    "layer1-black.png": "bdb08687aeeb8f113551340114aec59c5b48941305949fbdd558c20f3c0cfd0a",
+    "layer1-white.png": "438cd011796f80c606d06337aa2f9d467bae2dab5e4b45935993fbb2b9487c20",
+    "layer1-depth.png": "074dadec7fe43676cacc8e934a56c9282e35d559470f508f691f4595d840a45a",
+    "layer2-ids.png": "03f2bc520257364120487166da2bdc661ea55fd4b00f5021a7d1e6cc3d2f19d2",
+    "layer2-black.png": "64f61e94dea67bba0761fb6ccf602c20ba53c6eea96d6ea0f851049f83d12063",
+    "layer2-white.png": "32f019d21dab475a7151a7b5f4b467b7304565066adc5f5226bd89f530866056",
+    "layer2-depth.png": "a141f3f1c42ee0d1a65a6bc0d372eb44d7172728144a9b6131e4d7ce56d27b19"
+  },
+  "provenance": "CaveWii-generated geometry/shading; synthetic atlases only; no Mojang pixels"
+}

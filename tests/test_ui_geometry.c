@@ -335,8 +335,36 @@ static void check_compact_inventory(void) {
 	assert(strstr(src, "add_slot(v,220,76,INVENTORY_SLOT_OUTPUT);v->slots[v->count-1].extent=26;"));
 	assert(strstr(src, "else inventory_portrait(v,inv,ox+74,oy+46,58,104);"));
 	assert(strstr(src, "else gutil_texquad(ox+194,oy+80,90,35,22,15,22,16);"));
-	assert(strstr(src, "if(full)container_page_header(ox+320-container_page_header_width(true)/2,oy+10,false,true);"));
-	assert(strstr(src, "else container_page_header(ox+44,oy+20,false,false);"));
+	assert(strstr(src, "if(full)container_page_header(ox+320-container_page_header_width(true)/2,oy+container_page_header_y(true),false,true);"));
+	assert(strstr(src, "else container_page_header(ox+44,oy+container_page_header_y(false),false,false);"));
+	/* ci-1101/07 (+ Sol R2): the full panel starts under the TV-safe header;
+	 * machine_panel draws a 2 px outer border beyond its rect (rect(x-2,y-2,
+	 * w+4,h+4)), so the DRAWN panel incl. border must end at or above the
+	 * hearts row (363): 46 + 315 + 2 == 363 (last drawn row 362). */
+	assert(strstr(src, "machine_panel(ox+(full?134:32),oy+(full?46:8),full?372:576,full?315:188);"));
+	assert(strstr(src, "rect(x-2,y-2,w+4,h+4,17,255);") && "machine_panel border expansion changed; re-pin");
+	{
+		const int border = 2, panel_y = 46, panel_h = 315;
+		int hearts_y = screen_ingame_hotbar_top(480, GFX_GUI_SCALE) - 10 * GFX_GUI_SCALE;
+		assert(hearts_y == 363);
+		assert(panel_y + panel_h + border <= hearts_y && "inventory panel border touches the hearts");
+		assert(strstr(src, "machine_panel(px,py,full?372:576,full?331:188);"));
+		assert(30 + 331 + 2 <= hearts_y && "machine panel border touches the hearts");
+		for(int machine = 0; machine < 2; machine++) {
+			struct container_compact panel;
+			assert(container_compact_open(&panel,
+				machine ? WINDOW_TYPE_DISPENSER : WINDOW_TYPE_FURNACE,
+				machine ? 45 : 39, 0, 640, 480));
+			for(size_t k = 0; k < panel.count; k++)
+				assert(panel.slots[k].y + 36 <= 30 + 331);
+		}
+		/* the inventory hotbar slot row (off_y 30 + 288 .. +36) stays inside */
+		assert(30 + 288 + 36 <= panel_y + panel_h);
+		/* the Crafting page panel (recipe_ui_panel draws inside its rect) too */
+		struct recipe_browser_geometry pg;
+		recipe_browser_geometry_grid(2, 480, 0, 12, 0, 1, &pg);
+		assert(pg.panel_y + pg.panel_h <= hearts_y);
+	}
 	/* No in-panel title, no header Previous/Next glyphs, no Recipes button. */
 	assert(!strstr(src, "gutil_text_rgb(ox+146,oy+56,\"Inventory\""));
 	assert(!strstr(src, "\"Recipes\",14,true"));
@@ -349,17 +377,47 @@ static void check_compact_inventory(void) {
 	free(host);
 	/* The Crafting page draws the same header (recipe_browser.c, grid 2). */
 	char* rb = read_source("source/game/gui/recipe_browser.c");
-	assert(strstr(rb, "if(full)header_w=container_page_header(bx+320-container_page_header_width(true)/2,by+10,true,true);"));
-	assert(strstr(rb, "else header_w=container_page_header(bx+44,by+20,true,false);"));
+	assert(strstr(rb, "if(full)header_w=container_page_header(bx+320-container_page_header_width(true)/2,by+container_page_header_y(true),true,true);"));
+	assert(strstr(rb, "else header_w=container_page_header(bx+44,by+container_page_header_y(false),true,false);"));
 	free(rb);
+	/* ci-1101/07 (real-Wii softlock-repro-faad2a0 capture): the title row was
+	 * clipped off the top of the screen -- B3 had the full header at y 10,
+	 * inside the SDTV overscan band. The whole header rect (split ink plate
+	 * y-3 .. underline y+20) must lie inside the pane AND, full screen, in
+	 * the TV-safe band (top >= 24, like the bottom hint row's 24). Checked
+	 * for 640/802 x 480 and both split halves (x 240). */
+	for(int W = 640; W <= 802; W += 162) for(int H = 240; H <= 480; H += 240) {
+		bool full = H >= 480;
+		int oy = (H - (full ? 480 : 240)) / 2;
+		int y = oy + container_page_header_y(full);
+		int top = full ? y : y - 3, bottom = y + CONTAINER_PAGE_HEADER_H;
+		int hx = full ? (W - 640) / 2 + 320 - container_page_header_width(true) / 2
+					  : (W - 640) / 2 + 44;
+		int hw = container_page_header_width(!full ? false : true);
+		assert(top >= 0 && bottom <= H && "page header outside its pane");
+		assert(hx >= 0 && hx + hw <= W && "page header outside its pane (x)");
+		if(full) {
+			assert(top >= GUTIL_HINT_BOTTOM_FULL && "full page header in the overscan band");
+			/* and it stays above the panel it titles (border at panel-2) */
+			assert(bottom <= 46 - 2);
+			struct recipe_browser_geometry pg;
+			recipe_browser_geometry_grid(2, H, 0, 12, 0, 1, &pg);
+			assert(bottom <= pg.panel_y - 2);
+		}
+	}
+	printf("  MEASURE page header y: full %d (h %d), split %d\n",
+		container_page_header_y(true), CONTAINER_PAGE_HEADER_H, container_page_header_y(false));
 	struct recipe_browser_geometry full, split, bench;
 	recipe_browser_geometry_grid(2, 480, 0, 12, 0, 1, &full);
 	recipe_browser_geometry_grid(2, 240, 0, 12, 0, 1, &split);
 	recipe_browser_geometry(240, 0, 12, 0, 1, &bench);
 	/* 2026-10-31 part B: the footer is the bottom hint row (strip top
 	 * 428 / 196); the panels end above it (full: above the hearts, B3). */
-	assert(full.panel_y == 32 && full.panel_h == 320 && full.category_y == 40
-		&& full.family_y == 90 && full.name_y == 148 && full.footer_y == 428);
+	/* ci-1101/07: full page panel 46..362 (was 32..352), under the TV-safe
+	 * header; its lowest row (inventory hotbar, panel+272..+308) still fits. */
+	assert(full.panel_y == 46 && full.panel_h == 316 && full.category_y == 54
+		&& full.family_y == 104 && full.name_y == 162 && full.footer_y == 428);
+	assert(46 + 308 <= 46 + 316);
 	assert(split.panel_y == 8 && split.panel_h == 184 && split.category_y == 42
 		&& split.family_y == 86 && split.name_y == 134 && split.footer_y == 196);
 	/* T13 fix r1 (Sol review): at EVERY size the vertical rows -- page header
@@ -1395,7 +1453,8 @@ static void hint_row_invariants(const struct gutil_hint_row* r,
 		if(c->glyph_count == 2)
 			assert(c->glyph_x[1] == c->glyph_x[0] + c->glyph_w[0] + 4);
 		int last = c->glyph_count - 1;
-		assert(c->label_x == c->glyph_x[last] + c->glyph_w[last] + 5);
+		assert(c->label_x == c->glyph_x[last] + c->glyph_w[last]
+			+ gutil_hint_label_gap(c->glyph[last]));
 		/* labels are never truncated */
 		assert(c->label == items[c->item].label);
 		assert(c->label_w == gutil_font_width(items[c->item].label, 16));
@@ -1697,7 +1756,7 @@ static void check_pc_cap_glyphs(void) {
 	struct gutil_hint_row row;
 	assert(gutil_hint_row_layout(&in, 0, 0, 640, 480, false, GUTIL_HINT_ALIGN_LEFT,
 								 items, 2, &row) && row.count == 2);
-	assert(row.cells[0].rect.width == 48 + GUTIL_HINT_LABEL_GAP
+	assert(row.cells[0].rect.width == 48 + gutil_hint_label_gap(space)
 		   + gutil_font_width("Jump", GUTIL_HINT_TEXT));
 	/* the fallback atlas: generic KEY / MSE cells, no name, 1x wide */
 	texture_approved_controls.data = NULL;
@@ -3739,13 +3798,74 @@ static void check_weather_overlay_row(void) {
 	free(src);
 }
 
+/* Record the old single-player composition before exercising split menus. */
+static void check_creative_picker_geometry(void) {
+	used = 0; calls[0] = 0; recording = true;
+	screen_creative_picker.render2D(&screen_creative_picker, 640, 480);
+	recording = false;
+	uint64_t hash = UINT64_C(14695981039346656037);
+	for(size_t i = 0; i < used; i++) {
+		hash ^= (unsigned char)calls[i];
+		hash *= UINT64_C(1099511628211);
+	}
+	/* Captured before ci-1101/35 production edits (12169-byte draw tape). */
+	assert(used == 12169 && hash == UINT64_C(1212067025779354361));
+	printf("creative SP trace: %llu bytes, hash %llu\n",
+		(unsigned long long)used, (unsigned long long)hash);
+	struct client_session host = {0}, guest = {0};
+	struct container_glyphs glyphs = {0};
+	gstate.config_creative = true;
+	assert(local_menu_host_open_creative(&guest, 1, 640, 240));
+	used = 0; calls[0] = 0; recording = true;
+	local_menu_host_render(&host, &glyphs);
+	assert(used == 0); /* P1 retains main's world/HUD branch. */
+	hud_recording = true; hud_hotbar_quads = 0;
+	local_menu_host_render(&guest, &glyphs);
+	hud_recording = false; recording = false;
+	assert(used > 0 && hud_hotbar_quads == 0);
+	unsigned entries = 0;
+	for(const char* at = calls; (at = strstr(at, "item ")); at += 5) {
+		unsigned id, count, damage; int x, y, layer;
+		assert(sscanf(at, "item %u %u %u %d %d %d", &id, &count,
+			&damage, &x, &y, &layer) == 6);
+		assert(x >= 0 && x + 32 <= 640 && y >= 32 && y + 32 <= 112);
+		entries++;
+	}
+	assert(entries == 18); /* readable 9x2 composition, not a squeezed 9x5 */
+	for(const char* at = calls; (at = strstr(at, " | ")); at += 3) {
+		int x, y, z;
+		assert(sscanf(at + 3, "%d,%d,%d", &x, &y, &z) == 3);
+		assert(x >= 0 && x <= 640 && y >= 0 && y <= 240);
+	}
+	struct input_inventory notices = {0};
+	notices.notices[0] = (struct input_connection_notice){
+		.expires = time_add_ms(time_get(), 60000), .kind = INPUT_DEVICE_WPAD,
+		.channel = 1, .player = 1, .event = CONTROLLER_EVENT_LOW_BATTERY,
+		.category = INPUT_CAT_NUNCHUK, .active = 1, .connected = true};
+	gutil_join_inventory_override(&notices);
+	memset(&gutil_test_last_notice, 0, sizeof gutil_test_last_notice);
+	local_menu_host_render(&guest, &glyphs);
+	assert(gutil_test_last_notice.w > 0 && gutil_test_last_notice.x >= 140);
+	assert(gutil_test_last_notice.y >= 8
+		&& gutil_test_last_notice.y + gutil_test_last_notice.h <= 32);
+	gutil_join_inventory_override(NULL);
+	local_menu_host_reset(&guest);
+	gstate.config_creative = false;
+	puts("PASS creative picker: SP tape unchanged; P2 compact drawing stays inside its pane without HUD");
+
+}
+
 int main(void) {
+	/* Draw recorder: represent a loaded fallback sheet; graphics calls are wrapped. */
+	static uint8_t controls_texel[4];
+	texture_controls.data = controls_texel;
 	gstate.config_user.root = json_value_init_object();
 	texture_font.width = texture_font.height = 128; gutil_reset_font(&texture_font);
 	assert(gutil_font_width("Sort", 16) == 44);
 	blocks_init(); items_init();
 	struct entity hud_body = {0}; hud_body.health = 160;
 	gstate.players[0].local_player = &hud_body;
+	check_creative_picker_geometry();
 	check_compact_inventory();
 	check_pause_composition();
 	check_controller_picture_slots();

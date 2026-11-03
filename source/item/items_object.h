@@ -1099,10 +1099,9 @@ static struct item item_glowstone_dust = {
 // paper ring + compass, CraftingManager:73). RENDER: TextureCompassFX (the
 // live needle animation) is now ported byte-faithfully -- see
 // source/graphics/compass_fx.h and the runtime consumer
-// source/platform/texture.c's item_needle_fx_tick. Gated behind the T2
-// "gfx.item_needle_anim" toggle (default ON on PC, OFF on Wii pending a
-// real-hardware bytes/frame measurement -- game_state.h); with the toggle off
-// (or on an unmeasured Wii build) the icon stays the pack's STATIC items.png
+// source/platform/texture.c's item_needle_fx_tick. Default ON on PC and Wii;
+// opt out with gfx.item_needle_anim=0. With the toggle off,
+// the icon stays the pack's STATIC items.png
 // tile (6,3), same as before this port. Simulation-neutral either way.
 static struct item item_compass = {
 	.name = "Compass",

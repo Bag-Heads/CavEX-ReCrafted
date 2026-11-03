@@ -23,6 +23,7 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "../../game/game_state.h"
 #include "../tex_gx_conv.h" /* pack-cache-0927: the shared GX encoders */
 
 // Defined above tex_gfx_load; also used by tex_gfx_load_atlas earlier in the file.
@@ -83,15 +84,9 @@ static void* tex_conv(enum tex_format type, uint8_t* image, size_t width,
 	return output;
 }
 
-// Build a GX_TF_RGB5A3 mip chain (LODs 0..3) from an RGBA8 atlas with
-// the given tile pitch: one 32-byte-aligned MEM2 buffer with all four LODs
-// back-to-back, the layout GX expects when GX_InitTexObj is called with the
-// mipmap flag set. Total size is width*height*2 * 85/64 ~= 1.33x LOD 0.
-// A level that is not 4-aligned (a 16-multiple that isn't a power of two,
-// e.g. 336) or a failed allocation returns NULL and the caller falls back to
-// the single-LOD path. The chain is encoded straight into the combined
-// buffer (pack-cache-0927: the old per-LOD MEM2 staging buffers + memcpy
-// produced the identical bytes with a higher peak).
+// LOD 0 plus one isolated downsample, stored back-to-back for GX.
+// Incompatible grids use nearest level zero; allocation failure also falls
+// back to level zero and is never frozen into an opt-in mip cache.
 enum { LODS = TEX_GX_ATLAS_LODS };
 
 static void* tex_build_mip_chain_rgba16(uint8_t* image, size_t width,
@@ -136,6 +131,12 @@ bool tex_gfx_load_atlas(struct tex_gfx* tex, void* img, size_t width,
 		return false;
 	}
 
+	/* Beta RenderEngine.java:20,164-170: useMipmaps=false, GL_NEAREST.
+	 * Apply the same policy to fresh loads and host-baked cache records. */
+	if(!config_read_flag(&gstate.config_user, "render.mipmaps", false)
+	   || tex_atlas_mip_levels(grid) == 1)
+		return tex_gfx_load(tex, img, width, height, type, false);
+
 	size_t total;
 	void* output
 		= tex_build_mip_chain_rgba16(img, width, height, grid, &total);
@@ -148,7 +149,7 @@ bool tex_gfx_load_atlas(struct tex_gfx* tex, void* img, size_t width,
 				"[texture] atlas mip chain failed (%ux%u); falling back to "
 				"single-LOD load\n",
 				(unsigned)width, (unsigned)height);
-		return tex_gfx_load(tex, img, width, height, type, true);
+		return tex_gfx_load(tex, img, width, height, type, false);
 	}
 
 	if(tex->data) // re-entrant reload (pack switch): free the previous atlas first
@@ -166,12 +167,9 @@ bool tex_gfx_load_atlas(struct tex_gfx* tex, void* img, size_t width,
 	GX_InitTexObj(&tex->obj, output, width, height, GX_TF_RGB5A3, GX_CLAMP,
 				  GX_CLAMP, GX_TRUE);
 	GX_InitTexObjMaxAniso(&tex->obj, GX_ANISO_1);
-	// Minification is trilinear (linear within each LOD + linear between LODs)
-	// so distant terrain stays clean; max_lod = 3 because we built 4 levels
-	// (0..3). Magnification is GX_NEAR so close-up texels stay crisp and blocky
-	// like Java Minecraft, instead of being smeared by bilinear upscaling.
-	GX_InitTexObjLOD(&tex->obj, GX_LIN_MIP_LIN, GX_NEAR, 0.0f, 3.0f, 0.0f,
-					 GX_FALSE, GX_FALSE, GX_ANISO_1);
+	// Only the isolated LOD range may participate in trilinear sampling.
+	GX_InitTexObjLOD(&tex->obj, GX_LIN_MIP_LIN, GX_NEAR, 0.0f,
+					 (float)(LODS - 1), 0.0f, GX_FALSE, GX_FALSE, GX_ANISO_1);
 	GX_InvalidateTexAll();
 
 	free(img);
@@ -214,17 +212,17 @@ void tex_cache_texel_free(void* p) {
 }
 
 /* Install cache-restored GX bytes exactly as tex_gfx_load (lods 1) or
-   tex_gfx_load_atlas (lods 4) finishes after its conversion: same GXTexObj
+   tex_gfx_load_atlas (lods 2) finishes after its conversion: same GXTexObj
    calls, same fields. Takes ownership of `data` on every path. */
 bool tex_gfx_restore(struct tex_gfx* tex, void* data, size_t data_bytes,
 					 size_t width, size_t height, enum tex_format type,
 					 unsigned lods, bool linear, bool atlas) {
 	(void)atlas;
 	uint8_t fmt = tex_gx_format(type);
-	bool shape_ok = lods == 1
+	bool shape_ok = data_bytes != 0 && (lods == 1
 		? data_bytes == tex_gx_bytes(type, width, height)
 		: (lods == LODS && type == TEX_FMT_RGBA16
-		   && data_bytes == tex_gx_atlas_bytes(width, height));
+		   && data_bytes == tex_gx_atlas_bytes(width, height)));
 	if(fmt == 0xFF || !shape_ok
 	   || !tex_gfx_dimensions_valid(width, height, type)) {
 		tex_cache_texel_free(data);
@@ -244,8 +242,9 @@ bool tex_gfx_restore(struct tex_gfx* tex, void* data, size_t data_bytes,
 		GX_InitTexObj(&tex->obj, data, width, height, GX_TF_RGB5A3, GX_CLAMP,
 					  GX_CLAMP, GX_TRUE);
 		GX_InitTexObjMaxAniso(&tex->obj, GX_ANISO_1);
-		GX_InitTexObjLOD(&tex->obj, GX_LIN_MIP_LIN, GX_NEAR, 0.0f, 3.0f, 0.0f,
-						 GX_FALSE, GX_FALSE, GX_ANISO_1);
+		GX_InitTexObjLOD(&tex->obj, GX_LIN_MIP_LIN, GX_NEAR, 0.0f,
+						 (float)(LODS - 1), 0.0f, GX_FALSE, GX_FALSE,
+						 GX_ANISO_1);
 	} else {
 		GX_InitTexObj(&tex->obj, data, width, height, fmt, GX_CLAMP, GX_CLAMP,
 					  GX_FALSE);
@@ -373,6 +372,12 @@ void tex_gfx_lookup(struct tex_gfx* tex, int x, int y, uint8_t* color) {
 				= tex->data + ((x / 8) + (y / 4) * (tex->width / 8)) * 32;
 			uint8_t pixel = blk[(x % 8) + (y % 4) * 8];
 			color[0] = color[1] = color[2] = color[3] = pixel;
+		} break;
+		case TEX_FMT_RGBA16: {
+			/* RGB5A3 LOD0, the inverse of tex_gfx_subimage / tex_gx_rgb5a3:
+			 * the item needle FX captures its base cells through here. */
+			tex_gx_rgb5a3_decode(((const uint16_t*)tex->data)[
+				water_fx_swizzle_index(x, y, (int)tex->width)], color);
 		} break;
 		default: assert(false);
 	}

@@ -1,4 +1,7 @@
 {
+ "render": {
+  "mipmaps": false
+ },
  "paths": {
   "texturepack": "assets",
   "worlds": "saves"

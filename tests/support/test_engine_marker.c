@@ -6,7 +6,7 @@
  *   - configure time: the playable-target boundary sweep in CMakeLists
  *     rejects CAVEWII_TESTING / cavex_test_* links on playable targets;
  *   - post-link (PC): cmake/check_no_test_marker.cmake fails the cavex app
- *     build if the marker string appears in cavewii_v2.exe;
+ *     build if the marker string appears in CavEX-ReCrafted.exe;
  *   - post-link (Wii): the Makefile .dol rule readelf-greps for the symbol.
  * Do not move this into an engine source file and do not remove it: without
  * the marker, "test objects never link into playable executables" is

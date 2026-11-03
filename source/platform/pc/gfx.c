@@ -199,8 +199,9 @@ bool gfx_setup() {
 	/* Explicit PC proof viewport; normal play retains native 640x480. */
 	if(config_read_int(&gstate.config_user, "debug.capture_height", 480) == 240)
 		window_height = 240;
-	window
-		= glfwCreateWindow(window_width, window_height, GAME_NAME, NULL, NULL);
+	/* The player-facing name; GAME_NAME stays the internal build marker. */
+	window = glfwCreateWindow(window_width, window_height, "CavEX: ReCrafted",
+							  NULL, NULL);
 	if(!window) {
 		fprintf(stderr, "[gfx] glfwCreateWindow failed\n");
 		glfwTerminate();

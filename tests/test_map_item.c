@@ -976,10 +976,15 @@ static void test_production_sp_bytes(const char* trace_path) {
 		sp_trace = NULL;
 	}
 	printf("production SP trace FNV64=%016llx\n", (unsigned long long)sp_hash);
+	fflush(stdout);
 	/* Independently built bdbd7cbe4 production trace: 1,592,120 bytes,
 	 * SHA256 84d50e1ecfa1bd89de4c65995b98c869a2100045a64366fbcd7a79104a0e4285.
 	 * Candidate and historical binary traces were compared byte-for-byte. */
-	assert(sp_hash == UINT64_C(0x81099e600b7dc26b));
+	/* Re-pinned 2026-11-02 (hw1102c map fix): the scan no longer writes the
+	 * blank colour of an UNLOADED column over a pixel (Beta's server would
+	 * have loaded it); this fixture's unloaded fringe moves the trace. HEAD
+	 * c8d7879ca without the fix still reproduces the old pin 81099e600b7dc26b. */
+	assert(sp_hash == UINT64_C(0x586873c53763063c));
 	s.worlds[0].dimension = s.player.dimension = WORLD_DIM_OVERWORLD;
 }
 

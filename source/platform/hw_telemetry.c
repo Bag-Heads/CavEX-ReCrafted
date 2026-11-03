@@ -1902,6 +1902,21 @@ size_t hw_telemetry_format_heartbeat(
 	if(hb->ssw_present) /* hw1030n; see hw_heartbeat.ssw */
 		off = append_format(dst, dst_size, off - 1, ",\"ssw\":[%u,%u]}",
 			hb->ssw[0], hb->ssw[1]);
+	/* ci-1101/37: the longest >= 10 ms drain mutex wait this window, with the
+	 * contended lock named and its holder -- only when one happened, so a
+	 * quiet heartbeat keeps its bytes. The name is a build-time literal
+	 * (thread_stripe_set_name), never console input: it carries the same
+	 * escaping guard as mp_end_reason all the same, and an empty name emits
+	 * "" rather than dropping the key. */
+	if(hb->lqd_wait_present) {
+		char name_text[THREAD_DRAIN_WAIT_MUTEX_NAME_MAX * 6 + 1];
+		const char* nm = hb->lqd_wait_name;
+		append_json_string(name_text, sizeof name_text, 0, nm, strlen(nm));
+		off = append_format(dst, dst_size, off - 1,
+			",\"lqd_w\":[%u,%u,%u,%u,%u,%s]}", hb->lqd_wait_us,
+			hb->lqd_wait_mutex, hb->lqd_wait_holder_id,
+			hb->lqd_wait_holder_tag, hb->lqd_wait_stripe, name_text);
+	}
 	if(hb->mm_valid)
 		off = append_format(dst, dst_size, off - 1,
 			",\"mm_valid\":%u,\"mm_st\":%u,\"mm_bits\":%u,"

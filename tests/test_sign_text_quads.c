@@ -335,6 +335,60 @@ static void test_glyph_uv(void) {
 	assert(fabsf(verts[6].v - 64.0f / 256.0f) < 1e-6f);
 }
 
+// ci-1101/30: Beta colour codes on a sign line. [mcb173-retromcp
+// FontRenderer.java:147-161 renderString, :183-202 getStringWidth;
+// TileEntitySignRenderer.java:56-58 centres with getStringWidth, base colour
+// 0]. "\247cRed \247fWhite" must draw glyphs for "Red White" ONLY, Red in
+// colour 12 (255,85,85), White in colour 15 (255,255,255), centred on the
+// code-free width; a code-free line stays Beta's black.
+static void test_colour_codes(void) {
+	char grid[64];
+	memset(grid, ' ', sizeof(grid));
+	const char* line0 = "\247cRed \247fWhite";
+	memcpy(grid, line0, strlen(line0));
+	memcpy(grid + 1 * SIGN_TEXT_QUAD_COLS, "AB", 2);
+	// uppercase selector selects too; an unknown one (1.4+ 'l') is white.
+	memcpy(grid + 2 * SIGN_TEXT_QUAD_COLS, "\247Ax\247ly", 6);
+	// "\247\247c": the 2nd 167 is the first code's selector (unknown ->
+	// white), so 'c' is DRAWN.
+	memcpy(grid + 3 * SIGN_TEXT_QUAD_COLS, "\247\247" "c", 3);
+
+	struct sign_text_vertex verts[SIGN_TEXT_MAX_VERTS];
+	size_t n = sign_text_build_quads(grid, 0, false, g_width, verts,
+									 SIGN_TEXT_MAX_VERTS);
+	// glyphs: "Red"+"White" (8) + "AB" (2) + "xy" (2) + "c" (1)
+	assert(n == 13 * 4);
+
+	const char* drawn = "RedWhiteABxyc";
+	for(size_t q = 0; q < 13; q++) {
+		unsigned char ch = (unsigned char)drawn[q];
+		assert(fabsf(verts[q * 4].u - (float)(ch % 16) * 16.0f / 256.0f) < 1e-6f);
+		assert(fabsf(verts[q * 4].v - (float)(ch / 16) * 16.0f / 256.0f) < 1e-6f);
+	}
+	for(size_t k = 0; k < 4; k++) {
+		const struct sign_text_vertex* red = &verts[0 * 4 + k];
+		const struct sign_text_vertex* white = &verts[3 * 4 + k];
+		const struct sign_text_vertex* plain = &verts[8 * 4 + k];
+		const struct sign_text_vertex* green_a = &verts[10 * 4 + k];
+		const struct sign_text_vertex* unk = &verts[11 * 4 + k];
+		const struct sign_text_vertex* c = &verts[12 * 4 + k];
+		assert(red->r == 255 && red->g == 85 && red->b == 85);
+		assert(white->r == 255 && white->g == 255 && white->b == 255);
+		assert(plain->r == 0 && plain->g == 0 && plain->b == 0);
+		assert(green_a->r == 85 && green_a->g == 255 && green_a->b == 85);
+		assert(unk->r == 255 && unk->g == 255 && unk->b == 255);
+		assert(c->r == 255 && c->g == 255 && c->b == 255);
+	}
+
+	// Width: R,e,d,W,h,i,t,e at 6+1 and one space at 4+1 = 61; codes add 0.
+	// pen_x0 = -61/2 = -30 (Java int division).
+	float f = SIGN_TEXT_MODEL_SCALE;
+	float s = 0.016666668f * f;
+	assert(fabsf(verts[0].x - (0.5f - 30.0f * s)) < 1e-4f);
+	// 'W' starts after "Red " = 21 + 5 = 26 units.
+	assert(fabsf(verts[3 * 4].x - (0.5f + (-30.0f + 26.0f) * s)) < 1e-4f);
+}
+
 int main(void) {
 	init_widths();
 
@@ -345,6 +399,7 @@ int main(void) {
 	test_wall_rotation_facings();
 	test_wall_board_and_text_per_beta();
 	test_glyph_uv();
+	test_colour_codes();
 
 	printf("test_sign_text_quads: all assertions passed\n");
 	return 0;

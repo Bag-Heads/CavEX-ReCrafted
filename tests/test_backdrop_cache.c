@@ -255,6 +255,21 @@ int main(void) {
 	}
 	puts("PASS two packs, switched twice: independent caches");
 
+	/* Scene-specific filenames share the beach publisher and invalidation. */
+ assert(tex_scene_backdrop_state_of(pack, true) == MISSING);
+ assert(tex_scene_backdrop_publish(pack, img_b, W, H, true) == PUBLISHED);
+ assert(tex_scene_backdrop_state_of(pack, true) == CACHED);
+ assert(cached_is(pack) == 0); /* beach was not overwritten */
+ assert(exists(pack, ".cavewii/backdrop/nether-background.png"));
+ assert(exists(pack, ".cavewii/backdrop/nether-background.id"));
+ write_bytes(pack, ".cavewii/backdrop/nether-background.png", "bad", 3);
+ assert(tex_scene_backdrop_state_of(pack, true) == CORRUPT);
+ assert(tex_backdrop_state_of(pack) == CACHED);
+ write_bytes(author, "gui/nether-background.png", art, sizeof(art));
+ assert(tex_scene_backdrop_state_of(author, true) == AUTHOR);
+ assert(tex_scene_backdrop_publish(author, img_a, W, H, true) == E_AUTHOR);
+ puts("PASS Nether: independent cache, corruption rejected, author art preserved");
+
 	test_fixture_dir_cleanup(root);
 	puts("test_backdrop_cache: all PASS");
 	return 0;

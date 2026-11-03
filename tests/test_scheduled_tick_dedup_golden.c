@@ -94,11 +94,12 @@ int main(void) {
 		server_world_scheduled_ticks_destroy(&w3);
 	}
 
-	// 7. PERF-GUARD: above SCHEDULED_TICK_DEDUP_SCAN_MAX pending entries the O(count) scan is skipped
-	//    (R2-review fix), so a duplicate is no longer collapsed -- a documented trade-off for the
-	//    thousands-pending fluid-cascade regime (already the distinct-cell overflow R2 deferred). Fill
-	//    past the cap with DISTINCT cells, then a duplicate must be APPENDED (count grows), proving the
-	//    guard engages. (Below the cap, cases 1-6 prove full dedup still holds.)
+	// 7. Dedup holds ABOVE the old SCHEDULED_TICK_DEDUP_SCAN_MAX cutoff too (HUNT-14 item 10,
+	//    ci-1101/39). This case used to pin the OPPOSITE (a duplicate APPENDED past 256 pending, the
+	//    R2-review perf trade-off). Beta World.scheduleBlockUpdate [740c583 World.java:1161] runs
+	//    scheduledTickSet.contains() on every insert, at any depth; the port now carries the same
+	//    (x,y,z,id) hash set, so the golden moved with the fix (the parent reproduces the old pin).
+	//    Fill past the old cap with DISTINCT cells, then a duplicate must be DISCARDED (count holds).
 	{
 		struct server_world w4;
 		memset(&w4, 0, sizeof(w4));
@@ -109,16 +110,16 @@ int main(void) {
 			assert(server_world_schedule_tick_raw(
 				&w4, x, 64, 0, BLOCK_REDSTONE_TORCH_LIT, 1)); // distinct x
 		assert((int)w4.scheduled_tick_count == over);
-		// a duplicate of cell x=0: count is now > the cap, so the dedup scan is skipped -> appended.
+		// a duplicate of cell x=0 with > 256 pending: contains() -> discarded, count unchanged.
 		assert(server_world_schedule_tick_raw(
 			&w4, 0, 64, 0, BLOCK_REDSTONE_TORCH_LIT, 1));
-		assert((int)w4.scheduled_tick_count == over + 1); // NOT collapsed: the guard is engaged
+		assert((int)w4.scheduled_tick_count == over); // collapsed: Beta dedups at every depth
 		server_world_scheduled_ticks_destroy(&w4);
 	}
 
 	server_world_scheduled_ticks_destroy(&w);
 	printf("test_scheduled_tick_dedup: OK (Beta (x,y,z,id) containment gate: duplicates collapse to "
 		   "one entry + never overflow; distinct pos/id stay separate; FIRST-INSERTED kept (both "
-			   "time orders); scan bounded above the perf cap)\n");
+			   "time orders); dedup holds past the old 256 scan cutoff)\n");
 	return 0;
 }

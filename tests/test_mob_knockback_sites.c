@@ -171,7 +171,31 @@ static int case_melee(void) {
 		fprintf(stderr, "melee: the attack did not land (reach/LOS fixture)\n");
 		return 2;
 	}
-	return check_site("melee", v, want);
+	int rc = check_site("melee", v, want);
+	if(rc)
+		return rc;
+	/* FALLING BONUS [decompile 740c583: EntityPlayer.attackTargetEntityWithCurrentItem
+	 * :468-475] -- `int var2 = inventory.getDamageVsEntity(var1); if(var2 > 0) {
+	 * if(this.motionY < 0.0D) ++var2; var1.attackEntityFrom(this, var2); ... }`.
+	 * A DESCENDING attacker lands one extra point of damage. The PvP path already
+	 * carries it (server_local_attack_split_player); the MOB path must match. An
+	 * empty hand on a pig is fist dmg 1, so a falling attacker deals 2 -> the
+	 * pig drops 10 -> 8. */
+	s.player.motion_y = -0.5;
+	struct entity* f = victim_at(23.5, 18.0);
+	mob_motion_bypass_reset();
+	struct server_rpc fall_rpc = {.type = SRPC_ENTITY_ATTACK,
+								  .payload.entity_attack.entity_id = f->id};
+	server_local_test_process_rpc(&s, &fall_rpc);
+	if(f->health != 8) {
+		fprintf(stderr,
+				"RED melee_falling_bonus: pig health %d, want 8 (fist 1 + motionY<0 "
+				"bonus 1 = 2 off a full 10) [EntityPlayer.java:468-475]\n",
+				(int)f->health);
+		return 1;
+	}
+	printf("  melee_falling_bonus: motionY<0 -> +1 damage (health 10 -> 8) OK\n");
+	return 0;
 }
 
 static uint32_t g_next_id = 800000;

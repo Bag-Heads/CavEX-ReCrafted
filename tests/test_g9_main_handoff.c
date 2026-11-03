@@ -25,6 +25,35 @@ static uint32_t test_generation, test_turn;
 static const char* audio_fixture;
 static uint32_t read_clock(void) { return __atomic_load_n(&clock_us, __ATOMIC_ACQUIRE); }
 static void set_clock(uint32_t us) { __atomic_store_n(&clock_us, us, __ATOMIC_RELEASE); }
+/* All lease-measured service bodies use the lease's injected clock. Host
+ * rendezvous and standalone audio decoding keep real time, including calls
+ * on other threads. A separate host-clock jump models the prior 3 ms
+ * preemption between the mesher's budget start/check without sleeping. */
+static __thread bool service_clock;
+static __thread unsigned service_samples, service_host_pause_ms;
+static __thread bool mesh_clock;
+static bool pause_next_mesh;
+static unsigned service_pauses;
+ptime_t __real_time_get(void);
+ptime_t __wrap_time_get(void) {
+	if(!service_clock) return __real_time_get();
+	if(mesh_clock && pause_next_mesh && ++service_samples == 2) {
+		service_host_pause_ms += 3;
+		pause_next_mesh = false;
+		service_pauses++;
+		printf("clock regression: simulated host pause=3000us lease=%u sample=%u\n",
+			read_clock(), service_samples);
+	}
+	uint32_t now = read_clock();
+	return (ptime_t){.tv_sec = now / 1000000u,
+		.tv_nsec = (long)(now % 1000000u) * 1000};
+}
+static void begin_service_clock(unsigned operation) {
+	assert(!service_clock);
+	service_clock = true;
+	mesh_clock = operation == G9_HANDOFF_MESH;
+	service_samples = service_host_pause_ms = 0;
+}
 static bool sender(uint8_t priority) { return priority == 65 || priority == 66; }
 static void wait_stage(unsigned target) {
 	ptime_t start = time_get();
@@ -112,7 +141,9 @@ static int baseline_red(void) {
 static struct thread worker;
 static uint32_t rpc_cost, mesh_cost;
 static enum g9_handoff_result real_service(unsigned operation, uint32_t budget) {
+	begin_service_clock(operation);
 	enum g9_handoff_result result = clin_g9_handoff_service(operation, budget);
+	service_clock = false;
 	set_clock(read_clock() + (operation == G9_HANDOFF_RPC ? rpc_cost : mesh_cost));
 	return result;
 }
@@ -150,13 +181,16 @@ static struct g9_priority_lease finish_case(void) {
 }
 static void real_input(unsigned cost) {
 	struct g9_lease_token token = thread_g9_handoff_work_begin(G9_HANDOFF_INPUT);
+	begin_service_clock(G9_HANDOFF_INPUT);
 	input_poll(); /* Production edge retirement, no fabricated input credit. */
+	service_clock = false;
 	set_clock(read_clock()+cost);
 	thread_g9_handoff_work_end(token, G9_HANDOFF_INPUT, true);
 }
 static struct audio_service_limits host_audio_limits(void);
 static void real_audio(unsigned cost) {
 	struct g9_lease_token token = thread_g9_handoff_work_begin(G9_HANDOFF_AUDIO);
+	begin_service_clock(G9_HANDOFF_AUDIO);
 	struct audio_service_limits limits = host_audio_limits();
 	struct audio_service_budget b = {.start=time_get(),
 		.cap_us=thread_g9_handoff_audio_remaining(), .limits=&limits};
@@ -166,6 +200,7 @@ static void real_audio(unsigned cost) {
 	uint32_t reserve = 0;
 	bool valid = r == AUDIO_SERVICE_DONE && audio_music_service_witness(&w)
 		&& audio_service_wait_reserve(&w, &limits, 4000, &reserve);
+	service_clock = false;
 	set_clock(read_clock()+cost);
 	thread_g9_lease_audio(reserve, !valid);
 	thread_g9_handoff_work_end(token, G9_HANDOFF_AUDIO, valid);
@@ -333,8 +368,11 @@ static void early_cases(void) {
 		if(mode == 1) {
 			assert(!thread_g9_handoff_dispatch(G9_HANDOFF_RPC|G9_HANDOFF_MESH, real_service));
 			assert(gstate.world_time == 777);
+			pause_next_mesh = true;
 		}
 		assert(thread_g9_handoff_dispatch(G9_HANDOFF_RPC|G9_HANDOFF_MESH, real_service));
+		assert(!pause_next_mesh && service_pauses == 1);
+		if(mode == 1) assert(service_host_pause_ms == 3);
 		struct g9_priority_lease s = finish_case();
 		printf("mode=%u services=%u failed=%u stalls=%u late=%u faults=%u\n",
 			mode, s.stats.services, s.failed, s.stats.stalls, s.stats.late_ack, s.stats.faults);
@@ -344,7 +382,7 @@ static void early_cases(void) {
 		assert(s.stats.service_max_us == (mode == 1 ? 280 : 210)
 			&& s.stats.main_sleep_requested_us == 8000);
 	}
-	puts("PASS: request-after-old-point, real RPC/mesh/input/audio, <=500us; end/dependency/cancel wake and clock wrap");
+	puts("PASS: request-after-old-point, real RPC/mesh/input/audio, <=500us; simulated 3ms host preemption, end/dependency/cancel wake and clock wrap");
 }
 static void rejection_cases(void) {
 	for(unsigned oversized=0; oversized<4; oversized++) {
@@ -441,12 +479,14 @@ static void audio_no_credit_cases(void) {
         begin_case(0,1);
         struct g9_lease_token token=thread_g9_handoff_work_begin(G9_HANDOFF_AUDIO);
         assert(token.generation);
+        begin_service_clock(G9_HANDOFF_AUDIO);
         struct audio_service_budget b;
         audio_service_get_budget(&b,thread_g9_handoff_audio_remaining());
         if(mode==1) b.cap_us=0;
         if(mode==2) b.calibration=true;
         enum audio_service_result r=audio_update_service((vec3){0,0,0},0,&b);
         if(r==AUDIO_SERVICE_DONE) r=audio_music_update_service(&b);
+        service_clock = false;
         assert(mode==0 ? r==AUDIO_SERVICE_UNSAFE : mode==1 ? r==AUDIO_SERVICE_MORE : r==AUDIO_SERVICE_DONE);
         bool complete=r==AUDIO_SERVICE_DONE && b.limits->margins_verified && !b.calibration;
         assert(!complete); /* even structurally DONE calibration has no credit */

@@ -1670,6 +1670,11 @@ bool input_sneak_toggle_latched(unsigned player) {
 		&& input_sneak_state[player].toggle.engaged;
 }
 
+void input_sneak_toggle_release(unsigned player) {
+	if(player < INPUT_LOCAL_PLAYERS)
+		input_sneak_state[player].toggle = (struct input_sneak_toggle){0};
+}
+
 static bool input_sneak_apply(unsigned player, enum input_category category,
 							  bool connected, bool raw) {
 	if(player >= INPUT_LOCAL_PLAYERS)
@@ -2848,6 +2853,10 @@ void input_sneak_vehicle_mark(unsigned player, bool riding) {
 bool input_sneak_toggle_latched(unsigned player) {
 	(void)player;
 	return false;
+}
+
+void input_sneak_toggle_release(unsigned player) {
+	(void)player;
 }
 #endif
 

@@ -983,6 +983,11 @@ void screen_texturepacks_backdrop_service(bool at_title_idle) {
 	if(!s_bd_hooks)
 		return;
 	/* The background is the next phase, never concurrent with sound loading. */
+	if(s_bd == TEXPACKS_BD_BAKING && !at_title_idle) {
+		texpacks_bd_drop_bake();
+		s_bd = TEXPACKS_BD_QUEUED;
+		return; /* Never publish a completed optional scene after world admission. */
+	}
 	if(s_bd_hooks->sounds_state
 	   && s_bd_hooks->sounds_state() != AUDIO_REGISTRY_READY
 	   && s_bd_hooks->sounds_state() != AUDIO_REGISTRY_DISABLED) return;
@@ -1005,6 +1010,9 @@ void screen_texturepacks_backdrop_service(bool at_title_idle) {
 		if(s_bd_hooks->uploaded && !s_bd_hooks->uploaded())
 			texpacks_bd_fail("The background couldn't be uploaded.");
 	}
+	/* A scene deferred during boot/Apply becomes eligible at the title. */
+	if(s_bd == TEXPACKS_BD_IDLE && at_title_idle && texpacks_bd_needed())
+		texpacks_bd_queue();
 	if(s_bd == TEXPACKS_BD_QUEUED && at_title_idle) {
 		/* A replaced/cancelled bake can still own mesher-visible scratch. */
 		if(s_bd_hooks->retired && !s_bd_hooks->retired()) return;
@@ -1042,7 +1050,8 @@ void screen_texturepacks_backdrop_service(bool at_title_idle) {
 			texpacks_bd_fail("The background couldn't be uploaded.");
 			return;
 		}
-		s_bd = TEXPACKS_BD_IDLE;
+		/* The same title job handles the next missing scene after retirement. */
+		s_bd = texpacks_bd_needed() ? TEXPACKS_BD_QUEUED : TEXPACKS_BD_IDLE;
 		s_bd_reason[0] = '\0';
 	} else if(st == BACKDROP_BAKE_FAILED || st == BACKDROP_BAKE_CANCELLED) {
 		enum backdrop_bake_error e = s_bd_hooks->bake_error();

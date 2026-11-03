@@ -2601,7 +2601,7 @@ void world_pre_render_clear(struct world* w) {
 // s_lod_near_radius is the seed of the runtime "reach dial": chunks within it
 // stay full-detail. Default keeps a generous full-detail core; tune on-device
 // against the real-Wii GPU/framerate (Dolphin can't see the GPU ceiling).
-#define LOD_NEAR_RADIUS_DEFAULT 2
+#define LOD_NEAR_RADIUS_DEFAULT 2 /* tests only; the game sets lod.high_detail_radius at boot (main.c) */
 static int s_lod_near_radius = LOD_NEAR_RADIUS_DEFAULT;
 /* Split RENDER REACH (2026-09-10, T2, docs/local_splitscreen.md): with two
  * cameras active, chunks farther than this many chunks (Chebyshev) from BOTH

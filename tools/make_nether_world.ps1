@@ -16,9 +16,9 @@ param(
 # spawn area), which is the streaming cost under diagnosis.
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
-$exe = Join-Path $repo 'build-verify/cavewii_v2.exe'
+$exe = Join-Path $repo 'build-verify/CavEX-ReCrafted.exe'
 if($ExecutablePath) { $exe = (Resolve-Path -LiteralPath $ExecutablePath).Path }
-if(-not (Test-Path -LiteralPath $exe)) { throw 'Build the verify preset first (build-verify/cavewii_v2.exe).' }
+if(-not (Test-Path -LiteralPath $exe)) { throw 'Build the verify preset first (build-verify/CavEX-ReCrafted.exe).' }
 if(-not $OutRoot) { $OutRoot = Join-Path $repo 'tmp/jobs/nether-1030' }
 $run = New-Item -ItemType Directory -Path (Join-Path $OutRoot ('pc-run_{0}' -f (Get-Date -Format 'yyyyMMdd_HHmmss'))) -Force
 Copy-Item -LiteralPath (Join-Path $repo 'config.json') -Destination (Join-Path $run.FullName 'config.json')

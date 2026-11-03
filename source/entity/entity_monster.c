@@ -1194,6 +1194,27 @@ static void mob_acquire_chase_path(struct server_local* s, struct entity* e,
 									 &e->data.monster.path, NULL);
 }
 
+// ci-1101/43 item 9: Beta EntityWolf.setPathEntity's getPathToEntity(this,
+// owner, 16.0F) result [740c583: EntityWolf.java:192-193]. Returns true iff a
+// path to the owner's feet exists (Beta var3 != null). RNG-free -- the wolf's
+// tamed-follow teleport decision is path==null && dist>12, NOT an eye-ray
+// test; this is the exact "no path" signal the pathfinding port was built to
+// supply (docs/deviations.md "Mob-AI pathing" revert condition). The search is
+// bounded to Beta's own 16-block range, so its CPU cost is bounded too. The
+// path is searched into a scratch (not e->data.monster.path) so the existing
+// chase re-acquisition + its 1-in-20 keep RNG stream are left untouched.
+static bool wolf_has_path_to_owner(struct server_local* s, struct entity* e,
+								   struct server_player* owner) {
+	struct path_entity scratch;
+	path_entity_clear(&scratch);
+	bool found = pathfinder_create_path_to_entity(
+		&s_pathfinder_scratch, mob_path_cell_query, block_world(s),
+		e->pos[0], e->pos[1], e->pos[2], e->width, e->height,
+		(float)owner->x, (float)(owner->y - PLAYER_EYE_HEIGHT),
+		(float)owner->z, MOB_FOLLOW_RANGE, &scratch, NULL);
+	return found && scratch.length > 0;
+}
+
 // next-gaps-0924/P7 (WORLD lane; separate function, MOVE lane's file): SpawnerAnimals.
 // performSleepSpawning's fresh-pathfinder path search from the mob to the player, range 32
 // [740c583 SpawnerAnimals.java:171,225] for a mob that is not an entity yet -- the same
@@ -2406,10 +2427,17 @@ static bool server_tick_monster(struct entity* e, struct server_local* s) {
 				e->data.monster.target_actor = server_local_actor_ident(s, owner);
 				e->data.monster.wolf_target_id = 0;
 				e->data.monster.aggro_time = MOB_TARGET_RETENTION_TICKS;
-				// With no A*, a blocked eye ray is the available "no path"
-				// signal. The scan/order/placement itself remains exact Beta.
+				// ci-1101/43 item 9: Beta's gate is a REAL "no path" test --
+				// getPathToEntity(this, owner, 16) == null -- NOT an eye ray
+				// [740c583: EntityWolf.java:192-193, setPathEntity; the ring
+				// scan/order/placement below plus the >12 (>144 sq) distance
+				// gate are its exact companion conditions]. With FH-13's A*
+				// port this replaces the documented LOS-as-no-path deviation
+				// (docs/deviations.md "Mob-AI pathing" revert condition): a
+				// clear 16-block path suppresses the teleport even with the
+				// eye ray blocked, and a walled-off owner still teleports.
 				if(wolf_should_teleport(owner_dist_sq)
-				   && !mob_can_see_player(s, e, owner))
+				   && !wolf_has_path_to_owner(s, e, owner))
 					(void)entity_wolf_try_teleport_to_owner(
 						e, s, (float)owner->x,
 						(float)(owner->y - PLAYER_EYE_HEIGHT),
@@ -3768,16 +3796,18 @@ static bool server_tick_monster(struct entity* e, struct server_local* s) {
         if (target_alive && can_see
             && dx * dx + dy * dy + dz * dz < SKELETON_SHOOT_RANGE_SQ
             && e->ai_timer <= 0.0f) {
-            // Beta launch geometry (parity fix 2026-06-19, target corrected 2026-06-19):
-            // launch from skel feet + SKELETON_ARROW_LAUNCH_DY (2.43 = skel getEyeHeight
-            // 1.53 - 0.1 EntityArrow ctor + 1.0 arrow posY bump), aiming at the player's POSY
+            // Beta launch geometry (parity fix 2026-06-19, target corrected 2026-06-19,
+            // launch height corrected to the decompile 2026-11-01):
+            // launch from skel feet + SKELETON_ARROW_LAUNCH_DY (2.83 = skel getEyeHeight
+            // 1.53 - 0.1 EntityArrow ctor + 1.4 `var7.posY += 1.4F` [EntitySkeleton.java:40]),
+            // aiming at the player's POSY
             // minus SKELETON_ARROW_TARGET_DY (0.08). Beta EntitySkeleton.attackEntity aims
             // at the target's posY plus its eye height minus 0.2 = player.posY + 0.12 - 0.2 =
             // player.posY - 0.08, and the player's posY IS the eye/camera (yOffset 1.62) ==
             // CaveWii's s->player.y. So the target is s->player.y - 0.08 (the head region),
             // NOT s->player.y - PLAYER_EYE_HEIGHT - 0.08 (which aimed 0.08 BELOW the feet --
             // the arrow buried into the ground on flat terrain). Flat-ground ddy = 1.54 -
-            // 2.43 = -0.89 (Beta), not the -2.51 the feet-target gave.
+            // 2.83 = -1.29 (Beta), not the -2.91 the feet-target gave.
             vec3 from = {e->pos[0], e->pos[1] + SKELETON_ARROW_LAUNCH_DY, e->pos[2]};
             float ddx = (float)target->x - from[0];
             float ddy = (float)(target->y - SKELETON_ARROW_TARGET_DY) - from[1];

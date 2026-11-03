@@ -627,7 +627,13 @@ static bool build_entity(struct entity_nbt_arena* a, struct nbt_list* list,
 			&& add_num(a, kids, TAG_INT, "CaveWiiAge", e->data.arrow.age)
 			&& add_num(a, kids, TAG_SHORT, "CaveWiiItemId", e->data.arrow.item_id)
 			&& add_num(a, kids, TAG_SHORT, "CaveWiiDamage", e->data.arrow.damage)
-			&& add_num(a, kids, TAG_BYTE, "CaveWiiFromPlayer",
+			/* ci-1101/41 item 12: Beta's own names + types
+			 * (EntityArrow.writeEntityToNBT, EntityArrow.java:241,243:
+			 * setByte("shake"), setBoolean("player")). They take the slots
+			 * of the pre-fix CaveWiiFromPlayer (byte) / CaveWiiShakeTicks
+			 * (int) tags, so an old record is this encoding with two renamed
+			 * tags (arrow_legacy_shape) and the node budget is unchanged. */
+			&& add_num(a, kids, TAG_BYTE, "player",
 						   e->data.arrow.from_player ? 1 : 0)
 			&& add_num(a, kids, TAG_BYTE, "CaveWiiFromSkeleton",
 						   e->data.arrow.from_skeleton ? 1 : 0)
@@ -635,7 +641,7 @@ static bool build_entity(struct entity_nbt_arena* a, struct nbt_list* list,
 						   e->data.arrow.in_ground ? 1 : 0)
 			&& add_num(a, kids, TAG_INT, "CaveWiiStuckTicks",
 						   e->data.arrow.stuck_ticks)
-			&& add_num(a, kids, TAG_INT, "CaveWiiShakeTicks",
+			&& add_num(a, kids, TAG_BYTE, "shake",
 						   e->data.arrow.shake_ticks)
 			&& add_num(a, kids, TAG_SHORT, "xTile", e->data.arrow.stuck_block_x)
 			&& add_num(a, kids, TAG_SHORT, "yTile", e->data.arrow.stuck_block_y)
@@ -1019,6 +1025,55 @@ static w_coord_t block_chunk_coord(int32_t value) {
 	return (w_coord_t)q;
 }
 
+static bool beta_vector_shape(const nbt_node* n, nbt_type element_type,
+							  size_t count);
+
+/* ci-1101/41 item 12: true only for an EXACT Beta 1.7.3 EntityArrow record:
+ * Entity.writeToNBT's eight common tags (Entity.java:751-757) plus
+ * EntityArrow.writeEntityToNBT's eight (EntityArrow.java:236-243), each once
+ * with Beta's type, booleans 0/1 and shake within Beta's 0..7 counter. Any
+ * extra/missing/mistyped tag keeps the record opaque (byte-preserved), so an
+ * admitted Beta arrow is always fully described by the codec. */
+static bool beta_arrow_record_exact(const nbt_node* comp) {
+	static const struct { const char* name; nbt_type type; } tags[] = {
+		{"id", TAG_STRING}, {"Pos", TAG_LIST}, {"Motion", TAG_LIST},
+		{"Rotation", TAG_LIST}, {"FallDistance", TAG_FLOAT},
+		{"Fire", TAG_SHORT}, {"Air", TAG_SHORT}, {"OnGround", TAG_BYTE},
+		{"xTile", TAG_SHORT}, {"yTile", TAG_SHORT}, {"zTile", TAG_SHORT},
+		{"inTile", TAG_BYTE}, {"inData", TAG_BYTE}, {"shake", TAG_BYTE},
+		{"inGround", TAG_BYTE}, {"player", TAG_BYTE},
+	};
+	enum { N = sizeof(tags) / sizeof(tags[0]) };
+	unsigned seen = 0;
+	struct list_head* p;
+	list_for_each(p, &comp->payload.tag_compound->entry) {
+		const nbt_node* n = list_entry(p, struct nbt_list, entry)->data;
+		if(!n || !n->name)
+			return false;
+		size_t k = 0;
+		while(k < N && strcmp(n->name, tags[k].name))
+			k++;
+		if(k == N || n->type != tags[k].type || (seen & (1u << k)))
+			return false;
+		seen |= 1u << k;
+	}
+	if(seen != (1u << N) - 1u)
+		return false;
+	const nbt_node* id = find_child(comp, "id");
+	if(!id->payload.tag_string || strcmp(id->payload.tag_string, "Arrow")
+	   || !beta_vector_shape(find_child(comp, "Pos"), TAG_DOUBLE, 3)
+	   || !beta_vector_shape(find_child(comp, "Motion"), TAG_DOUBLE, 3)
+	   || !beta_vector_shape(find_child(comp, "Rotation"), TAG_FLOAT, 2))
+		return false;
+	int8_t ground = find_child(comp, "OnGround")->payload.tag_byte;
+	int8_t in_ground = find_child(comp, "inGround")->payload.tag_byte;
+	int8_t player = find_child(comp, "player")->payload.tag_byte;
+	int8_t shake = find_child(comp, "shake")->payload.tag_byte;
+	return (ground == 0 || ground == 1) && (in_ground == 0 || in_ground == 1)
+		&& (player == 0 || player == 1) && shake >= 0
+		&& shake <= ARROW_SHAKE_TICKS;
+}
+
 static bool parse_entity(const nbt_node* comp, w_coord_t chunk_x,
 						 w_coord_t chunk_z, struct archived_entity* out) {
 	memset(out, 0, sizeof(*out));
@@ -1292,19 +1347,54 @@ static bool parse_entity(const nbt_node* comp, w_coord_t chunk_x,
 		return true;
 	}
 	case ARCHIVED_ENTITY_ARROW:
+		if(!find_child(comp, "CaveWiiItemId")) {
+			/* ci-1101/41 item 12: a pure-Beta Arrow (never written by
+			 * CaveWii) is admitted only in its exact Beta shape; anything
+			 * else stays runtime-opaque and byte-preserved as before. */
+			if(!beta_arrow_record_exact(comp))
+				return false;
+			/* EntityArrow.readEntityFromNBT (EntityArrow.java:246-254)
+			 * restores only the tile, shake, inGround and player fields:
+			 * shootingEntity is not persisted (null owner, never the host's
+			 * reserved id 0), ticksInAir/ticksInGround restart at 0, and
+			 * every Beta arrow is the bow arrow (item 262, 4 damage ->
+			 * ARROW_DAMAGE on the player scale). A null shooter applies no
+			 * skeleton scaling (from_skeleton false). */
+			out->data.arrow.owner_source_id = UINT32_MAX;
+			out->data.arrow.item_id = ITEM_ARROW;
+			out->data.arrow.damage = ARROW_DAMAGE;
+			read_int(comp, "player", &v);
+			out->data.arrow.from_player = v != 0;
+			read_int(comp, "shake", &v);
+			out->data.arrow.shake_ticks = v & 255;
+			read_int(comp, "inGround", &v);
+			out->data.arrow.in_ground = v == 1;
+			read_int(comp, "xTile", &v); out->data.arrow.stuck_block_x = (int16_t)v;
+			read_int(comp, "yTile", &v); out->data.arrow.stuck_block_y = (int16_t)v;
+			read_int(comp, "zTile", &v); out->data.arrow.stuck_block_z = (int16_t)v;
+			read_int(comp, "inTile", &v); out->data.arrow.stuck_block_type = (uint8_t)v;
+			read_int(comp, "inData", &v); out->data.arrow.stuck_block_meta = (uint8_t)v;
+			return true;
+		}
 		read_u32(comp, "CaveWiiOwnerId", &out->data.arrow.owner_source_id);
 		read_int_range(comp, "CaveWiiAge", 0, INT32_MAX,
 					   &out->data.arrow.age);
 		read_u16(comp, "CaveWiiItemId", &out->data.arrow.item_id);
 		if(read_int_range(comp, "CaveWiiDamage", INT16_MIN, INT16_MAX, &v))
 			out->data.arrow.damage = (int16_t)v;
-		if(read_int(comp, "CaveWiiFromPlayer", &v)) out->data.arrow.from_player = v != 0;
+		/* ci-1101/41 item 12: Beta's "player" wins; the pre-fix
+		 * CaveWiiFromPlayer is read only when it is absent (old saves). */
+		if(read_int(comp, "player", &v)
+		   || read_int(comp, "CaveWiiFromPlayer", &v))
+			out->data.arrow.from_player = v != 0;
 		if(read_int(comp, "CaveWiiFromSkeleton", &v)) out->data.arrow.from_skeleton = v != 0;
 		if(read_int(comp, "inGround", &v)) out->data.arrow.in_ground = v != 0;
 		read_int_range(comp, "CaveWiiStuckTicks", 0,
 					   ARROW_STUCK_DESPAWN_TICKS, &out->data.arrow.stuck_ticks);
-		read_int_range(comp, "CaveWiiShakeTicks", 0, ARROW_SHAKE_TICKS,
-					   &out->data.arrow.shake_ticks);
+		if(!read_int_range(comp, "shake", 0, ARROW_SHAKE_TICKS,
+						   &out->data.arrow.shake_ticks))
+			read_int_range(comp, "CaveWiiShakeTicks", 0, ARROW_SHAKE_TICKS,
+						   &out->data.arrow.shake_ticks);
 		if(read_int_range(comp, "xTile", INT16_MIN, INT16_MAX, &v)) out->data.arrow.stuck_block_x = (int16_t)v;
 		if(read_int_range(comp, "yTile", INT16_MIN, INT16_MAX, &v)) out->data.arrow.stuck_block_y = (int16_t)v;
 		if(read_int_range(comp, "zTile", INT16_MIN, INT16_MAX, &v)) out->data.arrow.stuck_block_z = (int16_t)v;
@@ -1787,6 +1877,16 @@ static bool entity_beta_import_owned(const nbt_node* comp, w_coord_t x,
 		else if(!strcmp(n->name, "PushZ")) { bit = 1u << 20; type = TAG_DOUBLE; }
 		else if(!strcmp(n->name, "Fuel")) { bit = 1u << 21; type = TAG_SHORT; }
 		else if(!strcmp(n->name, "Items")) { bit = 1u << 22; type = TAG_LIST; }
+		/* ci-1101/41 item 12: EntityArrow.writeEntityToNBT
+		 * (EntityArrow.java:236-243). */
+		else if(!strcmp(n->name, "xTile")) { bit = 1u << 23; type = TAG_SHORT; }
+		else if(!strcmp(n->name, "yTile")) { bit = 1u << 24; type = TAG_SHORT; }
+		else if(!strcmp(n->name, "zTile")) { bit = 1u << 25; type = TAG_SHORT; }
+		else if(!strcmp(n->name, "inTile")) { bit = 1u << 26; type = TAG_BYTE; }
+		else if(!strcmp(n->name, "inData")) { bit = 1u << 27; type = TAG_BYTE; }
+		else if(!strcmp(n->name, "shake")) { bit = 1u << 28; type = TAG_BYTE; }
+		else if(!strcmp(n->name, "inGround")) { bit = 1u << 29; type = TAG_BYTE; }
+		else if(!strcmp(n->name, "player")) { bit = 1u << 30; type = TAG_BYTE; }
 		else return false;
 		if(n->type != type || (specific & bit))
 			return false;
@@ -1823,6 +1923,12 @@ static bool entity_beta_import_owned(const nbt_node* comp, w_coord_t x,
 	   || decoded->kind == ARCHIVED_ENTITY_MINECART
 	   || decoded->kind == ARCHIVED_ENTITY_BOAT)
 		return beta_nonliving_owned(comp, id, specific, decoded);
+	/* ci-1101/41 item 12: parse_entity admits a CaveWii-tag-free arrow only
+	 * through beta_arrow_record_exact, which already proves every value
+	 * decodes losslessly; the certificate re-checks the exact tag set. */
+	if(decoded->kind == ARCHIVED_ENTITY_ARROW)
+		return !strcmp(id, "Arrow") && specific == 0x7f800000u
+			&& beta_arrow_record_exact(comp);
 	if(decoded->kind != ARCHIVED_ENTITY_MONSTER
 	   || (strcmp(id, "Creeper") && strcmp(id, "Zombie")
 		   && strcmp(id, "Skeleton") && strcmp(id, "Chicken")
@@ -1998,6 +2104,58 @@ static void legacy_shape(nbt_node* rec, enum archived_entity_kind kind,
 	}
 }
 
+/* ci-1101/41 item 12: the pre-fix CaveWii arrow tag pair <-> Beta's.
+ * to_legacy: player (byte) -> CaveWiiFromPlayer (byte), shake (byte) ->
+ * CaveWiiShakeTicks (int); otherwise the reverse. Same position, same value.
+ * Returns false only on OOM (the record may then be half-renamed and must be
+ * discarded by the caller). */
+static bool arrow_rename_tags(nbt_node* rec, bool to_legacy) {
+	struct list_head* p;
+	list_for_each(p, &rec->payload.tag_compound->entry) {
+		nbt_node* n = list_entry(p, struct nbt_list, entry)->data;
+		if(!n || !n->name)
+			continue;
+		const char* to = NULL;
+		nbt_type type = n->type;
+		int32_t value = 0;
+		if(to_legacy && !strcmp(n->name, "player") && n->type == TAG_BYTE) {
+			to = "CaveWiiFromPlayer";
+			value = n->payload.tag_byte;
+		} else if(to_legacy && !strcmp(n->name, "shake")
+				  && n->type == TAG_BYTE) {
+			to = "CaveWiiShakeTicks";
+			type = TAG_INT;
+			value = n->payload.tag_byte;
+		} else if(!to_legacy && !strcmp(n->name, "CaveWiiFromPlayer")
+				  && n->type == TAG_BYTE) {
+			to = "player";
+			value = n->payload.tag_byte;
+		} else if(!to_legacy && !strcmp(n->name, "CaveWiiShakeTicks")
+				  && n->type == TAG_INT) {
+			to = "shake";
+			type = TAG_BYTE;
+			value = n->payload.tag_int < 0 ? 0
+				: (n->payload.tag_int > ARROW_SHAKE_TICKS ? ARROW_SHAKE_TICKS
+														  : n->payload.tag_int);
+		}
+		if(!to)
+			continue;
+		size_t len = strlen(to) + 1;
+		char* name = malloc(len);
+		if(!name)
+			return false;
+		memcpy(name, to, len);
+		free(n->name);
+		n->name = name;
+		n->type = type;
+		if(type == TAG_INT)
+			n->payload.tag_int = value;
+		else
+			n->payload.tag_byte = (int8_t)value;
+	}
+	return true;
+}
+
 static bool entity_native_deletion_safe(const nbt_node* old,
 	struct archived_entity* decoded) {
 	struct chunk_entities one={.entities=decoded,.count=1};
@@ -2052,6 +2210,18 @@ static bool entity_native_deletion_safe(const nbt_node* old,
 		legacy_shape(legacy, decoded->kind, int_tags, strip_air);
 		same = item_nbt_equal(old, legacy);
 		nbt_free(legacy);
+	}
+	/* ci-1101/41 item 12: the arrow schema before Beta's player/shake names
+	 * (CaveWiiFromPlayer byte, CaveWiiShakeTicks int, same positions). */
+	if(!same && list && !list_empty(&list->entry)
+	   && decoded->kind == ARCHIVED_ENTITY_ARROW) {
+		nbt_node* legacy = item_nbt_clone_lossless(
+			list_entry(list->entry.flink, struct nbt_list, entry)->data);
+		if(legacy) {
+			if(arrow_rename_tags(legacy, true))
+				same = item_nbt_equal(old, legacy);
+			nbt_free(legacy);
+		}
 	}
 	nbt_free(exact);chunk_entities_build_free(arena);
 	chunk_entities_build_free(legacy_arena);
@@ -2616,6 +2786,13 @@ static nbt_node* chunk_entities_preserve_impl(const nbt_node* original,
 		 * (CEP_NATIVE_UNSAFE). Foreign (imported) records keep their schema. */
 		bool inject_beta = parsed && runtime->kind == ARCHIVED_ENTITY_MONSTER
 			&& entity_has_legacy_provenance(old, &decoded);
+		/* ci-1101/41 item 12: OUR pre-fix arrow record takes Beta's
+		 * player/shake names in place first, so the value refresh below
+		 * reaches them (it only rewrites tags the candidate also has). */
+		if(parsed && runtime->kind == ARCHIVED_ENTITY_ARROW
+		   && entity_has_legacy_provenance(old, &decoded)
+		   && !arrow_rename_tags(old, false))
+			PRESERVE_FAIL(CEP_ALLOC);
 		const char* prev_name = NULL;
 		list_for_each(q,&candidate->payload.tag_compound->entry) {
 			nbt_node* n=list_entry(q,struct nbt_list,entry)->data;

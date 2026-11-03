@@ -19,7 +19,7 @@ param(
 )
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
-$exe = Join-Path $repo 'build-verify/cavewii_v2.exe'
+$exe = Join-Path $repo 'build-verify/CavEX-ReCrafted.exe'
 if($ExecutablePath) { $exe = (Resolve-Path -LiteralPath $ExecutablePath).Path }
 if(-not (Test-Path -LiteralPath $exe)) { throw 'Build the verify preset first.' }
 if(-not $OutRoot) {

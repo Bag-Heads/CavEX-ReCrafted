@@ -79,6 +79,32 @@ static void test_save_recovery(void) {
 	assert(config_save(&c, path));
 	struct stat st;
 	assert(stat(backup, &st) != 0 && stat(temporary, &st) != 0);
+	/* Neither on-disk copy is recoverable; valid memory must still save. */
+	broken = fopen(path, "wb");
+	assert(broken && fputs("{broken", broken) >= 0 && fclose(broken) == 0);
+	broken = fopen(backup, "wb");
+	assert(broken && fputs("{also broken", broken) >= 0 && fclose(broken) == 0);
+	/* R9: an unreadable backup may only have failed a transient read, so a
+	 * save whose new copy cannot be written must leave it exactly as it was
+	 * (it is never removed before the replacement exists). */
+	fail_write = true;
+	assert(!config_save(&c, path));
+	fail_write = false;
+	{
+		char kept[32] = {0};
+		FILE* f = fopen(backup, "rb");
+		assert(f && "the backup survives a failed write");
+		size_t n = fread(kept, 1, sizeof kept - 1, f);
+		assert(fclose(f) == 0);
+		assert(n == strlen("{also broken") && !strcmp(kept, "{also broken"));
+		assert(stat(temporary, &st) != 0);
+	}
+	assert(config_save(&c, path));
+	assert(config_create(&loaded, path));
+	assert(config_read_int(&loaded, "controls.look_sensitivity", -1) == 5);
+	config_destroy(&loaded);
+	assert(stat(backup, &st) != 0 && stat(temporary, &st) != 0);
+	assert(config_save(&c, path)); /* later saves remain usable */
 	assert(remove(path) == 0);
 	config_destroy(&c);
 	puts("PASS config recovery: partial write, failed promotion/rollback, reload and subsequent save");
@@ -517,7 +543,29 @@ static void test_user_config_reaches_shipped_defaults(void) {
 	free(shipped_bytes);
 }
 
+static void test_mipmap_flags(void) {
+	const char* values[] = {"true", "1", "false", "0", "-2", "0.5",
+		"null", "\"1\"", "[]", "{}"};
+	const bool expected[] = {true, true, false, false, true, true,
+		false, false, false, false};
+	for(size_t i = 0; i < sizeof values / sizeof values[0]; ++i) {
+		char text[80];
+		snprintf(text, sizeof text, "{\"render\":{\"mipmaps\":%s}}", values[i]);
+		struct config c = {0};
+		c.root = json_parse_string(text);
+		assert(c.root);
+		assert(config_read_flag(&c, "render.mipmaps", false) == expected[i]);
+		json_value_free(c.root);
+	}
+	struct config c = {0};
+	c.root = json_parse_string("{}");
+	assert(!config_read_flag(&c, "render.mipmaps", false));
+	assert(config_read_flag(&c, "render.mipmaps", true));
+	json_value_free(c.root);
+}
+
 int main(int argc, char** argv) {
+	test_mipmap_flags();
 	for(int i = 1; i < argc; i++) {
 		if(strcmp(argv[i], "--fallback-disabled-mutant") == 0)
 			fallback_mutant = true;

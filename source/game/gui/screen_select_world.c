@@ -249,6 +249,8 @@ static bool world_dir_is_directory(const char* parent, const char* name) {
 	return is_dir;
 }
 
+static bool sworld_ensure_directory_tree(const char* path);
+
 static void screen_sworld_reset(struct screen* s, int width, int height) {
 	/* Returning from the sound gate's Back also drops its pending reason. */
 	loading_reason_end(0);
@@ -322,9 +324,22 @@ static void screen_sworld_reset(struct screen* s, int width, int height) {
 		= config_read_string(&gstate.config_user, "paths.worlds", "saves");
 
 	DIR* d = opendir(saves_path);
+	if(!d && errno == ENOENT) {
+		/* A saves folder that does not exist yet (fresh card, or paths.worlds
+		 * naming a folder nothing has created) is Beta's "no worlds" state:
+		 * GuiSelectWorld -> SaveConverterMcRegion makes the directory before
+		 * listing it. Create it here too, so Retry is not a permanent loop
+		 * over the same ENOENT (ci-1101/27). Only ENOENT: anything else
+		 * (a file in the way, EACCES) is a real error below. */
+		if(sworld_ensure_directory_tree(saves_path))
+			d = opendir(saves_path);
+		else
+			fprintf(stderr, "[world-list] cannot create missing \"%s\": %s\n",
+					saves_path, strerror(errno));
+	}
 	if(!d) {
-		/* A missing / unreadable saves directory is an ERROR with Retry,
-		 * disclosed -- not "no worlds". */
+		/* An unreadable saves directory is an ERROR with Retry, disclosed --
+		 * not "no worlds". */
 		fprintf(stderr, "[world-list] cannot open \"%s\": %s -- showing Retry\n",
 				saves_path, strerror(errno));
 		list_error = true;

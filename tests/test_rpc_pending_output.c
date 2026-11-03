@@ -1099,9 +1099,13 @@ static void case_deadline(void) {
 		clin_rpc_send(&c);
 	}
 	struct client_rpc c = batch(144);
+	/* The dead-consumer backstop, shortened so the fail-closed proof runs
+	 * fast (shipping value: 120 s; ci-1101/61). */
+	clin_test_set_rpc_exhaustion_timeout_ms(1000);
 	const ptime_t t0 = time_get();
 	clin_rpc_send(&c); /* no consumer and no shutdown: old code hangs forever */
 	float ms = time_diff_s(t0, time_get()) * 1000.0f;
+	clin_test_set_rpc_exhaustion_timeout_ms(0);
 	uint32_t pending, sum, max, n;
 	clin_rpc_pending_stats(&pending, NULL, NULL, NULL);
 	clin_rpc_wait_take(&sum, &max, &n);
@@ -1142,6 +1146,57 @@ static void case_deadline(void) {
 	dict_entity_clear(S.entities);
 	server_world_discard(&S.worlds[0]);
 	test_fixture_dir_cleanup(s_dir);
+}
+/* ci-1101/61: a LIVE consumer that stalls longer than the old 1000 ms
+ * deadline, then resumes (the PC runs' 2.7 s / 5.2 s MAIN stalls), must cost
+ * a wait, never the world. Old code: fault at 1.0 s, publication stopped,
+ * "World publication stopped (client not consuming)". Deterministic: the
+ * consumer is held for a fixed 2500 ms with ring + inbox full. */
+static void* stalled_live_consumer(void* arg) {
+	(void)arg;
+	thread_msleep(2500);
+	struct client_rpc c;
+	uint64_t gen;
+	if(clin_test_inbox_pop(&c, &gen)) /* the consumer resumes: one token */
+		clin_test_rpc_release(&c);
+	return NULL;
+}
+static void case_stall_recovers(void) {
+	const unsigned FULL = 16 + CLIN_RPC_PENDING_CAPACITY;
+	uint32_t d0, x0;
+	reset_stats_view(&d0, &x0);
+	for(unsigned i = 0; i < FULL; i++) {
+		struct client_rpc c = hud(i);
+		clin_rpc_send(&c);
+	}
+	struct thread consumer;
+	bool ok = thread_create(&consumer, stalled_live_consumer, NULL, 64);
+	assert(ok);
+	(void)ok;
+	const ptime_t t0 = time_get();
+	struct client_rpc c = hud(FULL);
+	clin_rpc_send(&c); /* exhausted: waits out the whole 2.5 s stall */
+	const float ms = time_diff_s(t0, time_get()) * 1000.0f;
+	thread_join(&consumer);
+	uint32_t sum_us, max_us, n, pending, exhausted;
+	clin_rpc_wait_take(&sum_us, &max_us, &n);
+	clin_rpc_pending_stats(&pending, NULL, NULL, &exhausted);
+	printf("  stalled-consumer send waited %.1f ms (measured %u us), pending %u, "
+		   "faulted %d, stopped %d\n", ms, max_us, pending,
+		   (int)clin_rpc_publication_faulted(),
+		   (int)clin_server_publication_stopped());
+	check(ms >= 2400.0f && n == 1 && max_us >= 2400000u && exhausted - x0 == 1,
+		"a 2.5 s consumer stall is one measured wait (past the old 1 s deadline)");
+	check(!clin_rpc_publication_faulted() && !clin_server_publication_stopped()
+			&& clin_rpc_cancelled_sends() == 0,
+		"a recoverable consumer stall never stops publication (world kept)");
+	check(pending == CLIN_RPC_PENDING_CAPACITY,
+		"the ring stayed full: head delivered, the waiting envelope appended");
+	unsigned expect = 1; /* envelope 0 was popped by the resumed consumer */
+	bool in_order = true;
+	const unsigned got = drain_all(&expect, &in_order);
+	check(got == FULL && in_order,
+		"nothing dropped, order kept across the long stall");
 }
 static void case_chunk_busy(void) {
 	for(unsigned i = 0; i < 16; i++) { struct client_rpc c = hud(i); clin_rpc_send(&c); }
@@ -1262,6 +1317,7 @@ int main(int argc, char** argv) {
 	CASE("cancel", case_cancel)
 	CASE("oom_recovery", case_oom_recovery)
 	CASE("deadline", case_deadline)
+	CASE("stall_recovers", case_stall_recovers)
 	CASE("chunk_busy", case_chunk_busy)
 	CASE("telemetry_race", case_telemetry_race)
 	CASE("burst", case_burst)

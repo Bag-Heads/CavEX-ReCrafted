@@ -39,8 +39,23 @@ function Set-StagedServiceDiagnosticConfig {
             $common = @("-WiiHost", $WiiHost,
                 "-Port", "$Port", "-ConnectTimeoutSeconds", "$ConnectTimeoutSeconds")
             if($StageToken) { $common += @("-StageToken", $StageToken) }
-            & (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1) -NoProfile -ExecutionPolicy Bypass -File (Join-Path $tools "fetch_wii_stage_file.ps1") @common -RemotePath $remote -OutFile $local
-            if($LASTEXITCODE -ne 0) { throw "service diagnostic config fetch failed: $remote" }
+            # Stage reports open_failed for an absent user file (no errno detail).
+            # Require a successfully fetched shipped default before proceeding.
+            # Capture native stderr without turning it into a terminating PS error.
+            $savedPreference = $ErrorActionPreference
+            try {
+                $ErrorActionPreference = "Continue"
+                $fetchOutput = & (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1) -NoProfile -ExecutionPolicy Bypass -File (Join-Path $tools "fetch_wii_stage_file.ps1") @common -RemotePath $remote -OutFile $local 2>&1
+                $fetchExit = $LASTEXITCODE
+            } finally { $ErrorActionPreference = $savedPreference }
+            if($fetchExit -ne 0) {
+                if(($fetchOutput | Out-String) -notmatch '"reason"\s*:\s*"(?:not_found|open_failed)"') {
+                    throw "service diagnostic config fetch failed: $remote ($fetchOutput)"
+                }
+                $defaults = $remote -replace 'config.json$', 'config_wii.json'
+                & (Get-Command powershell, pwsh -ErrorAction SilentlyContinue | Select-Object -First 1) -NoProfile -ExecutionPolicy Bypass -File (Join-Path $tools "fetch_wii_stage_file.ps1") @common -RemotePath $defaults -OutFile $local
+                if($LASTEXITCODE -ne 0) { throw "service diagnostic defaults fetch failed: $defaults" }
+            }
             $config = Get-Content -Raw -LiteralPath $local | ConvertFrom-Json
             if($null -eq $config.debug) {
                 $config | Add-Member -Force NoteProperty debug ([pscustomobject]@{})

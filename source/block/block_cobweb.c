@@ -72,7 +72,11 @@ struct block block_cobweb = {
 	.ignore_lighting = false,
 	.flammable = false,
 	.place_ignore = false,
-	.digging.hardness = 6000, // TODO: might not be correct
+	// [mcb173-retromcp Block.java:53] web setHardness(4.0F) -> 4.0 * 1500 =
+	// 6000 at the engine's FH-01 scale (hardness * 30 ticks * 50 ms). Harvest:
+	// Material.java:30 setNoHarvest -> only a sword (tool SWORD below) or
+	// shears (ItemShears.java:18-20, item_shears_can_harvest) drop string.
+	.digging.hardness = 6000,
 	.digging.tool = TOOL_TYPE_SWORD,
 	.digging.min = TOOL_TIER_WOOD,
 	.digging.best = TOOL_TIER_WOOD,

@@ -41,6 +41,14 @@
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
+#include "loading_tips.h"
+
+/* Design preview: style 0 (default) keeps approved art; 1/2 select dark /
+ * lighter pack-owned Nether scene for PORTAL reasons; missing art tiles. */
+/* Both scenes are resident from pack loading/title baking. Drawing performs
+ * no file IO, allocation, decode, bake or GPU fence. */
+void lworld_draw_loading_backdrop(enum loading_reason reason, int width,
+	int height, float elapsed_s, int style);
 
 /* Local presentation only. Last measured stage fraction survives regressed
  * or unavailable readings. UINT32_MAX means no new measurement. */

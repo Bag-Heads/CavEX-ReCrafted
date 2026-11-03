@@ -57,12 +57,21 @@ def conversion_map() -> dict:
     return json.loads((ROOT / "tools/pack_helper/conversion_map.json").read_text())
 
 
-def noise_png(w: int, h: int, seed: int) -> bytes:
+def noise_png(w: int, h: int, seed: int, *, terrain=False) -> bytes:
     rng = random.Random(seed)
     img = Image.new("RGBA", (w, h))
     img.putdata([(rng.randrange(256), rng.randrange(256), rng.randrange(256),
                   rng.choice((0, 255, 255, rng.randrange(256))))
                  for _ in range(w * h)])
+    if terrain:
+        # The desktop scene map requires solid Nether terrain to be opaque.
+        # Keep random alpha everywhere else (including mushroom cutouts), so
+        # the original alpha-conversion coverage remains in this fixture.
+        for cx, cy in ((7, 6), (8, 6), (9, 6)):
+            box = (cx * w // 16, cy * h // 16, (cx + 1) * w // 16, (cy + 1) * h // 16)
+            tile = img.crop(box)
+            tile.putalpha(255)
+            img.paste(tile, box)
     out = io.BytesIO()
     img.save(out, format="PNG")
     return out.getvalue()
@@ -81,8 +90,10 @@ def jar_entries(seed: int, *, drop=None, hd=None, modern=False,
         if dest == hd:
             w, h = w * 2, h * 2
         name = "gui/container.png" if dest == "gui/chest.png" else dest
-        entries.append((name, noise_png(w, h, seed * 1000 + i)))
+        entries.append((name, noise_png(w, h, seed * 1000 + i, terrain=dest == "terrain.png")))
     entries.append(("title/mclogo.png", noise_png(32, 32, seed)))  # unused image
+    if drop != "title/splashes.txt":
+        entries.append(("title/splashes.txt", b"Synthetic splash!\r\nAnother \xff splash\n"))
     if modern:
         entries.append(("assets/minecraft/textures/block/stone.png", noise_png(16, 16, 1)))
     return entries
@@ -185,7 +196,11 @@ def compare_with_helper(jar: Path, ours: Path, tmp: Path, label: str,
     if not prepared["ok"]:
         return
     helper = Path(prepared["path"])
-    hset = files_of(helper) - {core.MANIFEST_NAME}
+    # The desktop importer now supplies a precomposed Nether illustration for
+    # Wii. The in-game importer intentionally cannot run this offline composer.
+    scene_files = {"gui/nether-background.png", "gui/nether-background.md"}
+    check(scene_files <= files_of(helper), f"{label}: desktop Nether scene present")
+    hset = files_of(helper) - {core.MANIFEST_NAME} - scene_files
     oset = files_of(ours) - {core.MANIFEST_NAME}
     check(hset == oset, f"{label}: same file set (helper-only {sorted(hset - oset)}, "
                         f"ours-only {sorted(oset - hset)})")
@@ -218,13 +233,23 @@ def test_table(probe: str) -> None:
 
 
 def test_import(probe: str, tmp: Path) -> None:
-    for label, descriptors in (("plain", False), ("descriptor", True)):
+    for label, descriptors in (("plain", False), ("descriptor", True),
+                               ("no-splashes", False)):
         root = make_root(tmp, label)
         jar = root / "beta" / "b1.7.3.jar"
-        write_jar(jar, jar_entries(7 if descriptors else 3), descriptors=descriptors)
+        write_jar(jar, jar_entries(7 if descriptors else 3,
+                                 drop="title/splashes.txt" if label == "no-splashes" else None),
+                  descriptors=descriptors)
         code, out = run(probe, "sync", root)
         check(code == 0, f"{label}: sync import DONE ({out.strip()})")
         pack = root / "texturepacks" / PACK
+        splash = pack / "title/splashes.txt"
+        if label == "no-splashes":
+            check(not splash.exists(), "missing optional splashes: no file, import succeeds")
+        else:
+            with zipfile.ZipFile(jar) as archive:
+                check(splash.is_file() and splash.read_bytes() == archive.read("title/splashes.txt"),
+                      f"{label}: C importer preserves jar splash bytes")
         compare_with_helper(jar, pack, tmp, label)
         check(not (root / "texturepacks" / ".beta-import-tmp").exists()
               and not (root / "texturepacks" / ".beta-import-old").exists(),

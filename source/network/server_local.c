@@ -1671,6 +1671,37 @@ void server_local_test_seed_math_random(int64_t seed) {
 }
 #endif
 
+/* ci-1101/11 R2-1: BlockChest's `private Random random = new Random()`
+ * (BlockChest.java:6). Beta has ONE BlockChest instance per process, so the
+ * stream is process-global here too (the s_math_random precedent), and it is
+ * java.util.Random-exact (R2-3: the same jrand the player's dropPlayerItem
+ * and death scatter use). It is distinct from container_drop_rng (now the
+ * furnace's furnaceRand only) and dispenser_break_rng, so breaking a chest
+ * never shifts later furnace or dispenser output. The iron chest shares it:
+ * it is a CaveWii addition built on BlockChest's storage row and spill path
+ * with no Beta class of its own, so a separate stream would be invented
+ * state; sharing keeps "one chest-family Random", exactly like a double
+ * chest's two halves share BlockChest.random in Beta. Lazily seeded from the
+ * runtime (Java seeds `new Random()` from the clock too); the test seam pins
+ * exact draw order. */
+static struct java_random s_chest_break_rand;
+static bool s_chest_break_rand_seeded = false;
+
+static struct java_random* server_local_chest_break_rand(void) {
+	if(!s_chest_break_rand_seeded) {
+		server_world_runtime_jrand_seed(&s_chest_break_rand);
+		s_chest_break_rand_seeded = true;
+	}
+	return &s_chest_break_rand;
+}
+
+#ifdef CAVEWII_SERVER_LOCAL_TEST
+void server_local_test_seed_chest_break_rand(int64_t seed) {
+	jrand_set_seed(&s_chest_break_rand, seed);
+	s_chest_break_rand_seeded = true;
+}
+#endif
+
 /* ===== S0 audio: server-caused sound events (see server_local.h) ======== */
 
 /* Dedicated cosmetic-roll stream (the s_math_random precedent). Beta drew
@@ -4827,6 +4858,12 @@ static bool server_local_planned_death_drop_matches(
 	return true;
 }
 
+static bool server_local_spawn_chest_recovery_batch(
+	vec3 pos, const struct item_data* items,
+	const struct death_drop_provenance* provenance, size_t count, bool throw,
+	const uint8_t* delays, const bool* owned, bool any_owned,
+	struct server_local* s, struct server_player* player);
+
 bool server_local_spawn_sourced_item_batch_for(
 	vec3 pos, const struct item_data* items,
 	const struct death_drop_provenance* provenance, size_t count, bool throw,
@@ -4862,12 +4899,43 @@ bool server_local_spawn_sourced_item_batch_for(
 		if(container_rng)
 			server_local_ensure_container_drop_rng(s);
 		const struct server_body_rand actor_raw = player->entity_rand;
+		/* ci-1101/11 R2-4: a chest-family window (chest / double-chest half /
+		 * iron chest) whose block vanished while open and whose spill was
+		 * refused closes here with its storage still in hand. Beta would have
+		 * spilled that storage from BlockChest.onBlockRemoval at the BLOCK:
+		 * per-slot offset, 10-30 piles, chest Random. So the storage records
+		 * scatter at their owner origin exactly like the break path, and only
+		 * the player-owned records (cursor) drop at the player. One prepare /
+		 * one join: the whole close stays all-or-nothing. */
+		bool chest_storage = false;
+		for(size_t i = 0; i < count; i++)
+			chest_storage = chest_storage
+				|| (provenance[i].kind == DEATH_DROP_OWNER_CONTAINER_STORAGE
+					&& (provenance[i].window == WINDOWC_CHEST
+						|| provenance[i].window == WINDOWC_IRON_CHEST));
+		/* ci-1101/25 R5/R5c: drops (orphaned storage AND the cursor/grid
+		 * beside it) land in block_world -- a container close runs with
+		 * block_world = the world its tile window is bound to
+		 * (server_local_container_on_close: chest, furnace, dispenser, any
+		 * tile window); the player's own inventory, an unbound or stale
+		 * window keep the ambient world (slot 0 outside a dispatch). */
+		struct server_world* close_w = block_world(s);
+		if(chest_storage) {
+			struct server_world* prev_bw = block_world_enter(s, close_w);
+			bool ok = server_local_spawn_chest_recovery_batch(
+				pos, items, provenance, count, throw, delays, owned, any_owned,
+				s, player);
+			block_world_leave(s, prev_bw);
+			if(!ok)
+				player->entity_rand = actor_raw;
+			return ok;
+		}
 		bool ok = server_local_spawn_item_batch_rng(
 			pos, items, count, throw, s,
 			container_rng ? &s->container_drop_rng : &s->rand_src, delays, player,
 			any_owned ? owned : NULL,
 			any_owned ? server_local_player_rand(s, player) : NULL,
-			&s->worlds[0]);
+			close_w);
 		if(!ok)
 			player->entity_rand = actor_raw;
 		return ok;
@@ -4965,19 +5033,42 @@ bool server_local_spawn_container_item_batch(
 // same per-slot/per-piece scatter as BlockChest lines 129-156 and the existing
 // dispenser implementation below. Keep the chest batch path's atomic
 // allocation/join/rollback contract: the TE remains the owner on failure.
-static void server_local_container_scatter_offset(struct random_gen* rng,
-	w_coord_t x, w_coord_t y, w_coord_t z, vec3 pos) {
-	float ox = rand_gen_flt(rng) * 0.8F + 0.1F;
-	float oy = rand_gen_flt(rng) * 0.8F + 0.1F;
-	float oz = rand_gen_flt(rng) * 0.8F + 0.1F;
+/* The block class's own Random behind one onBlockRemoval scatter: exactly
+ * one of the two is set. `java` is the java.util.Random-exact stream
+ * (BlockChest.random); `gen` is the legacy xorshift stream the furnace keeps
+ * (furnaceRand; its goldens are pinned to it). */
+struct container_scatter_rng {
+	struct random_gen* gen;
+	struct java_random* java;
+};
+
+static float container_scatter_flt(struct container_scatter_rng r) {
+	return r.java ? jrand_next_float(r.java) : rand_gen_flt(r.gen);
+}
+static int container_scatter_int(struct container_scatter_rng r, int bound) {
+	return r.java ? (int)jrand_next_int_bound(r.java, bound)
+				  : rand_gen_int(r.gen, bound);
+}
+static float container_scatter_gaussian(struct container_scatter_rng r) {
+	/* Beta: (float)random.nextGaussian() -- the cast precedes the * 0.05F. */
+	return r.java ? (float)jrand_next_gaussian(r.java) : rand_gen_gaussian(r.gen);
+}
+
+static void server_local_container_scatter_offset(
+	struct container_scatter_rng rng, w_coord_t x, w_coord_t y, w_coord_t z,
+	vec3 pos) {
+	float ox = container_scatter_flt(rng) * 0.8F + 0.1F;
+	float oy = container_scatter_flt(rng) * 0.8F + 0.1F;
+	float oz = container_scatter_flt(rng) * 0.8F + 0.1F;
 	pos[0] = (float)x + ox;
 	pos[1] = (float)y + oy;
 	pos[2] = (float)z + oz;
 }
 
-static void server_local_container_scatter_piece(struct random_gen* rng,
-	struct item_data* remaining, struct item_data* drop, vec3 vel) {
-	int take = rand_gen_int(rng, 21) + 10;
+static void server_local_container_scatter_piece(
+	struct container_scatter_rng rng, struct item_data* remaining,
+	struct item_data* drop, vec3 vel) {
+	int take = container_scatter_int(rng, 21) + 10;
 	if(take > remaining->count)
 		take = remaining->count;
 	*drop = (struct item_data) {
@@ -4985,34 +5076,34 @@ static void server_local_container_scatter_piece(struct random_gen* rng,
 		.count = (uint8_t)take,
 	};
 	remaining->count -= (uint8_t)take;
-	vel[0] = rand_gen_gaussian(rng) * 0.05F;
-	vel[1] = rand_gen_gaussian(rng) * 0.05F + 0.2F;
-	vel[2] = rand_gen_gaussian(rng) * 0.05F;
+	/* R2-2: `new EntityItem(...)` runs first (EntityItem.java:9-21: hoverStart,
+	 * rotationYaw, motionX, motionZ from Math.random), THEN onBlockRemoval
+	 * overwrites motion X/Y/Z. Same convention as every batch/player drop
+	 * path here (server_local_item_velocity). */
+	vec3 ctor;
+	server_local_entity_item_constructor_velocity(ctor);
+	vel[0] = container_scatter_gaussian(rng) * 0.05F;
+	vel[1] = container_scatter_gaussian(rng) * 0.05F + 0.2F;
+	vel[2] = container_scatter_gaussian(rng) * 0.05F;
 }
 
-bool server_local_furnace_scatter_contents(struct server_local* s,
-	w_coord_t x, w_coord_t y, w_coord_t z, const struct item_data slots[3]) {
-	if(!s || !slots || s->death_drop_active)
-		return false;
-	#ifdef CAVEWII_SERVER_LOCAL_TEST
-	if(s_fail_next_container_drop) {
-		s_fail_next_container_drop = false;
-		s->orphan_container_retry_pending = true;
-		return false;
-	}
-	#endif
-	server_local_ensure_container_drop_rng(s);
-	struct random_gen* rng = &s->container_drop_rng;
-	struct random_gen rng_before = *rng;
-	struct server_local_math_random_state math_before;
-	server_local_math_random_capture(&math_before);
-	uint32_t next_entity_before = s->next_entity_id;
-	// item_data.count is uint8_t; 26 pieces is the maximum for one slot
-	// (ceil(255 / 10)). Three furnace slots therefore need at most 78.
-	struct entity* prepared[3 * 26] = {0};
-	uint32_t ids[3 * 26] = {0};
-	size_t count = 0;
-	for(int slot = 0; slot < 3; slot++) {
+/* Upper bound on pieces one slot array can produce (ceil(count/10) each). */
+static size_t server_local_container_scatter_bound(
+	const struct item_data* slots, size_t slot_count) {
+	size_t bound = 0;
+	for(size_t slot = 0; slot < slot_count; slot++)
+		if(slots[slot].id != 0 && slots[slot].count != 0)
+			bound += ((size_t)slots[slot].count + 9) / 10;
+	return bound;
+}
+
+/* Prepare phase only: appends every piece of `slots` to prepared/ids (the
+ * caller sized them with the bound above and joins/rolls back as one). */
+static bool server_local_container_scatter_prepare(struct server_local* s,
+	struct container_scatter_rng rng, w_coord_t x, w_coord_t y, w_coord_t z,
+	const struct item_data* slots, size_t slot_count, struct entity** prepared,
+	uint32_t* ids, size_t* count, size_t cap) {
+	for(size_t slot = 0; slot < slot_count; slot++) {
 		struct item_data stack = slots[slot];
 		if(stack.id == 0 || stack.count == 0)
 			continue;
@@ -5022,32 +5113,210 @@ bool server_local_furnace_scatter_contents(struct server_local* s,
 			struct item_data drop;
 			vec3 vel;
 			server_local_container_scatter_piece(rng, &stack, &drop, vel);
-			assert(count < 3 * 26);
-			struct entity* e = server_local_prepare_item(
-				pos, &drop, vel, 0, 0, 0, s);
+			assert(*count < cap);
+			/* ci-1101/25: into the removal world (block_world: the dig's
+			 * world, worlds[0] outside a dispatch -- single player
+			 * unchanged), never the Overworld for a Nether chest. */
+			struct entity* e = server_local_prepare_item_w(
+				block_world(s), pos, &drop, vel, 0, 0, 0, s);
 			if(!e)
-				goto rollback;
-			prepared[count] = e;
-			ids[count++] = e->id;
+				return false;
+			prepared[*count] = e;
+			ids[(*count)++] = e->id;
 		}
 	}
-	if(count && !server_local_entity_join_batch(s, ids, count))
-		goto rollback;
-	for(size_t i = 0; i < count; i++)
-		server_local_publish_item(s, prepared[i]);
+	return true;
+}
+
+/* ci-1101/11: the one scatter body behind BlockChest.onBlockRemoval
+ * (src_original 129-157), BlockFurnace.onBlockRemoval (142-171) and the
+ * retry sweep. Per occupied slot, in slot order: ONE (x,y,z) offset triple
+ * (3x nextFloat()*0.8F+0.1F) shared by every piece of that slot, then
+ * while(stackSize > 0): nextInt(21)+10 capped by the remainder, one
+ * EntityItem at the fixed slot position with a fresh nextGaussian()*0.05F
+ * per axis (Y +0.2F). Beta draws these from the block class's own `private
+ * Random random` (never World.rand); CaveWii's equivalent isolated stream is
+ * container_drop_rng. delayBeforeCanPickup stays at the EntityItem default 0.
+ * All-or-nothing like every other container spill: an allocation or join
+ * failure rolls back every prepared piece, the RNG, the math random and the
+ * id counter, so the caller may retain the backing row for the retry pass.
+ * The piece arrays are sized from the exact upper bound (ceil(count/10) per
+ * slot; 27 x 64 is 189, a 54-slot double row at most 378) and heap-held so a
+ * full 54-slot row never puts 1.4K pointers on the server stack. */
+static bool server_local_container_scatter_spawn(struct server_local* s,
+	bool chest, w_coord_t x, w_coord_t y, w_coord_t z,
+	const struct item_data* slots, size_t slot_count) {
+	if(!s || !slots)
+		return false;
+	#ifdef CAVEWII_SERVER_LOCAL_TEST
+	if(s_fail_next_container_drop) {
+		s_fail_next_container_drop = false;
+		return false;
+	}
+	#endif
+	size_t bound = server_local_container_scatter_bound(slots, slot_count);
+	if(bound == 0)
+		return true;
+	struct entity** prepared = calloc(bound, sizeof *prepared);
+	uint32_t* ids = calloc(bound, sizeof *ids);
+	if(!prepared || !ids) {
+		free(prepared);
+		free(ids);
+		return false;
+	}
+	struct container_scatter_rng rng = {0};
+	if(chest) {
+		rng.java = server_local_chest_break_rand();
+	} else {
+		server_local_ensure_container_drop_rng(s);
+		rng.gen = &s->container_drop_rng;
+	}
+	struct random_gen gen_before = rng.gen ? *rng.gen : (struct random_gen) {0};
+	struct java_random java_before
+		= rng.java ? *rng.java : (struct java_random) {0};
+	struct server_local_math_random_state math_before;
+	server_local_math_random_capture(&math_before);
+	uint32_t next_entity_before = s->next_entity_id;
+	size_t count = 0;
+	bool ok = server_local_container_scatter_prepare(
+		s, rng, x, y, z, slots, slot_count, prepared, ids, &count, bound);
+	if(ok && count && !server_local_entity_join_batch(s, ids, count))
+		ok = false;
+	if(ok) {
+		for(size_t i = 0; i < count; i++)
+			server_local_publish_item(s, prepared[i]);
+	} else {
+		server_local_rollback_prepared_items(s, prepared, count);
+		if(rng.gen)
+			*rng.gen = gen_before;
+		if(rng.java)
+			*rng.java = java_before;
+		server_local_math_random_restore(&math_before);
+		s->next_entity_id = next_entity_before;
+	}
+	free(prepared);
+	free(ids);
+	return ok;
+}
+
+/* R2-4 body (see the call site): storage records grouped per owner block in
+ * record order (= slot order, how every close handler builds them) scatter
+ * from the chest stream at that block; every other record is prepared the
+ * way server_local_spawn_item_batch_rng prepares it (player-owned ->
+ * dropPlayerItem from the player's rand, else constructor/throw motion from
+ * rand_src). All pieces join as one batch; any failure rolls back entities,
+ * every stream touched, the Math stream and the id counter. */
+static bool server_local_spawn_chest_recovery_batch(
+	vec3 pos, const struct item_data* items,
+	const struct death_drop_provenance* provenance, size_t count, bool throw,
+	const uint8_t* delays, const bool* owned, bool any_owned,
+	struct server_local* s, struct server_player* player) {
+	size_t cap = server_local_container_scatter_bound(items, count) + count;
+	struct entity** prepared = calloc(cap, sizeof *prepared);
+	uint32_t* ids = calloc(cap, sizeof *ids);
+	struct item_data* storage = calloc(count, sizeof *storage);
+	if(!prepared || !ids || !storage) {
+		free(prepared);
+		free(ids);
+		free(storage);
+		return false;
+	}
+	struct container_scatter_rng rng = {.java = server_local_chest_break_rand()};
+	struct java_random java_before = *rng.java;
+	struct random_gen world_before = s->rand_src;
+	struct java_random* actor_rng
+		= any_owned ? server_local_player_rand(s, player) : NULL;
+	struct java_random actor_before
+		= actor_rng ? *actor_rng : (struct java_random) {0};
+	struct server_local_math_random_state math_before;
+	server_local_math_random_capture(&math_before);
+	uint32_t next_entity_before = s->next_entity_id;
+	size_t n = 0;
+	bool ok = true;
+	bool* done = calloc(count, sizeof *done);
+	if(!done)
+		ok = false;
+	for(size_t i = 0; i < count && ok; i++) {
+		if(done[i])
+			continue;
+		const struct death_drop_provenance* pv = &provenance[i];
+		bool is_storage = pv->kind == DEATH_DROP_OWNER_CONTAINER_STORAGE
+			&& (pv->window == WINDOWC_CHEST || pv->window == WINDOWC_IRON_CHEST);
+		if(!is_storage) {
+			vec3 zero = {0};
+			struct entity* e = server_local_prepare_item_w(block_world(s), pos,
+				&items[i], zero, 0, 0, delays ? delays[i] : 0, s);
+			if(!e) {
+				ok = false;
+				break;
+			}
+			if(owned && owned[i])
+				server_local_player_drop_velocity(player, actor_rng, e->vel);
+			else
+				server_local_item_velocity(player, throw, &s->rand_src, e->vel);
+			prepared[n] = e;
+			ids[n++] = e->id;
+			done[i] = true;
+			continue;
+		}
+		/* Every storage record of THIS owner block, in record order. */
+		size_t m = 0;
+		for(size_t j = i; j < count; j++) {
+			const struct death_drop_provenance* q = &provenance[j];
+			if(done[j] || q->kind != pv->kind || q->window != pv->window
+			   || q->owner_x != pv->owner_x || q->owner_y != pv->owner_y
+			   || q->owner_z != pv->owner_z)
+				continue;
+			storage[m++] = items[j];
+			done[j] = true;
+		}
+		ok = server_local_container_scatter_prepare(s, rng, pv->owner_x,
+			pv->owner_y, pv->owner_z, storage, m, prepared, ids, &n, cap);
+	}
+	if(ok && n && !server_local_entity_join_batch(s, ids, n))
+		ok = false;
+	if(ok) {
+		for(size_t i = 0; i < n; i++)
+			server_local_publish_item(s, prepared[i]);
+	} else {
+		server_local_rollback_prepared_items(s, prepared, n);
+		*rng.java = java_before;
+		s->rand_src = world_before;
+		if(actor_rng)
+			*actor_rng = actor_before;
+		server_local_math_random_restore(&math_before);
+		s->next_entity_id = next_entity_before;
+	}
+	free(done);
+	free(storage);
+	free(prepared);
+	free(ids);
+	return ok;
+}
+
+bool server_local_furnace_scatter_contents(struct server_local* s,
+	w_coord_t x, w_coord_t y, w_coord_t z, const struct item_data slots[3]) {
+	if(!s || !slots || s->death_drop_active)
+		return false;
+	if(!server_local_container_scatter_spawn(s, false, x, y, z, slots, 3)) {
+		s->orphan_container_retry_pending = true;
+		return false;
+	}
 
 	/* C2 tiles: every present body's window on THIS world's furnace loses
 	 * its storage (TileEntityFurnace.canInteractWith); a window bound to
 	 * another world's furnace at the same cell views a different tile and is
-	 * left alone. Block removals run in world slot 0 (callbacks carry no
-	 * world). */
+	 * left alone. ci-1101/25: "this world" is the removal world
+	 * (block_world; worlds[0] outside a dispatch), not always slot 0 -- a
+	 * Nether break used to clear the host's Overworld window instead. */
+	struct server_world* removal_w = block_world(s);
 	for(unsigned body_i = 0; body_i < 2; body_i++) {
 		struct server_player* body = server_local_damage_candidate(s, body_i);
 		struct inventory* inv = body ? body->active_inventory : NULL;
 		if(!inv || inv == &body->inventory
 		   || inv->logic != &inventory_logic_furnace
 		   || inv->x != x || inv->y != y || inv->z != z
-		   || !server_local_window_bound_to(inv, &s->worlds[0]))
+		   || !server_local_window_bound_to(inv, removal_w))
 			continue;
 		inv->invalidated = true;
 		for(int slot = 0; slot < 3; slot++) {
@@ -5061,14 +5330,6 @@ bool server_local_furnace_scatter_contents(struct server_local* s,
 		}
 	}
 	return true;
-
-rollback:
-	server_local_rollback_prepared_items(s, prepared, count);
-	*rng = rng_before;
-	server_local_math_random_restore(&math_before);
-	s->next_entity_id = next_entity_before;
-	s->orphan_container_retry_pending = true;
-	return false;
 }
 
 // Beta 1.7.3 in-world item drop ('Q' key). EntityPlayer.dropCurrentItem ->
@@ -8723,6 +8984,8 @@ static void server_local_chest_selftest(struct server_local* s) {
 // Shears block-break special drop (item_shears.c); forward-declared here to avoid a header touch.
 extern bool item_shears_block_drop(struct block_data blk, struct item_data held,
 								   struct item_data* out);
+// ci-1101/44: Beta ItemShears.canHarvestBlock (ItemShears.java:18-20), item_shears.c.
+extern bool item_shears_can_harvest(uint8_t block_type, uint16_t held_id);
 
 // Ice player-harvest water conversion (block_ice.c); forward-declared here (not
 // wired through block->onBreak -- see block_ice.c's block_ice_harvest comment for
@@ -9341,9 +9604,11 @@ void server_local_window_reply(struct inventory* inv, struct client_rpc* call) {
 		clin_rpc_send(call);
 }
 
+/* ci-1101/25: the view of the REMOVAL world's chest (block_world), not the
+ * slot-0 chest at the same coordinates. */
 bool server_local_has_chest_view(struct server_local* s,
 	w_coord_t x, w_coord_t y, w_coord_t z) {
-	return inventory_chest_view_at(s, x, y, z) != NULL;
+	return inventory_chest_view_at_w(s, block_world(s), x, y, z) != NULL;
 }
 
 bool server_local_open_inventory(struct server_local* s,
@@ -9655,12 +9920,11 @@ void server_local_send_inv_changes(set_inv_slot_t changes,
 	}
 }
 
-bool server_local_spill_active_container(struct server_local* s,
-									  w_coord_t x, w_coord_t y, w_coord_t z) {
-	if(!s) return false;
-	struct inventory* inv = inventory_chest_view_at(s, x, y, z);
-	if(!inv) inv = s->player.active_inventory;
-	if(!inv || inv == &s->player.inventory) return false;
+/* The storage slot range of `inv` that belongs to the block at (x,y,z), or
+ * false when `inv` does not view that block (or is a dispenser, see below). */
+static bool server_local_spill_range(const struct inventory* inv,
+	w_coord_t x, w_coord_t y, w_coord_t z, size_t* first_out,
+	size_t* count_out, uint8_t* window_out) {
 	size_t first = 0, count = 0;
 	uint8_t window = 0;
 	if(inv->logic == &inventory_logic_chest && inv->x == x && inv->y == y
@@ -9699,21 +9963,75 @@ bool server_local_spill_active_container(struct server_local* s,
 		// routes through server_local_dispenser_scatter_contents instead.
 		return false;
 	}
+	*first_out = first;
+	*count_out = count;
+	*window_out = window;
+	return true;
+}
+
+bool server_local_spill_active_container(struct server_local* s,
+									  w_coord_t x, w_coord_t y, w_coord_t z) {
+	return server_local_spill_active_container_found(s, x, y, z, NULL);
+}
+
+/* *found (optional) reports whether a window owning the block was found. A
+ * found window owns the contents even when the spill fails (it is marked
+ * dead and its close retries the orphan batch), so the caller must then
+ * never drop the backing row as well (ci-1101/25 R5: single owner). */
+bool server_local_spill_active_container_found(struct server_local* s,
+	w_coord_t x, w_coord_t y, w_coord_t z, bool* found) {
+	if(found) *found = false;
+	if(!s) return false;
+	/* ci-1101/25: only a window on THIS removal world's block owns it. The
+	 * shared chest view of block_world answers first; otherwise any present
+	 * body's window (host, then guest) bound to that world. A window bound
+	 * to another dimension's tile at the same coordinates is a different
+	 * tile and is never spilled here (it used to fall back to the host's
+	 * window in any world, and missed a guest's window entirely). */
+	struct server_world* w = block_world(s);
+	size_t first = 0, count = 0;
+	uint8_t window = 0;
+	struct inventory* inv = inventory_chest_view_at_w(s, w, x, y, z);
+	if(inv && !server_local_spill_range(inv, x, y, z, &first, &count, &window))
+		inv = NULL;
+	for(unsigned i = 0; !inv && i < 2; i++) {
+		struct server_player* body = server_local_damage_candidate(s, i);
+		struct inventory* cand = body ? body->active_inventory : NULL;
+		if(!cand || cand == &body->inventory
+		   || !server_local_window_bound_to(cand, w))
+			continue;
+		if(server_local_spill_range(cand, x, y, z, &first, &count, &window))
+			inv = cand;
+	}
+	if(!inv) return false;
+	if(found) *found = true;
 	inv->invalidated = true;
 	inventory_chest_invalidate_peers(inv, x, y, z);
 
 	assert(first + count <= inv->capacity);
-	struct item_data drops[IRON_CHEST_SIZE_STORAGE];
-	size_t drop_count = 0;
-	for(size_t k = 0; k < count; k++)
-		if(inv->items[first + k].id != 0)
-			drops[drop_count++] = inv->items[first + k];
+	if(!s->death_drop_active) {
+		// ci-1101/11: a window-open break must produce the SAME Beta
+		// distribution as a closed one (BlockChest.onBlockRemoval reads the
+		// TileEntity, which the live window mirrors slot for slot): per-slot
+		// offset, 10-30 piles, per-piece gaussian motion. Zero slots are
+		// skipped by the scatter itself, so the window's slot order is kept.
+		if(!server_local_container_scatter_spawn(
+			   s, window != WINDOWC_FURNACE, x, y, z, &inv->items[first],
+			   count))
+			return false;
+	} else {
+		struct item_data drops[IRON_CHEST_SIZE_STORAGE];
+		size_t drop_count = 0;
+		for(size_t k = 0; k < count; k++)
+			if(inv->items[first + k].id != 0)
+				drops[drop_count++] = inv->items[first + k];
 
-	if(drop_count > 0
-	   && !server_local_spawn_container_item_batch(
-		   (vec3) {x + 0.5F, y + 0.5F, z + 0.5F}, drops, drop_count,
-		   false, s))
-		return false;
+		if(drop_count > 0
+		   && !server_local_spawn_container_item_batch(
+			   (vec3) {x + 0.5F, y + 0.5F, z + 0.5F}, drops, drop_count,
+			   false, s))
+			return false;
+	}
 
 	// Commit only after the complete batch exists. The cursor is player-owned
 	// and intentionally survives the block break; only this block's slots clear.
@@ -9732,11 +10050,8 @@ bool server_local_spill_active_container(struct server_local* s,
 	return true;
 }
 
-static bool server_local_active_container_at(
-	const struct server_local* s, w_coord_t x, w_coord_t y, w_coord_t z) {
-	const struct inventory* inv = s->player.active_inventory;
-	if(!inv || inv == &s->player.inventory)
-		return false;
+static bool server_local_window_views_container(const struct inventory* inv,
+	w_coord_t x, w_coord_t y, w_coord_t z) {
 	if(inv->logic == &inventory_logic_double_chest)
 		return (inv->x == x && inv->y == y && inv->z == z)
 			|| (inv->x2 == x && inv->y2 == y && inv->z2 == z);
@@ -9744,6 +10059,26 @@ static bool server_local_active_container_at(
 			|| inv->logic == &inventory_logic_iron_chest
 			|| inv->logic == &inventory_logic_furnace)
 		&& inv->x == x && inv->y == y && inv->z == z;
+}
+
+/* A live window (any present body's) viewing world `w`'s container at
+ * (x,y,z). ci-1101/25 R5: per world -- a window bound to another world's
+ * same-cell container does not pin this world's orphan. Slot 0 keeps the
+ * legacy host check (an unbound host window still pins its orphan). */
+static bool server_local_active_container_at(
+	struct server_local* s, struct server_world* w, w_coord_t x,
+	w_coord_t y, w_coord_t z) {
+	for(unsigned i = 0; i < 2; i++) {
+		struct server_player* body = server_local_damage_candidate(s, i);
+		const struct inventory* inv = body ? body->active_inventory : NULL;
+		if(!inv || inv == &body->inventory
+		   || !server_local_window_views_container(inv, x, y, z))
+			continue;
+		if(server_local_window_bound_to(inv, w)
+		   || (i == 0 && w == &s->worlds[0]))
+			return true;
+	}
+	return false;
 }
 
 // An EntityItem allocation can fail after the world cell has already become
@@ -9761,15 +10096,39 @@ unsigned server_local_test_orphan_retry_sweep_calls(void) {
 }
 #endif
 
+static bool server_local_retry_orphaned_container_drops_in(
+	struct server_local* s, struct server_world* sweep_world);
+
 static bool server_local_retry_orphaned_container_drops(struct server_local* s) {
 #ifdef CAVEWII_SERVER_LOCAL_TEST
 	s_orphan_retry_sweep_calls++;
 #endif
 	bool complete = true;
-	/* A1b: this sweep runs against slot 0 (its block checks, chunk owners and
-	 * spill all use that world); it touches only rows that world owns. A1c
-	 * converts the sweep into a per-world pass. */
-	struct server_world* sweep_world = &s->worlds[0];
+	/* ci-1101/25 R5: one pass per live world slot (slot 0 always, as
+	 * before). Each pass touches only rows its world owns, checks blocks and
+	 * chunk owners in that world, and spills with block_world = that world so
+	 * the retried scatter lands where the container was. */
+	for(unsigned slot = 0; slot < SERVER_LOCAL_WORLD_SLOTS; slot++) {
+		struct server_world* sweep_world = &s->worlds[slot];
+		if(slot != 0 && !server_local_world_live(sweep_world))
+			continue;
+		struct server_world* prev_bw = block_world_enter(s, sweep_world);
+		if(!server_local_retry_orphaned_container_drops_in(s, sweep_world))
+			complete = false;
+		block_world_leave(s, prev_bw);
+	}
+	// FIX #4: keep the pending flag in sync with what THIS pass actually
+	// found, regardless of which caller ran it (the gated per-tick sweep
+	// below, or the ungated portal-transition call) -- true if anything is
+	// still retained (so the per-tick sweep keeps chasing it), false once a
+	// full pass finds nothing left to do (so a healthy tick stops scanning).
+	s->orphan_container_retry_pending = !complete;
+	return complete;
+}
+
+static bool server_local_retry_orphaned_container_drops_in(
+	struct server_local* s, struct server_world* sweep_world) {
+	bool complete = true;
 	struct te_store sweep = server_world_tile_store(sweep_world);
 	for(int i = 0; i < sweep.max_chest; i++) {
 		struct complex_block_pos* p = &s->chest_pos[i];
@@ -9781,26 +10140,23 @@ static bool server_local_retry_orphaned_container_drops(struct server_local* s) 
 		if(block.type == BLOCK_CHEST || block.type == BLOCK_IRON_CHEST)
 			continue;
 		struct server_chunk* owner_chunk = dict_server_chunks_get(
-			s->world.chunks,
+			sweep_world->chunks,
 			S_CHUNK_ID(WCOORD_CHUNK_OFFSET(p->x),
 					   WCOORD_CHUNK_OFFSET(p->z)));
 		if(!owner_chunk) {
 			complete = false;
 			continue;
 		}
-		if(server_local_active_container_at(s, p->x, p->y, p->z)) {
+		if(server_local_active_container_at(s, sweep_world, p->x, p->y,
+											p->z)) {
 			complete = false;
 			continue;
 		}
 
-		struct item_data drops[MAX_CHEST_SLOTS];
-		size_t count = 0;
-		for(int k = 0; k < MAX_CHEST_SLOTS; k++)
-			if(s->chest_items[i][k].id != 0)
-				drops[count++] = s->chest_items[i][k];
-		if(server_local_spawn_container_item_batch(
-			   (vec3) {p->x + 0.5F, p->y + 0.5F, p->z + 0.5F}, drops,
-			   count, false, s)) {
+		// ci-1101/11: the retried spill is the same Beta scatter the
+		// first attempt would have produced (BlockChest.onBlockRemoval).
+		if(server_local_container_scatter_spawn(s, true, p->x, p->y, p->z,
+			   s->chest_items[i], MAX_CHEST_SLOTS)) {
 			memset(s->chest_items[i], 0, sizeof(s->chest_items[i]));
 			te_store_free_row(&sweep, TE_KIND_CHEST, i);
 			/* Owner deletion + replacement items must enter one compressed chunk
@@ -9820,14 +10176,15 @@ static bool server_local_retry_orphaned_container_drops(struct server_local* s) 
 		if(block.type == BLOCK_FURNACE || block.type == BLOCK_FURNACE_LIT)
 			continue;
 		struct server_chunk* owner_chunk = dict_server_chunks_get(
-			s->world.chunks,
+			sweep_world->chunks,
 			S_CHUNK_ID(WCOORD_CHUNK_OFFSET(p->x),
 					   WCOORD_CHUNK_OFFSET(p->z)));
 		if(!owner_chunk) {
 			complete = false;
 			continue;
 		}
-		if(server_local_active_container_at(s, p->x, p->y, p->z)) {
+		if(server_local_active_container_at(s, sweep_world, p->x, p->y,
+											p->z)) {
 			complete = false;
 			continue;
 		}
@@ -9840,12 +10197,6 @@ static bool server_local_retry_orphaned_container_drops(struct server_local* s) 
 		} else
 			complete = false;
 	}
-	// FIX #4: keep the pending flag in sync with what THIS pass actually
-	// found, regardless of which caller ran it (the gated per-tick sweep
-	// below, or the ungated portal-transition call) -- true if anything is
-	// still retained (so the per-tick sweep keeps chasing it), false once a
-	// full pass finds nothing left to do (so a healthy tick stops scanning).
-	s->orphan_container_retry_pending = !complete;
 	return complete;
 }
 
@@ -12943,13 +13294,13 @@ static bool server_local_spawn_destroyed_container_items_body(
 
 	vec3 pos = {x + 0.5F, y + 0.5F, z + 0.5F};
 	if(!s->death_drop_active) {
-		struct item_data drops[DEATH_DROP_JOURNAL_MAX_CONTAINER_SLOTS];
-		size_t count = 0;
-		for(size_t i = 0; i < slot_count; i++)
-			if(slots[i].id != 0)
-				drops[count++] = slots[i];
-		return server_local_spawn_container_item_batch(
-			pos, drops, count, false, s);
+		// ci-1101/11: BlockChest.onBlockRemoval (src_original 129-157) does
+		// NOT drop each slot as one stack at the block centre; it scatters
+		// every slot in 10-30 piles from its own Random. Same shape for the
+		// iron chest, which reuses this path. The death-drop journal branch
+		// below keeps its durable one-record-per-slot plan (replay-exact).
+		return server_local_container_scatter_spawn(
+			s, true, x, y, z, slots, slot_count);
 	}
 
 	struct death_drop_journal* journal = s->death_drop_journal;
@@ -17419,7 +17770,10 @@ void server_local_dispenser_scatter_contents(
 	// precedent).
 	if(s->dispenser_break_rng.seed == 0)
 		s->dispenser_break_rng.seed = 0x2545F491u;
-	struct random_gen* rng = &s->dispenser_break_rng;
+	/* R2-2 (ci-1101/11): the shared piece helper now also consumes the
+	 * EntityItem constructor's Math.random draws per piece; the dispenser's
+	 * own stream and its outputs are unchanged. */
+	struct container_scatter_rng rng = {.gen = &s->dispenser_break_rng};
 
 	for(int slot = 0; slot < DISPENSER_TE_SLOTS; slot++) {
 		struct item_data stack = items[slot];
@@ -17778,6 +18132,30 @@ void server_local_actor_portal_tick(struct server_local* s,
 // dimension) -- Beta shows a single "Entering the Nether" screen too.
 static int server_local_active_window_id(const struct server_player* player);
 static void server_local_reopen_active_inventory(struct server_player* player);
+/* ci-1101/25 R5c: run a container window's on_close with block_world = the
+ * world the window is bound to, so every drop its close makes (orphaned
+ * storage, cursor, crafting grid) lands in that world. An unbound or stale
+ * window leaves block_world as it is (slot 0 outside a dispatch). The caller
+ * has already published the stable player-inventory alias. */
+static bool server_local_container_on_close(struct server_local* s,
+	struct inventory* active, struct server_player* player) {
+	if(!active || !active->logic || !active->logic->on_close)
+		return false;
+	/* R5d/R9: the player's OWN inventory (window 0) never takes the binding
+	 * (owner->window_world is retained from the last tile window and may be
+	 * another world). Its cursor/grid drops go through the player like Beta
+	 * (Container.onCraftGuiClosed -> EntityPlayer.dropPlayerItem ->
+	 * joinEntityItemWithWorld on the player's worldObj): the closing
+	 * player's CURRENT world. */
+	struct server_world* bound = active == &player->inventory
+		? server_local_world_of(s, player)
+		: server_local_window_world(active);
+	struct server_world* prev = block_world_enter(s, bound);
+	bool ok = active->logic->on_close(active, player);
+	block_world_leave(s, prev);
+	return ok;
+}
+
 bool server_local_close_active_inventory_for(struct server_local* s,
 	struct server_player* player) {
 	if(!s || !player)
@@ -17788,7 +18166,7 @@ bool server_local_close_active_inventory_for(struct server_local* s,
 	// fails, the authoritative/client container must remain intact. This hook is
 	// idempotent after success because it clears only stacks it actually spawned.
 	if(player->inventory.logic && player->inventory.logic->on_close)
-		if(!player->inventory.logic->on_close(&player->inventory, player))
+		if(!server_local_container_on_close(s, &player->inventory, player))
 			return false;
 
 	if(active != &player->inventory) {
@@ -17796,8 +18174,7 @@ bool server_local_close_active_inventory_for(struct server_local* s,
 		// destroy/free `active`, commit its backing tile entity, and spawn a picked
 		// cursor stack into the source world.
 		player->active_inventory = &player->inventory;
-		if(!active || !active->logic || !active->logic->on_close
-		   || !active->logic->on_close(active, player)) {
+		if(!server_local_container_on_close(s, active, player)) {
 			player->active_inventory = active;
 			return false;
 		}
@@ -17815,6 +18192,13 @@ bool server_local_test_close_active_inventory(struct server_local* s) {
 	return server_local_close_active_inventory(s);
 }
 #endif
+
+/* Beta narrows these through a Java (short) cast on write; CaveWii's int
+ * counters never leave the short range in play, so this only guards a
+ * corrupt value from wrapping. */
+static int16_t server_local_clamp_i16(int v) {
+	return (int16_t)(v < INT16_MIN ? INT16_MIN : (v > INT16_MAX ? INT16_MAX : v));
+}
 
 static bool server_local_write_level_state(struct server_local* s) {
 	/* G9 R3: after a light stop nothing of the session is written; the disk
@@ -17872,6 +18256,25 @@ static bool server_local_write_level_state(struct server_local* s) {
 								   &s->weather.thunder_time)
 		/* PLAYER-HEALTH-NBT: Beta half-hearts + exact CaveWiiHealth. */
 		&& level_archive_write_player_health(&s->level, s->player.health)
+		/* ci-1101/41 item 11: Beta Entity.writeToNBT (Entity.java:752-757)
+		 * Motion/Fire/Air/OnGround + EntityPlayer.writeEntityToNBT
+		 * (EntityPlayer.java:330-331) Sleeping/SleepTimer. MUST follow the
+		 * health pair: Sleeping is the legacy health classifier's "Beta-born"
+		 * provenance tag, so it is only ever written beside a consistent
+		 * CaveWiiHealth marker (level_player_legacy_health_units). Motion is
+		 * the server-owned motion (vel_x, motion_y, vel_z); the client walk
+		 * velocity is not mirrored here (see player.vel_* comments). */
+		&& level_archive_write_player_entity_state(
+			&s->level,
+			&(struct level_player_entity_state) {
+				.motion = {s->player.vel_x, s->player.motion_y,
+						   s->player.vel_z},
+				.fire = server_local_clamp_i16(s->player.fire),
+				.air = server_local_clamp_i16(s->player.oxygen),
+				.on_ground = s->player.on_ground,
+				.sleeping = s->player.sleeping,
+				.sleep_timer = server_local_clamp_i16(s->player.sleep_timer),
+			})
 		&& isfinite(s->player.fall_distance)
 		&& s->player.fall_distance >= 0.0F
 		&& level_archive_write_player_fall_distance(
@@ -19932,6 +20335,14 @@ server_local_load_world_impl_ex(
 
 		s->player.oxygen = MAX_OXYGEN;
 		s->player.fire = -PLAYER_FIRE_RESISTANCE; // fresh entity: not lit
+		/* ci-1101/41 item 11: Entity.readFromNBT (Entity.java:786-787)
+		 * restores Fire/Air. Only from a Player record this load actually
+		 * read; a save without the tags keeps the fresh values above. The
+		 * portal/override path re-stamps its carried fire/oxygen after this
+		 * returns; a death respawn checkpoints the fresh body first. */
+		if(vsp_player_read)
+			level_archive_read_player_fire_air(&s->level, &s->player.fire,
+											   &s->player.oxygen);
 		// Fresh-player portal baseline (Beta EntityPlayer ctor:
 		// timeUntilPortal = 20). The LIVE dimension switch re-stamps its
 		// own carried fire/oxygen + 10-tick cooldown AFTER this returns.
@@ -21873,8 +22284,7 @@ void server_local_process_window_for(struct server_local* s,
 			// Publish the stable alias before on_close: a container callback can
 			// destroy/free `active` and may call back into server inventory code.
 			player->active_inventory = &player->inventory;
-			if(!active->logic || !active->logic->on_close
-			   || !active->logic->on_close(active, player)) {
+			if(!server_local_container_on_close(s, active, player)) {
 				player->active_inventory = active;
 				server_local_reopen_active_inventory(player);
 			} else player->active_inventory->transaction_pending = false;
@@ -22409,12 +22819,17 @@ static void server_local_process_block_dig_for_body(struct server_local* s,
 					   && ((it
 							&& it->tool.type == blocks[blk.type]->digging.tool
 							&& it->tool.tier >= blocks[blk.type]->digging.min)
+						   // ci-1101/44: web (Material.java:30 setNoHarvest) is
+						   // also harvested by shears (ItemShears.java:18-20).
+						   || (has_tool && item_shears_can_harvest(blk.type, it_data.id))
 						   || blocks[blk.type]->digging.min == TOOL_TIER_ANY
 						   || blocks[blk.type]->digging.tool == TOOL_TYPE_ANY)) {
 						// Beta ItemShears/BlockLeaves.harvestBlock: leaves broken while holding
 						// shears drop the leaf block itself instead of the normal sapling roll.
 						struct item_data shear_drop;
-						if(has_tool
+						// Creative addition (maintainer 2026-11-01): suppress only
+						// harvested items, not onBreak contents or ice conversion.
+						if(!s->creative_mode && has_tool
 						   && item_shears_block_drop(blk, it_data, &shear_drop)) {
 							/* RetroMCP b1.7.3 BlockLeaves.java:159-164:
 							 * harvestBlock passes its world to dropBlockAsItem_do.
@@ -22432,7 +22847,7 @@ static void server_local_process_block_dig_for_body(struct server_local* s,
 							// dropBlockAsItem_do site. [740c583: BlockLeaves.java]
 							if(leaf_drop)
 								leaf_drop->data.item.pickup_delay = 10;
-						} else
+						} else if(!s->creative_mode)
 							server_local_harvest_block_drops(
 								s,
 								&(struct block_info) {
@@ -23254,6 +23669,18 @@ static void server_local_process_entity_attack_for(struct server_local* s,
 		                          : NULL;
 		    int dmg = it ? player_melee_damage(it->tool.type, it->tool.tier)
 		                 : player_melee_damage(TOOL_TYPE_ANY, TOOL_TIER_ANY);
+		    /* FALLING BONUS [decompile 740c583: EntityPlayer
+		       .attackTargetEntityWithCurrentItem:468-475]: a player whose
+		       server motionY is negative lands ONE extra point of damage
+		       (`if(this.motionY < 0.0D) ++var2;`). motionY is the
+		       SERVER-integrated EntityPlayerMP.motionY this engine keeps in
+		       server_player.motion_y (advanced once per update by the actor
+		       motion physics), which is what Beta's server-side attack reads:
+		       the server owns this motion, not the client's per-packet sample.
+		       (The player-vs-player path applies the same bonus from its own
+		       retransport sample, vel_y; that field is out of scope here.) */
+		    if(player->motion_y < 0.0)
+		      dmg++;
 		    /* PIG ZOMBIE GROUP ANGER [740c583: EntityPigZombie.attackEntityFrom]:
 		       when the attacker is a player, every pig zombie within the
 		       expand(32,32,32) box becomeAngryAt()s BEFORE super.attackEntityFrom
@@ -24462,6 +24889,7 @@ static void server_local_process_owned(struct server_rpc_source source,
 	 * is the established shape for this class (unlike RECIPE_CRAFT, these
 	 * verbs hold no client-side pending token that a reply must retire). */
 	else if(call->type == SRPC_HOTBAR_SLOT || call->type == SRPC_DROP_ITEM
+			|| call->type == SRPC_CREATIVE_GIVE
 			|| call->type == SRPC_USE_ITEM || call->type == SRPC_BLOCK_DIG
 			|| call->type == SRPC_BLOCK_PLACE
 			|| call->type == SRPC_ENTITY_ATTACK
@@ -24483,6 +24911,13 @@ static void server_local_process_owned(struct server_rpc_source source,
 				break;
 			case SRPC_DROP_ITEM:
 				server_local_process_drop_item_for(s, s->guest_actor, call);
+				break;
+			case SRPC_CREATIVE_GIVE:
+				/* The legacy creative verb is absent from the shared death
+				 * and sleep classifiers. Gate the new guest route explicitly. */
+				if(s->guest_actor->health > 0 && !s->guest_actor->sleeping
+				   && !s->guest_actor->rz.recovering)
+					server_creative_handle_give_for(s, s->guest_actor, call);
 				break;
 			case SRPC_USE_ITEM:
 				server_local_process_use_item_for(s, s->guest_actor, call);
@@ -24725,25 +25160,39 @@ void server_local_test_process_rpc(struct server_local* s,
 #define MOB_SPAWN_CAP 10         // max live monsters in the loaded area
 #define MOB_SPAWN_ATTEMPTS 6     // candidate tries per cycle
 #define MOB_SPAWN_CYCLE 10       // run the cycle every N world ticks (~2 Hz)
-#define MOB_SPAWN_MIN_DIST 16.0F // don't spawn on top of the player
+#define MOB_SPAWN_MIN_DIST 16.0F // don't spawn on top of the player (ring radius)
 #define MOB_SPAWN_MAX_DIST 56.0F // stay inside the loaded view (~5 chunks)
+/* ci-1101/43 item 8: Beta's natural-spawn player exclusion is a 3-D 24-block
+ * getClosestPlayer query, NOT a horizontal 16-block ring.
+ * [740c583: SpawnerAnimals.java:115
+ *  `if(var0.getClosestPlayer((double)var27,(double)var28,(double)var29, 24.0D) == null)`
+ *  var27=x+0.5F, var28=y (feet), var29=z+0.5F; World.getClosestPlayer :2166-2181
+ *  uses Entity.getDistanceSq :644-649 -- posY on BOTH sides, cutoff strict
+ *  `< 24^2 = 576`.]
+ * MOB_SPAWN_MIN_DIST stays the RING draw radius; this is the separate gate.
+ * player.y is the EYE here, so the player term drops to feet
+ * (y - PLAYER_EYE_HEIGHT) to match the candidate feet y the callers pass. */
+#define MOB_SPAWN_PLAYER_EXCLUDE 24.0F
+#define MOB_SPAWN_PLAYER_EXCLUDE_SQ \
+	(MOB_SPAWN_PLAYER_EXCLUDE * MOB_SPAWN_PLAYER_EXCLUDE)
 
-/* Existing Cave natural-spawn exclusion: horizontal distance 16, strict at
- * the boundary. Every present body suppresses a candidate, matching Beta's
- * all-player query while preserving Cave's established radius and geometry. */
+/* Beta natural-spawn exclusion: 3-D distance 24, strict at the boundary, over
+ * every present body in the spawning world [740c583: SpawnerAnimals.java:115;
+ * World.java:2166-2181]. (x,z) is the candidate block centre, y its FEET. */
 /* A1c: the player-distance exclusions consider the ELIGIBLE actors of the
  * spawning world only (server_local.h, eligible-actor contract). */
 static bool mob_spawn_far_from_players_w(struct server_local* s,
 										 struct server_world* w, float x,
-										 float z) {
+										 float y, float z) {
 	struct server_player* players[SERVER_LOCAL_MAX_PRESENT_ACTORS];
 	size_t count = server_local_eligible_actors_w(
 		s, w, players, SERVER_LOCAL_MAX_PRESENT_ACTORS);
 	for(size_t i = 0; i < count; i++) {
 		float dx = x - (float)players[i]->x;
+		float dy =
+			y - ((float)players[i]->y - PLAYER_EYE_HEIGHT); /* feet-to-feet */
 		float dz = z - (float)players[i]->z;
-		if(dx * dx + dz * dz
-		   < MOB_SPAWN_MIN_DIST * MOB_SPAWN_MIN_DIST)
+		if(dx * dx + dy * dy + dz * dz < MOB_SPAWN_PLAYER_EXCLUDE_SQ)
 			return false;
 	}
 	return true;
@@ -24756,24 +25205,24 @@ static bool mob_spawn_far_from_players_w(struct server_local* s,
  * pre-split single-body behaviour. */
 static bool mob_spawn_anchor_far_from_players_w(struct server_local* s,
 												struct server_world* w,
-												float x, float z) {
+												float x, float y, float z) {
 	struct server_player* players[SERVER_LOCAL_MAX_PRESENT_ACTORS];
 	if(server_local_eligible_actors_w(s, w, players,
 									  SERVER_LOCAL_MAX_PRESENT_ACTORS)
 	   < 2)
 		return true;
-	return mob_spawn_far_from_players_w(s, w, x, z);
+	return mob_spawn_far_from_players_w(s, w, x, y, z);
 }
 
 
 #ifdef CAVEWII_SERVER_LOCAL_TEST
 bool server_local_test_mob_spawn_far_from_players(struct server_local* s,
-										   float x, float z) {
-	return mob_spawn_far_from_players_w(s, &s->worlds[0], x, z);
+										   float x, float y, float z) {
+	return mob_spawn_far_from_players_w(s, &s->worlds[0], x, y, z);
 }
 bool server_local_test_mob_spawn_anchor_far_from_players(
-	struct server_local* s, float x, float z) {
-	return mob_spawn_anchor_far_from_players_w(s, &s->worlds[0], x, z);
+	struct server_local* s, float x, float y, float z) {
+	return mob_spawn_anchor_far_from_players_w(s, &s->worlds[0], x, y, z);
 }
 #endif
 // Ghast channel (2026-09-01, ghast-starvation fix; docs/deviations.md "Nether
@@ -25838,7 +26287,7 @@ static void server_local_spawn_mobs_w(struct server_local* s,
 			 * this attempt's anchor as before. */
 			const bool anchor_far
 				= mob_spawn_anchor_far_from_players_w(
-					  s, w, (float)x + 0.5F, (float)z + 0.5F)
+					  s, w, (float)x + 0.5F, (float)y, (float)z + 0.5F)
 				&& mob_spawn_far_from_world_spawn((float)x, (float)y,
 												  (float)z, s->player.spawn_x,
 												  s->player.spawn_y,
@@ -25905,16 +26354,13 @@ static void server_local_spawn_mobs_w(struct server_local* s,
 				 * member's own candidate (Beta re-runs :123-132 per member). */
 				if(!mob_spawn_cell_ok(w, px, py, pz))
 					continue; // member landed in an invalid cell -> skip (Beta does too)
-				// Harden audit #4: enforce the SAME min-distance-to-player the anchor
-				// gets. The anchor spawns on a ring at >= MOB_SPAWN_MIN_DIST, but a pack
-				// member random-walks `+= rand(6)-rand(6)` off the previous member and is
-				// re-validated ONLY for air/floor/light -- it can scatter back to ~1 block
-				// from the player (a point-blank creeper). A single 2D squared-distance
-				// compare to the player (matching the anchor's ring radius) rejects that:
-				// both faithful (Beta's spawn checks keep mobs off the player) AND a Wii-
-				// playability guard against a no-reaction-window spawn in the player's face.
+				// Harden audit #4 + ci-1101/43 item 8: the SAME Beta player
+				// exclusion the anchor gets -- 3-D 24 blocks [SpawnerAnimals
+				// .java:115; World.java:2166-2181]. (Beta re-runs this per
+				// pack member off the member's own y, :123-132.) Also the
+				// Wii playability guard against a point-blank scatter spawn.
 				if(!mob_spawn_far_from_players_w(
-					   s, w, (float)px + 0.5F, (float)pz + 0.5F))
+					   s, w, (float)px + 0.5F, (float)py, (float)pz + 0.5F))
 					continue; // too close to the player -> skip this member
 				// AUDIT-DOSSIER fix: same world-spawn exclusion as the anchor
 				// (Beta re-derives it per pack member, not just once per pack).
@@ -26104,7 +26550,7 @@ static void server_local_spawn_animals_w(struct server_local* s,
 			// shares one check) -- see combat.h's mob_spawn_far_from_world_spawn
 			// citation. RNG-free, so it doesn't shift the seeded stream.
 			if(mob_spawn_anchor_far_from_players_w(
-				   s, w, (float)x + 0.5F, (float)z + 0.5F)
+				   s, w, (float)x + 0.5F, (float)y, (float)z + 0.5F)
 			   && mob_spawn_far_from_world_spawn((float)x, (float)y, (float)z,
 											  s->player.spawn_x,
 											  s->player.spawn_y,
@@ -26127,7 +26573,7 @@ static void server_local_spawn_animals_w(struct server_local* s,
 				if(!animal_spawn_spot_ok(w, px, py, pz))
 					continue;
 				if(!mob_spawn_far_from_players_w(
-					   s, w, (float)px + 0.5F, (float)pz + 0.5F))
+					   s, w, (float)px + 0.5F, (float)py, (float)pz + 0.5F))
 					continue; // never point-blank to the player
 				if(!mob_spawn_far_from_world_spawn((float)px, (float)py,
 												   (float)pz, s->player.spawn_x,
@@ -26251,7 +26697,7 @@ static void server_local_spawn_squid_w(struct server_local* s,
 			struct AABB sq_box;
 			mob_spawn_box_at(MONSTER_SQUID, x, y, z, &sq_box);
 			if(mob_spawn_anchor_far_from_players_w(
-				   s, w, (float)x + 0.5F, (float)z + 0.5F)
+				   s, w, (float)x + 0.5F, (float)y, (float)z + 0.5F)
 			   && mob_spawn_far_from_world_spawn((float)x, (float)y, (float)z,
 											  s->player.spawn_x,
 											  s->player.spawn_y,
@@ -26273,7 +26719,7 @@ static void server_local_spawn_squid_w(struct server_local* s,
 				if(!squid_spawn_spot_ok(w, px, py, pz))
 					continue;
 				if(!mob_spawn_far_from_players_w(
-					   s, w, (float)px + 0.5F, (float)pz + 0.5F))
+					   s, w, (float)px + 0.5F, (float)py, (float)pz + 0.5F))
 					continue; // never point-blank to the player
 				if(!mob_spawn_far_from_world_spawn((float)px, (float)py,
 												   (float)pz, s->player.spawn_x,
@@ -26374,12 +26820,14 @@ static int spawner_class_count(struct server_local* s, struct server_world* w,
 	return n;
 }
 
-// Harden audit #2: total LIVE monsters in the loaded area (not yet reaped). This is the
-// GLOBAL population the MOB_SPAWN_CAP bounds -- the natural-spawn loop already enforces
-// it, but the spawner path previously honored ONLY its local crowd cap, so N spawners
-// could drive the live count far past the cap (and past what the 16-slot move-RPC inbox /
-// 512 tick-snapshot were sized for). Computed ONCE per spawner pass (NOT per emit) and
-// threaded into sl_spawn_ctx so the emits stay O(1).
+// Total LIVE hostile monsters in world `w` (not yet reaped) -- telemetry only now.
+// ci-1101/45 (maintainer ruling 2026-11-02): the dungeon spawner no longer stops at the
+// global MOB_SPAWN_CAP (Beta's spawner has only the same-class >=6 crowd box,
+// TileEntityMobSpawner.java:56-60). The pressures the old "Harden audit #2" cap guarded
+// are handled where they live: the entity tick worklist is growable (server_local_state.h
+// entity_tick_keys), the client RPC path defers into an owned FIFO and then WAITS for a
+// token (clin_rpc_send_tagged: no message dropped), and server_entity_alloc refuses a
+// spawn cleanly (NULL, no assert) when the dict reserve or allocation fails.
 static int monsters_alive_total_w(struct server_local* s,
 								  struct server_world* w) {
 	int n = 0;
@@ -26418,11 +26866,11 @@ struct sl_spawn_ctx {
 	w_coord_t sx, sy, sz; /* the spawner cell (the crowd box origin) */
 	/* I04: the current burst member (createEntityInWorld: id + own Random). */
 	struct spawn_candidate member;
-	// Harden audit #2: the live GLOBAL monster count, seeded ONCE before the burst and
-	// bumped per successful emit, so the spawner honors MOB_SPAWN_CAP without an O(N)
-	// rescan on each emit. `live` is the running count; emits stop once it reaches `cap`.
-	int live;
-	int cap;
+	// ci-1101/43 item 2(b): set by sl_spawner_too_many_nearby when a burst ends
+	// on the >=6 crowd exit [TileEntityMobSpawner.java:66-70]; that path, like a
+	// member success, re-rolls the delay (updateDelay). A burst whose 4 members
+	// all simply failed getCanSpawnHere must NOT re-roll (Beta retries next tick).
+	bool crowd_exit;
 };
 
 /* I04 (board #8 follow-up): TileEntityMobSpawner builds each member with
@@ -26436,11 +26884,16 @@ static void sl_spawner_construct(void* ctx) {
 
 /* TileEntityMobSpawner.java:66-70: `if(var10 >= 6) { updateDelay(); return; }`
  * -- checked per member after createEntityInWorld, before its position draws;
- * true ENDS the burst (the caller re-rolls the delay after every burst). */
+ * true ENDS the burst. ci-1101/43 item 2(b): flag the crowd exit so the caller
+ * re-rolls the delay (updateDelay) EXACTLY as on a member success, per Beta. */
 static bool sl_spawner_too_many_nearby(void* ctx) {
 	struct sl_spawn_ctx* e = ctx;
-	return spawner_class_count(e->s, e->w, e->sx, e->sy, e->sz, e->mob)
-		>= SPAWNER_MAX_NEARBY;
+	if(spawner_class_count(e->s, e->w, e->sx, e->sy, e->sz, e->mob)
+	   >= SPAWNER_MAX_NEARBY) {
+		e->crowd_exit = true;
+		return true;
+	}
+	return false;
 }
 
 /* getCanSpawnHere on the member's own Random [EntityMob.java:92-102]: raw
@@ -26454,19 +26907,39 @@ static bool sl_spawner_can_spawn(void* ctx, int raw_sky_light,
 	return block_light_value <= jrand_next_int_bound(&e->member.rng, 8);
 }
 
+/* ci-1101/45 (HUNT-14 #2b): the member's EntityLiving.getCanSpawnHere geometry
+ * [740c583: EntityLiving.java:781-783] at its exact setLocationAndAngles
+ * position [TileEntityMobSpawner.java:72-75] -- NOT a cell test. The box is
+ * Entity.setPosition's: posX +- width/2, minY = posY (yOffset 0, ySize 0 for a
+ * fresh mob), height up [Entity.java setPosition]; width/height are the
+ * member's own setSize (EntitySpider.java:7 1.4x0.9, Entity default 0.6x1.8).
+ * The three clauses are the SAME canonical helpers the natural spawns run
+ * (mob_spawn_entity_clear / mob_spawn_box_blocked_w / mob_spawn_box_liquid,
+ * strict intersectsWith). No floor test, no "cell is air" test: Beta places
+ * a member mid-air (it falls) or inside a non-colliding block (tall grass,
+ * flower, web, thin snow). Float box: the member is spawned at the same
+ * (float) position below, so the gate and the physics box agree exactly. */
+static bool sl_spawner_spot_ok(void* ctx, double x, double y, double z) {
+	struct sl_spawn_ctx* e = ctx;
+	const struct monster_def* d = monster_def_get(e->member.mob);
+	struct AABB box;
+	aabb_setsize_centered_offset(&box, d->box_w, d->box_h, d->box_w, 0.0F,
+								 d->box_h * 0.5F, 0.0F);
+	aabb_translate(&box, (float)x, (float)y, (float)z);
+	return mob_spawn_entity_clear(e->s, e->w, &box)
+		&& !mob_spawn_box_blocked_w(e->w, &box)
+		&& !mob_spawn_box_liquid(e->w, &box);
+}
+
 static void sl_spawner_emit(void* ctx, double x, double y, double z) {
 	struct sl_spawn_ctx* e = ctx;
-	// Harden audit #2: obey the GLOBAL MOB_SPAWN_CAP, not just the local crowd cap.
-	// Without this, 8 spawners x 4-per-burst could push live mobs to ~48 -- past what
-	// the 16-slot move-RPC inbox + 512 tick-snapshot were sized for, which backs up the
-	// server tick against render and caps the framerate. `live` was seeded from the
-	// real count once per pass (spawner_fire) and is incremented per emit below, so this
-	// is a single int compare, not a rescan. RNG note: this skip does NOT shift the pure
-	// spawner_burst stream (it draws all its rand_gen_flt/int BEFORE calling emit).
-	// Newborn creation adds no generic motion draws. The cap bounds population;
-	// it does not discard any of the burst's already-consumed draws.
-	if(e->live >= e->cap)
-		return;
+	// ci-1101/45 (maintainer ruling 2026-11-02): NO global MOB_SPAWN_CAP here -- Beta's
+	// spawner joins every member that passed getCanSpawnHere (entityJoinedWorld,
+	// TileEntityMobSpawner.java:77); the only population bound is the same-class >=6
+	// crowd box (too_many_nearby). Resource exhaustion is graceful: a NULL return from
+	// server_local_spawn_monster_at_id_w (dict reserve / MEM low) means the spawn simply
+	// does not happen; the burst still counts it as a success, so the delay re-rolls
+	// (200..799 ticks) -- a natural back-off rather than a retry every tick.
 	/* setLocationAndAngles(var11, var13, var15, ...) [CFR
 	 * TileEntityMobSpawner.java:72-75]: the exact offset position, not a
 	 * block-centred cell (the crowd cap is the too_many_nearby hook, checked
@@ -26474,21 +26947,27 @@ static void sl_spawner_emit(void* ctx, double x, double y, double z) {
 	server_local_spawn_monster_at_id_w(e->w,
 		(vec3) {(float)x, (float)y, (float)z}, e->member.mob,
 		e->member.id, &e->member.rng);
-	e->live++; // count this fresh mob toward the global cap for the rest of the burst
 }
 
 // One spawner burst; the spot selection lives in spawner.c (headless-testable).
-static void spawner_fire(struct server_local* s, struct server_world* w,
+// ci-1101/43 item 2: returns whether the caller must RE-ROLL the spawner delay
+// (Beta's updateDelay), i.e. the burst ended on a member success OR the >=6
+// crowd exit. Beta re-rolls on neither an all-refused burst nor a run of <4
+// members that simply failed getCanSpawnHere -- those leave delay at its
+// elapsed value so TileEntityMobSpawner RETRIES the next tick, never idling a
+// fresh 200..800-tick delay [740c583: TileEntityMobSpawner.java:48-91 -- the
+// only updateDelay() call sites are the success path (:86) and the crowd exit
+// (:68); the for(var8<4) loop falls out with delay still <= 0 on 4 refusals].
+static bool spawner_fire(struct server_local* s, struct server_world* w,
 						 w_coord_t sx, w_coord_t sy, w_coord_t sz, int mob) {
-	// Harden audit #2: seed the running global count from the live population ONCE here
-	// (O(N) per BURST, not per emit), so the burst stops emitting at MOB_SPAWN_CAP.
 	struct sl_spawn_ctx e = {.s = s, .w = w, .mob = mob,
-		.sx = sx, .sy = sy, .sz = sz,
-		.live = monsters_alive_total_w(s, w), .cap = MOB_SPAWN_CAP};
+		.sx = sx, .sy = sy, .sz = sz};
 	// 2026-08-31 fix: getCanSpawnHere's light gate needs a day/night subtract --
 	// same thunderstorm override (force 10) as the natural hostile passes above.
 	// F1: the weather-darkened skylightSubtracted (rain 5/16), Nether-gated override;
-	// spawner_spot_ok requires an AIR cell, so no neighbour-max branch applies here.
+	// No neighbour-max branch applies here: a slab/stairs/farmland feet cell always
+	// intersects the member box (minY = that cell's integer y), so sl_spawner_spot_ok
+	// refuses it before the light read (ci-1101/45).
 	int sky_subtract = (w->dimension != WORLD_DIM_NETHER
 						&& server_weather_is_thundering(s))
 		? 10
@@ -26496,11 +26975,13 @@ static void spawner_fire(struct server_local* s, struct server_world* w,
 	static const struct spawner_member_ops ops = {
 		.construct = sl_spawner_construct,
 		.too_many_nearby = sl_spawner_too_many_nearby,
+		.spot_ok = sl_spawner_spot_ok,
 		.can_spawn = sl_spawner_can_spawn,
 		.emit = sl_spawner_emit,
 	};
-	spawner_burst(&s->rand_src, sx, sy, sz, sky_subtract, sl_spawner_get, w,
-				  &ops, &e);
+	int emitted = spawner_burst(&s->rand_src, sx, sy, sz, sky_subtract,
+								sl_spawner_get, w, &ops, &e);
+	return emitted > 0 || e.crowd_exit;
 }
 
 static bool spawner_tracker_owned(const struct active_spawner* sp,
@@ -26781,9 +27262,19 @@ static void server_local_tick_spawners_w(struct server_local* s,
 		active++;
 		if(--sp->delay > 0)
 			continue;
-		spawner_fire(s, w, sp->x, sp->y, sp->z, sp->mob);
-		sp->delay = SPAWNER_MIN_UNITS
-			+ rand_gen_int(&s->rand_src, SPAWNER_RAND_UNITS);
+		// ci-1101/43 item 2: re-roll the delay ONLY when Beta's updateDelay
+		// would (a member success or the >=6 crowd exit). An all-refused burst
+		// leaves `delay` spent (<= 0) so the spawner RETRIES on the next pass
+		// instead of being benched for another 200..800 ticks -- Beta's for
+		// loop falls out after 4 refusals with delay still 0 and re-runs next
+		// tick [740c583: TileEntityMobSpawner.java:48-91]. The 20-tick
+		// SPAWNER_CYCLE quantisation is the pre-existing cadence deviation;
+		// this fix only restores the retry-vs-re-roll decision.
+		if(spawner_fire(s, w, sp->x, sp->y, sp->z, sp->mob))
+			sp->delay = SPAWNER_MIN_UNITS
+				+ rand_gen_int(&s->rand_src, SPAWNER_RAND_UNITS);
+		else
+			sp->delay = 0;
 	}
 
 	s_spawner_active = active;
@@ -26798,10 +27289,12 @@ int server_local_test_tick_spawners(struct server_local* s) {
 	return s_spawner_active;
 }
 /* I04 test hook: one real dungeon-spawner burst (spawner_fire) at a cell,
- * without the near-player tracker / tile-entity lookup. */
-void server_local_test_spawner_fire(struct server_local* s, w_coord_t x,
+ * without the near-player tracker / tile-entity lookup. ci-1101/43 item 2:
+ * returns Beta's updateDelay decision (re-roll) so tests can pin the
+ * retry-vs-re-roll cadence. */
+bool server_local_test_spawner_fire(struct server_local* s, w_coord_t x,
 									w_coord_t y, w_coord_t z, int mob) {
-	spawner_fire(s, &s->worlds[0], x, y, z, mob);
+	return spawner_fire(s, &s->worlds[0], x, y, z, mob);
 }
 int server_local_test_tick_spawners_w(struct server_local* s,
 									  struct server_world* w) {
@@ -28189,6 +28682,23 @@ static void server_local_tick_item_updates_for(struct server_local* s,
 					   != 0)) {
 				struct map_rpc_slot* slot = clin_map_slot_try_acquire();
 				if(slot) {
+					/* Beta ItemMap.getMapData/onUpdate restamps the same stack
+					 * ItemRenderer reads. Our picker/missing-map fallback can
+					 * change damage in the server inventory only: publish that
+					 * identity before its pixels, through the owner's reply
+					 * route (including the admitted guest's generation). */
+					if(!s->map_client_sent_any[player_slot]
+					   || s->map_client_generation[player_slot] != generation
+					   || s->map_client_sent_id[player_slot] != (int16_t)held.durability)
+						server_local_window_reply(&actor->inventory,
+							&(struct client_rpc) {
+								.type = CRPC_INVENTORY_SLOT,
+								.payload.inventory_slot = {
+									.window = WINDOWC_INVENTORY,
+									.slot = held_slot,
+									.item = held,
+								},
+							});
 					slot->map_id = (int16_t)held.durability;
 					memcpy(slot->colors, md->colors, MAP_DATA_COLORS_SIZE);
 					server_local_send_w(w, (struct client_rpc) {
@@ -31813,7 +32323,7 @@ static bool server_local_update_body(struct server_local* s) {
 										  // painting's own spawn CRPC).
 
 		if(s->map_demo)
-			s->map_demo_defer = 100; // held-map capture: same post-load margin
+			s->map_demo_defer = preserve_live_player ? 0 : 100; // no portal give
 
 		if(s->piston_demo || s->piston_anim || s->piston_blast_demo
 		   || (s->nether_roundtrip_demo && s->nether_roundtrip_stage == 0)
@@ -31958,8 +32468,9 @@ static bool server_local_update_body(struct server_local* s) {
 		server_local_painting_demo(s);
 
 	// Held-map capture rig ("debug.map_demo"): once, post-load, give a fresh
-	// ITEM_MAP to hotbar slot 0 and select it -- onCreated allocates the map
-	// id + cache entry, and the held-item tick's scan + CRPC_MAP_DATA sender
+	// ITEM_MAP to the selected slot. Beta ItemMap.onCreated (RetroMCP client
+	// ItemMap.java:225-234) allocates an id, floor(player X/Z), scale 3.
+	// The held-item tick's scan + CRPC_MAP_DATA sender
 	// then feed the first-person live render with zero input.
 	if(s->map_demo_defer > 0 && s->player.finished_loading
 	   && --s->map_demo_defer == 0) {
@@ -31977,17 +32488,17 @@ static bool server_local_update_body(struct server_local* s) {
 		// untouched, so on failure it just skips the give instead of
 		// handing the player an ITEM_MAP with an unreserved id.
 		if(map_created) {
-			inventory_set_slot(&s->player.inventory, INVENTORY_SLOT_HOTBAR,
-							   map_stack);
-			inventory_set_hotbar(&s->player.inventory, 0);
+			size_t map_slot = INVENTORY_SLOT_HOTBAR
+				+ inventory_get_hotbar(&s->player.inventory);
+			inventory_set_slot(&s->player.inventory, map_slot, map_stack);
 			clin_rpc_send(&(struct client_rpc) {
 				.type = CRPC_INVENTORY_SLOT,
 				.payload.inventory_slot.window = WINDOWC_INVENTORY,
-				.payload.inventory_slot.slot = INVENTORY_SLOT_HOTBAR,
+				.payload.inventory_slot.slot = map_slot,
 				.payload.inventory_slot.item = map_stack,
 			}); // give_test_kit's exact per-slot sync idiom
-			printf("[map_demo] gave + selected map id=%d\n",
-				   (int)map_stack.durability);
+			printf("[map_demo] gave map id=%d to selected slot=%u\n",
+				   (int)map_stack.durability, (unsigned)map_slot);
 		} else {
 			printf("[map_demo] onCreated failed to durably allocate a map "
 				   "id -- skipping give\n");

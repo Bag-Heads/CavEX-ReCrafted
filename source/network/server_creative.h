@@ -28,5 +28,8 @@
  * A full inventory is a silent no-op -- predictable, no partial merges. */
 void server_creative_handle_give(struct server_local* s,
 								 const struct server_rpc* call);
+/* Owned dispatch has already checked the actor's admission and generation. */
+void server_creative_handle_give_for(struct server_local* s,
+	struct server_player* actor, const struct server_rpc* call);
 
 #endif

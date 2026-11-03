@@ -140,6 +140,32 @@ int main(void) {
 	level_archive_destroy(&la);
 	string_clear(file);
 
+	/* ci-1101/41 item 12: Beta World ctor (RetroMCP World.java:186-190) picks
+	 * the Hell provider ONLY for Dimension == -1; every other value (0, the
+	 * unreachable sky 1, garbage) loads the surface provider. CaveWii used to
+	 * read any non-zero value as the Nether. */
+	{
+		const int32_t values[] = {0, -1, 1, 7, -2};
+		const enum world_dim expect[] = {
+			WORLD_DIM_OVERWORLD, WORLD_DIM_NETHER, WORLD_DIM_OVERWORLD,
+			WORLD_DIM_OVERWORLD, WORLD_DIM_OVERWORLD,
+		};
+		for(size_t k = 0; k < sizeof values / sizeof values[0]; k++) {
+			fresh(&la, dir);
+			nbt_node* d = nbt_find_by_path(la.data, ".Data.Player.Dimension");
+			assert(d && d->type == TAG_INT);
+			d->payload.tag_int = values[k];
+			enum world_dim got = (enum world_dim)99;
+			assert(level_archive_read_player(&la, NULL, NULL, NULL, &got));
+			if(got != expect[k]) {
+				fprintf(stderr, "FAIL Dimension %d read as %d, Beta %d\n",
+						(int)values[k], (int)got, (int)expect[k]);
+				return 1;
+			}
+			level_archive_discard(&la);
+		}
+	}
+
 	string_clear(dir);
 	puts("test_level_archive_player_health PASS");
 	return 0;

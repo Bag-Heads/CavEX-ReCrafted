@@ -261,6 +261,50 @@ unsigned mem2_pool_column_occupancy(struct mem2_pool_stat* out,
  * PC. */
 void mem2_pool_column_events_flush(void);
 
+/* ci-1101/59 REMOTE-SESSION HAND-BACK. The COLUMN pool holds only the LOCAL
+ * server's column storage (server_world/worldgen/region_archive/death-drop
+ * recovery); the MP client installs remote columns through chunk_alloc
+ * (MEM2_POOL_NONE, chunk.c) and keeps bodies in the MP backing reservation.
+ * Yet the MEM2_POOL_COLUMN_BOOT_SLABS eager slabs (4 x 2,638,080 B =
+ * 10,305 KiB) stayed carved, empty, for the whole remote session: real Wii
+ * hw1102b_A_betamc (07eccba_11.02) joined with 23,345 KiB carve free and the
+ * F4 memory gate stopped installing at 67 of 81 in-radius columns once free
+ * fell to 1,440 KiB.
+ *
+ *   release_idle   hand EVERY wholly empty column slab back to the carve,
+ *                  boot slabs included (a slab with a live slot is kept, so
+ *                  this is safe whatever the local server still holds).
+ *                  Called by mp_session_prepare_remote, i.e. after the local
+ *                  server thread is joined and the local world retired.
+ *                  Inert while the pool self-test is armed. Returns the
+ *                  number of slabs handed back; each one queues an ordinary
+ *                  column_pool_shrink event.
+ *   restore_boot   REQUEST the boot slabs back; no carve happens here (review
+ *                  fix: at session teardown the remote client world -- voxels
+ *                  and display lists awaiting GPU retirement -- is still
+ *                  resident, so a 2.6 MB carve then would land in, and pin, a
+ *                  fragmented heap). The re-carve runs at the FIRST column
+ *                  take afterwards, before that take is served: up to
+ *                  MEM2_POOL_COLUMN_BOOT_SLABS, one attempt, the first
+ *                  refusal stops it and the ordinary demand growth takes
+ *                  over. Each attempt queues a column_pool_grow event.
+ *                  Called by mp_session_release_remote; inert while the pool
+ *                  self-test is armed.
+ *   restore_pending  true between restore_boot and that first take.
+ *
+ * Byte-identical game output: the pool decides only WHERE a column's arrays
+ * live, never their contents (test_pool_selftest / pool_selftest_3m prove
+ * placement equivalence). PC: no-op unless the CW_TEST_COLUMN_POOL emulation
+ * is on, where the same rules run against the host-side pool. */
+unsigned mem2_pool_column_release_idle(void);
+void mem2_pool_column_restore_boot(void);
+bool mem2_pool_column_restore_pending(void);
+#ifndef PLATFORM_WII
+/* PC emulation test seam: the next `count` slab carves fail (a heap too
+ * fragmented to spare 2.6 MB contiguous). */
+void mem2_test_column_carve_refuse(unsigned count);
+#endif
+
 /* colcap-1006 (ASTRA-CC-R5 item 2): COLUMN-POOL SELF-TEST HOOKS, driven only
  * by source/game/pool_selftest.c under the pool_selftest_3m hw_run profile.
  * INERT until mem2_pool_selftest_arm(): every other run -- and every play

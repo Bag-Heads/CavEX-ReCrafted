@@ -347,6 +347,22 @@ def test_live_parsing_sane() -> None:
     print("PASS: live parsing of texture.c / audio_sound_table.h / audio_music_table.h")
 
 
+def test_texture_loader_aliases_use_canonical_output_names() -> None:
+    cases = (
+        ('tex_read_gfx("gui/container.png", &w, &h, fmt);', ["gui/chest.png"]),
+        ('TEX_LOAD_FILE(&chest, "gui/chest.png", fmt, false);', ["gui/chest.png"]),
+        ('tex_read_gfx("gui/container.png", &w, &h, fmt);\n'
+         'tex_read_gfx("gui/chest.png", &w, &h, fmt);\n'
+         'tex_read_gfx("custom.png", &w, &h, fmt);', ["gui/chest.png", "custom.png"]),
+        ('tex_read_gfx("gui/chest.png", &w, &h, fmt);\n'
+         'tex_read_gfx("gui/container.png", &w, &h, fmt);', ["gui/chest.png"]),
+    )
+    for source, expected in cases:
+        actual = TOOL.extract_texture_dest_paths(source)
+        assert actual == expected, (actual, expected)
+    print("PASS: raw loader aliases become one canonical importer output")
+
+
 def test_refuses_without_jar_or_destination() -> None:
     proc = run_tool(["--out", "somewhere"])
     assert proc.returncode != 0, proc.stdout
@@ -833,6 +849,7 @@ def test_writing_into_repo_subtree_refused() -> None:
 
 def main() -> int:
     test_live_parsing_sane()
+    test_texture_loader_aliases_use_canonical_output_names()
     test_refuses_without_jar_or_destination()
     test_refuses_bad_jar()
     test_dry_run_writes_nothing()

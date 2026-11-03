@@ -81,6 +81,23 @@ uint16_t tex_gx_rgb5a3(const uint8_t* col) {
 	return (uint16_t)rgb16_2(lut_5[col[0]], lut_5[col[1]], lut_5[col[2]]);
 }
 
+void tex_gx_rgb5a3_decode(uint16_t v, uint8_t* rgba) {
+	if(v & 0x8000) {
+		for(int k = 0; k < 3; k++) {
+			uint8_t c = (v >> (10 - 5 * k)) & 0x1F;
+			rgba[k] = (uint8_t)((c << 3) | (c >> 2));
+		}
+		rgba[3] = 255;
+	} else {
+		for(int k = 0; k < 3; k++)
+			rgba[k] = (uint8_t)(((v >> (8 - 4 * k)) & 0x0F) * 17);
+		/* lut_3 is built from conv_color(i, 3) == i << 5 (its low-bit term
+		 * shifts by a negative count and is 0 on both hosts), so expand the
+		 * same way and the encoder maps it straight back. */
+		rgba[3] = (uint8_t)(((v >> 12) & 0x07) << 5);
+	}
+}
+
 size_t tex_gx_bytes(enum tex_format type, size_t width, size_t height) {
 	switch(type) {
 		case TEX_FMT_RGBA32: return width * height * 4;
@@ -175,6 +192,10 @@ bool tex_gx_encode(enum tex_format type, const uint8_t* rgba, size_t width,
 }
 
 size_t tex_gx_atlas_bytes(size_t width, size_t height) {
+	struct tex_atlas_grid grid;
+	if(!tex_atlas_grid_init(&grid, width, height)
+	   || tex_atlas_mip_levels(&grid) != TEX_GX_ATLAS_LODS)
+		return 0;
 	size_t total = 0;
 	for(int n = 0; n < TEX_GX_ATLAS_LODS; n++) {
 		size_t lw = width >> n, lh = height >> n;
@@ -188,6 +209,9 @@ size_t tex_gx_atlas_bytes(size_t width, size_t height) {
 
 bool tex_gx_encode_atlas(const uint8_t* rgba, size_t width, size_t height,
 						 const struct tex_atlas_grid* grid, uint8_t* out) {
+	if(!tex_gx_atlas_bytes(width, height)
+	   || tex_atlas_mip_levels(grid) != TEX_GX_ATLAS_LODS)
+		return false;
 	tex_gx_luts_init();
 	size_t off = 0;
 	for(int n = 0; n < TEX_GX_ATLAS_LODS; n++) {

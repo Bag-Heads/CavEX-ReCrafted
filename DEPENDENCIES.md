@@ -20,6 +20,28 @@ entry in `NOTICE`. Sources, all recorded on 2026-10-30:
 - libgcc (devkitPPC GCC runtime). GPL-3.0-or-later WITH GCC-exception-3.1 (maintainer Q6, 2026-10-30). `LICENSES/GCC-exception-3.1.txt` is byte-identical to https://raw.githubusercontent.com/gcc-mirror/gcc/releases/gcc-15/COPYING.RUNTIME (fetched 2026-10-30; gcc.gnu.org returned HTTP 429) and to the local MSYS2 gcc-libs copy.
 - zlib (ppc-zlib 1.3.1). `LICENSES/zlib.txt` is the header of the installed devkitPro `zlib.h` 1.3.1.
 
+Rechecked for 0.1.1 on 2026-11-01 (ci-1101/21): the existing texts above
+are present; the old REL-18e3 PARKING_LOT entry was stale. Local source
+checks used `../logc256kr/lwbt/{hci.c,bt.h}` at c70bdf2f,
+`tmp/jobs/freeze-deep-research-0929/libdvm-v2.1.0/COPYING` at 3006b937,
+and `fatfs-v0.15.3/source/ff.c` at 6d3e8f89 in that same job directory.
+Both libbte notices, the complete ZPL text and the FatFs notice match the
+bundled texts (comment markers/whitespace ignored for libbte). The installed
+`C:/msys64/opt/devkitpro/libogc/include/fat.h` matches that libdvm source;
+`portlibs/ppc/include/zlib.h` identifies 1.3.1 and matches the bundled licence
+notice. The omitted zlib header paragraph describes the compression format,
+not licence terms.
+
+The installed devkitPPC `_newlib_version.h` identifies 4.6.0, and GCC
+15.2.0's `include/unwind.h` declares GPLv3-or-later with Exception 3.1.
+Neither toolchain source COPYING file is installed. Fresh downloads of
+upstream newlib-4.6.0 `COPYING.NEWLIB` and GCC releases/gcc-15.2.0
+`COPYING.RUNTIME` match `LICENSES/newlib.txt` and
+`LICENSES/GCC-exception-3.1.txt` byte-for-byte after LF normalization.
+This distinguishes installed-header evidence from upstream full-text evidence;
+it is not a new audit of every linked newlib archive member.
+The export allowlist pins these notices and their licence texts for 0.1.1.
+
 ## Redistributed components
 
 "Source" means the file ships in the clean source export. "boot.dol" means it is

@@ -96,6 +96,11 @@
 struct name_tag_vertex {
 	float x, y, z;
 	float u, v;
+	// Beta colour code in force for this glyph (0xA7 + selector,
+	// beta_text_color.h): `coded` false = the pass's own colour; true = r,g,b
+	// at full alpha in every pass (name_tag_text_color).
+	bool coded;
+	uint8_t r, g, b;
 };
 
 // entity_remote_player's username[17] caps at 16 visible chars + NUL.
@@ -169,5 +174,13 @@ size_t name_tag_build_quads(const char* username, const vec3 entity_pos,
 							bool is_sneaking,
 							struct name_tag_vertex text_out[NAME_TAG_MAX_TEXT_VERTS],
 							struct name_tag_vertex bg_out[NAME_TAG_BG_VERTS]);
+
+// The submitted colour of one text vertex in a pass whose base colour is
+// white at `pass_alpha` (32 for Beta's 0x20FFFFFF through-walls / sneaking
+// pass, 255 for the -1 pass). [mcb173-retromcp FontRenderer.java:109,142,
+// 155] a colour code calls glColor3f, which sets alpha to 1.0, so a coded
+// glyph is its code colour at alpha 255 in EVERY pass.
+void name_tag_text_color(const struct name_tag_vertex* v, uint8_t pass_alpha,
+						 uint8_t out[4]);
 
 #endif

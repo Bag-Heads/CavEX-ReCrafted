@@ -270,7 +270,13 @@ static int record_slot(const nbt_node* n, size_t count, bool player) {
 		int slot=record_slot(parsed,count,player); nbt_free(parsed); return slot;
 	}
 	nbt_node* slot = child(n,"Slot");
-	return slot && slot->type == TAG_BYTE ? runtime_slot((uint8_t)slot->payload.tag_byte,count,player) : -1;
+	/* ci-1101/41 item 14: Beta reads the slot as getByte("Slot") & 255
+	 * (InventoryPlayer.java:229, TileEntityChest.java:56), and NBTTagCompound
+	 * .getByte returns 0 for an ABSENT tag, so a Slot-less record lands in
+	 * slot 0. A present wrong-type Slot (a ClassCastException in Beta) stays
+	 * unplaceable. */
+	if(!slot) return n && n->type==TAG_COMPOUND ? runtime_slot(0,count,player) : -1;
+	return slot->type == TAG_BYTE ? runtime_slot((uint8_t)slot->payload.tag_byte,count,player) : -1;
 }
 
 bool item_nbt_read_list(const nbt_node* list, struct item_data* items, size_t count, bool player) {
@@ -284,13 +290,40 @@ bool item_nbt_read_list(const nbt_node* list, struct item_data* items, size_t co
 		list_for_each(p,&list->payload.tag_list->entry) {
 			nbt_node* n = list_entry(p,struct nbt_list,entry)->data;
 			int slot = record_slot(n,count,player);
-			if(slot < 0) { ambiguous = true; continue; }
+			/* ci-1101/41 item 14: Beta InventoryPlayer.readFromNBT (RetroMCP
+			 * InventoryPlayer.java:226-237) and TileEntityChest.readFromNBT
+			 * place a record only inside the slot ranges and otherwise skip
+			 * it; they never disable the other slots. The record's bytes are
+			 * still kept verbatim by item_nbt_write_list (CaveWii never
+			 * deletes what it cannot place). Only a COMPOUND record is
+			 * placeable at all; a list of anything else is an unknown shape
+			 * and still pins the whole scope as before. */
+			if(slot < 0) {
+				if(!n || (n->type != TAG_COMPOUND && n->type != TAG_RAW_COMPOUND))
+					ambiguous = true;
+				continue;
+			}
 			struct item_data it;
 			if(!scalar(n,&it)) it = (struct item_data){.id=1,.count=1,.nbt_record=255};
-			else {
-				item_nbt_capture(n,&it);
-				if(!it.id || !it.count) it=(struct item_data){.id=1,.count=1,.nbt_record=255};
-			}
+			else if(!it.id) {
+				/* InventoryPlayer.readFromNBT places a stack only when
+				 * getItem() != null (InventoryPlayer.java:230); id 0 has no
+				 * Item, so the slot stays empty and the record is dropped on
+				 * rewrite (Beta's writer emits only non-null stacks).
+				 * TileEntityChest.readFromNBT (TileEntityChest.java:56-58) has
+				 * no such check and keeps an id-0 stack, which CaveWii cannot
+				 * represent (id 0 == empty): a container keeps the pinned,
+				 * byte-preserved placeholder it always had. */
+				if(player) continue;
+				it = (struct item_data){.id=1,.count=1,.nbt_record=255};
+			} else if(!it.count) {
+				/* A real item with Count 0: Beta places it like any stack
+				 * (the getItem() test ignores the count) and writes it back.
+				 * CaveWii keeps it in its slot with its own id/damage and
+				 * count 0, pinned, so the record is written back byte for
+				 * byte and nothing can stack onto a zero-size stack. */
+				it.nbt_record = 255;
+			} else item_nbt_capture(n,&it);
 			if(seen[slot]) it.nbt_record = 255;
 			seen[slot] = true; items[slot] = it;
 		}
@@ -402,7 +435,9 @@ nbt_node* item_nbt_write_list(const nbt_node* original, const struct item_data* 
 		list_for_each(p,&original->payload.tag_list->entry) {
 			nbt_node* n=list_entry(p,struct nbt_list,entry)->data;
 			int slot=record_slot(n,count,player);
-			if(slot<0) { if(!same) goto fail; if(!append(list,nbt_clone(n))) goto fail; continue; }
+			/* ci-1101/41 item 14: an unplaceable record is kept verbatim
+			 * whether or not the placed slots changed. */
+			if(slot<0) { if(!append(list,nbt_clone(n))) goto fail; continue; }
 			if(item_data_pinned(&before[slot])) {
 				if(!equal(before[slot],items[slot]) || !append(list,copy_raw(n))) goto fail;
 			} else if(!emitted[slot] && items[slot].id) {

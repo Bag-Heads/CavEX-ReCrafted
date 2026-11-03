@@ -163,7 +163,7 @@ class FakeStage(threading.Thread):
                  paths_worlds="saves", meta_read_error=False,
                  config_fetch_fails=False, token_locked=False,
                  token_locked_in_hello=True, hello_mutations=None,
-                 auth_mutations=None, meta_mutations=None):
+                 auth_mutations=None, meta_mutations=None, config_missing=False):
         super().__init__(daemon=True)
         self.card = card
         self.caps = list(caps if caps is not None else FULL_CAPS)
@@ -189,6 +189,7 @@ class FakeStage(threading.Thread):
         self.paths_worlds = paths_worlds
         self.meta_read_error = meta_read_error
         self.config_fetch_fails = config_fetch_fails
+        self.config_missing = config_missing
         self.inject_root_error = False
         self.inject_list_error_batch = None
         self.saves_protocol = 1
@@ -284,12 +285,15 @@ class FakeStage(threading.Thread):
         self._send_json(conn, reply)
 
     def _fetch(self, conn, parts):
-        if len(parts) != 2 or parts[1] != "sd:/config.json":
+        if len(parts) != 2 or parts[1] not in ("sd:/config.json", "sd:/config_wii.json"):
             return self._fail(conn, "bad_target")
+        if self.config_missing and parts[1] == "sd:/config.json":
+            # Real Stage fetch_file reports fopen failure without errno.
+            return self._fail(conn, "open_failed")
         if self.config_fetch_fails:
             # "could not READ the config" -- a different fact from "the
             # config has no paths key", and the tool must not fold them.
-            return self._fail(conn, "not_found")
+            return self._fail(conn, "read_failed")
         # paths_worlds=None models a config with NO paths key at all, which
         # the GAME reads as its default "saves" (config_read_string(...,
         # "paths.worlds", "saves"), screen_select_world.c:187).
@@ -2457,6 +2461,17 @@ def main() -> int:
                "an unreadable config must STOP, got " + str(p.returncode), p)
         expect("could not be READ" in p.stdout,
                "and must say so rather than call it an absent key: " + p.stdout, p)
+
+        # Fresh card: confirmed missing user config uses shipped defaults.
+        for suffix, worlds, expected in (("c", "saves", EXIT_OK),
+                                         ("d", "elsewhere", EXIT_ROOT_AMBIGUOUS)):
+            card = Card(saves=[entry("Keeper A"), entry("Keeper B"),
+                               entry("W1"), entry("W2")])
+            srv = fresh(card=card, config_missing=True, paths_worlds=worlds)
+            p = bind31(srv, tmp / ("man31" + suffix), "t7" + suffix)
+            srv.stop()
+            expect(p.returncode == expected,
+                   "fresh card must bind only when config_wii.json corroborates root", p)
 
         # ---- 32. T9: the N6 guards must be REACHABLE against the shape the
         # real server emits. On a failed stat the server does not know the

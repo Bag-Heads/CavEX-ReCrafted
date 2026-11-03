@@ -417,6 +417,8 @@ bool server_local_spawn_sourced_item_batch(
 // owner or an allocation failure; in either case the window contents remain.
 bool server_local_spill_active_container(struct server_local* s,
 									  w_coord_t x, w_coord_t y, w_coord_t z);
+bool server_local_spill_active_container_found(struct server_local* s,
+	w_coord_t x, w_coord_t y, w_coord_t z, bool* found);
 // Dispenser-slice: BlockDispenser.dispenseItem, called from block_dispenser.c's
 // onWorldTick after it re-checks the two-cell powered condition. Looks up the
 // TE at (x,y,z), draws the reservoir-sampled stack (dispenser_random) and, by
@@ -1136,11 +1138,12 @@ bool server_local_test_mob_spawn_bbox_clear(struct server_local* s, int mob,
 											w_coord_t x, w_coord_t y,
 											w_coord_t z);
 /* Probe the real natural-spawn current-player exclusion without consuming RNG.
- * Shipping policy is the existing horizontal 16-block strict boundary. */
+ * Beta's gate: 3-D 24-block getClosestPlayer, strict at the boundary
+ * [SpawnerAnimals.java:115; World.java:2166-2181]. (x,z) block centre, y feet. */
 bool server_local_test_mob_spawn_far_from_players(struct server_local* s,
-										   float x, float z);
+										   float x, float y, float z);
 bool server_local_test_mob_spawn_anchor_far_from_players(
-	struct server_local* s, float x, float z);
+	struct server_local* s, float x, float y, float z);
 // Drive the natural hostile-spawn pass (ring-scan + pack-spawn + the ghast
 // channel) alone -- no weather/redstone/fluid/random-tick sharing rand_src.
 void server_local_test_spawn_mobs(struct server_local* s);
@@ -1148,7 +1151,10 @@ struct java_random;
 bool server_local_test_spawn_candidate(struct server_local* s,
 	struct server_world* w, int pick, w_coord_t x, w_coord_t y, w_coord_t z,
 	uint32_t* out_id, int* out_mob, struct java_random* out_rng);
-void server_local_test_spawner_fire(struct server_local* s, w_coord_t x,
+/* Returns the beta updateDelay decision: true iff the burst ended on a member
+ * success or the >=6 crowd exit (re-roll the delay), false on an all-refused
+ * burst (retry next tick). [740c583: TileEntityMobSpawner.java:48-91] */
+bool server_local_test_spawner_fire(struct server_local* s, w_coord_t x,
 									w_coord_t y, w_coord_t z, int mob);
 void server_local_test_spawn_candidate_placed(struct server_local* s,
 	struct server_world* w, int pick, uint32_t* out_id, int* out_mob,

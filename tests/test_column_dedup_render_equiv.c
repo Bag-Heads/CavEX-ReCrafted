@@ -1,3 +1,13 @@
+/* ci-1101/47 FAST re-pin (2026-11-02): accepted natural-spawn 211def8d8
+ * alone explains this move. HEAD dee9d3edf with only that change reverted
+ * reproduces both old tapes; HEAD reproduces both current render tapes.
+ * First difference: seed12345 record1220/world tick1225, byte11635756,
+ * dirty generation7->9. Exactly98 generation fields change; every other
+ * header/list/vertex byte is identical. Seed42 stays byte-identical.
+ * ci-1101/39 item10 queue fix changes neither render tape. Old/new SHA256
+ * and isolated proof: manifest.json ci_1101_47_repin;
+ * C:/tmp/cavex-jobs/ci-1101/47/PROOF.md. Frozen regression, not a Beta oracle.
+ */
 /* ci-1101/12b render proof (2026-11-01; 11aa3bfc8 pins unchanged):
  * P=354809385 passes both old tapes;
  * git bisect identifies accepted IN-005 aa1ec22fb. First true difference

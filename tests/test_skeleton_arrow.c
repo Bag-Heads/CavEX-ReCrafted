@@ -32,31 +32,34 @@ static void test_constants(void) {
 	assert(ARROW_DAMAGE == 32);
 	assert(ARROW_DAMAGE == 4 * (COMBAT_HEALTH_PER_HEART / 2));
 	// Launch geometry + hit-box expansion (parity fix 2026-06-19).
-	assert(feq(SKELETON_ARROW_LAUNCH_DY, 2.43f)); // feet + 1.53 eye - 0.1 ctor + 1.0 lift
+	// 2.83 = 1.53 eye - 0.1 ctor + 1.4 (EntitySkeleton.java:40 `var7.posY += (double)1.4F`).
+	// Re-pinned 2026-11-01 from the prior 2.43, which read the +1.4 bump as +1.0; the
+	// parent build reproduced the old pin (this assert held at 2.43 before the fix).
+	assert(feq(SKELETON_ARROW_LAUNCH_DY, 2.83f)); // feet + 1.53 eye - 0.1 ctor + 1.4 lift
 	assert(feq(SKELETON_ARROW_TARGET_DY, 0.08f)); // aim at player feet - 0.08
 	assert(feq(ARROW_HIT_EXPAND, 0.3f));          // AxisAlignedBB.expand(0.3) before intercept
 }
 
-// Beta EntitySkeleton.attackEntity launch geometry: from skel feet + 2.43, aiming at the
+// Beta EntitySkeleton.attackEntity launch geometry: from skel feet + 2.83, aiming at the
 // player's POSY - 0.08. Beta's player posY IS the eye (EntityPlayer.yOffset 1.62), so the
 // target is the player's eye - 0.08 (the head), NOT the feet. The pre-lead vertical
 // component (before the horiz*0.2 gravity lead) must match Beta's arithmetic.
 static void test_launch_geometry(void) {
 	const float skel_feet = 0.0f, player_feet = 0.0f;         // flat ground
 	const float player_eye = player_feet + PLAYER_EYE_HEIGHT; // Beta player.posY == the eye
-	float from_y = skel_feet + SKELETON_ARROW_LAUNCH_DY;      // feet + 2.43
+	float from_y = skel_feet + SKELETON_ARROW_LAUNCH_DY;      // feet + 2.83
 	// Faithful target: player.posY(eye) + getEyeHeight(0.12) - 0.2 == eye - 0.08.
 	float target_y = player_eye - SKELETON_ARROW_TARGET_DY;
 	float ddy = target_y - from_y;
-	assert(fabsf(ddy - (-0.89f)) < 1.0e-4f); // Beta: (1.62 - 0.08) - 2.43 = -0.89
+	assert(fabsf(ddy - (-1.29f)) < 1.0e-4f); // Beta: (1.62 - 0.08) - 2.83 = -1.29
 	// The first parity pass aimed at the player FEET - 0.08 (= eye - 1.70), burying the shot
-	// a full eye-height too low (0.08 below the feet): ddy -2.51. That is the corrected bug.
+	// a full eye-height too low (0.08 below the feet): ddy -2.91. That is the corrected bug.
 	float feet_target_ddy = (player_feet - SKELETON_ARROW_TARGET_DY) - from_y;
-	assert(fabsf(feet_target_ddy - (-2.51f)) < 1.0e-4f);
+	assert(fabsf(feet_target_ddy - (-2.91f)) < 1.0e-4f);
 	// The pre-parity engine launched at feet+1.55 and aimed at the eye: ddy +0.07 (slightly high).
 	float old_ddy = player_eye - (skel_feet + 1.55f);
 	assert(fabsf(old_ddy - 0.07f) < 1.0e-4f);
-	// The faithful aim points slightly DOWN from the high (2.43) launch; the buggy feet-target
+	// The faithful aim points DOWN from the high (2.83) launch; the buggy feet-target
 	// pointed far steeper down; the old engine pointed slightly up. All three are distinct.
 	assert(ddy < 0.0f && feet_target_ddy < ddy && old_ddy > 0.0f);
 }

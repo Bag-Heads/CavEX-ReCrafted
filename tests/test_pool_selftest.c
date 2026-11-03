@@ -8,6 +8,9 @@
  * its canary/validator and Broadway timing; this pins the driver's logic so
  * a hardware slot is never spent on a driver bug.
  *
+ *   0. ci-1101/59 remote-session hand-back: release_idle returns every
+ *      empty slab (boot slabs included) and keeps a live one; restore_boot
+ *      re-carves to MEM2_POOL_COLUMN_BOOT_SLABS.
  *   1. boot churn, lowest placement: ok, zero violations, forced refusal kept
  *      the slab and it was reused, then handed back; 48 ballast left.
  *   2. scene: three identical frames -> gx_scene_hash stable, final ok.
@@ -112,6 +115,80 @@ int main(int argc, char** argv) {
 	setenv("CW_TEST_COLUMN_POOL", "lowest", 1);
 #endif
 	pool_selftest_set_emit(capture);
+
+	/* 0. ci-1101/59 remote-session hand-back (mem2.h), run BEFORE any arm:
+	 * the self-test latch makes release_idle inert, and the churn below must
+	 * still start from 4 empty boot slabs after a restore. */
+	{
+		struct mem2_pool_stat st;
+		uint8_t per[16];
+		void* live = mem2_alloc_pooled(MEM2_POOL_COLUMN_OBJECT, MEM2_POOL_COLUMN);
+		assert(live);
+		assert(mem2_pool_selftest_stats(&st, per, 16) == 4);
+		assert(st.slabs == 4 && st.used == 1 && per[0] == 1);
+		/* the slab holding a live column is kept; the three empty go back */
+		assert(mem2_pool_column_release_idle() == 3);
+		assert(mem2_pool_selftest_stats(&st, per, 16) == 1);
+		assert(st.slabs == 1 && st.used == 1 && per[0] == 1);
+		assert(mem2_pool_column_release_idle() == 0);
+		/* the ordinary hand-back keeps boot-count slabs: nothing moves */
+		mem2_free(live);
+		mem2_pool_selftest_stats(&st, per, 16);
+		assert(st.slabs == 1 && st.used == 0);
+		assert(mem2_pool_column_release_idle() == 1);
+		mem2_pool_selftest_stats(&st, per, 16);
+		assert(st.slabs == 0 && st.used == 0 && st.bytes == 0);
+		/* a column take during the session still works (demand growth) */
+		void* q = mem2_alloc_pooled(MEM2_POOL_COLUMN_OBJECT, MEM2_POOL_COLUMN);
+		assert(q);
+		mem2_pool_selftest_stats(&st, per, 16);
+		assert(st.slabs == 1 && st.used == 1);
+		mem2_free(q);
+		/* MP quit, then single player. The remote client world is still
+		 * resident at release (stand-in: a MEM2 block held across it, and
+		 * every carve refused while it lives), so release_remote must NOT
+		 * carve: it only requests the restore. */
+		void* remote_world = mem2_alloc(4096);
+		assert(remote_world && mem2_pool_column_release_idle() == 1);
+		mem2_test_column_carve_refuse(UINT32_MAX);
+		mem2_pool_column_restore_boot();
+		mem2_pool_selftest_stats(&st, per, 16);
+		assert(st.slabs == 0 && mem2_pool_column_restore_pending());
+		mem2_pool_column_restore_boot(); /* idempotent request */
+		/* client world reset: the remote world is gone, the heap can spare
+		 * slabs again; nothing has carved yet */
+		mem2_free(remote_world);
+		mem2_test_column_carve_refuse(0);
+		mem2_pool_selftest_stats(&st, per, 16);
+		assert(st.slabs == 0);
+		/* the first LOCAL column take re-carves all 4 boot slabs BEFORE it
+		 * is served, and lands lowest-first in slab 0 */
+		void* first = mem2_alloc_pooled(MEM2_POOL_COLUMN_OBJECT, MEM2_POOL_COLUMN);
+		assert(first && !mem2_pool_column_restore_pending());
+		assert(mem2_pool_selftest_stats(&st, per, 16) == 4);
+		assert(st.slabs == 4 && st.used == 1 && per[0] == 1);
+		int slab = -1, slot = -1;
+		assert(mem2_pool_column_locate(first, &slab, &slot) && slab == 0
+			   && slot == 0);
+		mem2_free(first);
+		/* a refused re-carve is one attempt, then ordinary demand growth */
+		assert(mem2_pool_column_release_idle() == 4);
+		mem2_pool_column_restore_boot();
+		mem2_test_column_carve_refuse(1);
+		first = mem2_alloc_pooled(MEM2_POOL_COLUMN_OBJECT, MEM2_POOL_COLUMN);
+		assert(first && !mem2_pool_column_restore_pending());
+		mem2_pool_selftest_stats(&st, per, 16);
+		assert(st.slabs == 1 && st.used == 1);
+		mem2_free(first);
+		mem2_pool_column_restore_boot();
+		assert(mem2_pool_column_restore_pending());
+		mem2_free(mem2_alloc_pooled(MEM2_POOL_COLUMN_OBJECT, MEM2_POOL_COLUMN));
+		mem2_pool_selftest_stats(&st, per, 16);
+		assert(st.slabs == 4 && st.used == 0); /* churn below starts at 4 */
+		printf("PASS remote hand-back: 3 empty slabs released around a live "
+			   "one, then all 4; restore deferred past a resident remote "
+			   "world, re-carved to 4 before the first local take\n");
+	}
 
 	/* 7. accumulator semantics */
 	{

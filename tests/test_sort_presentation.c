@@ -226,6 +226,9 @@ bool __wrap_input_pressed(enum input_button b) {
 }
 bool __wrap_input_pointer(float* x,float* y,float* a) { *x=*y=*a=0;return false; }
 int main(void) {
+	/* Draw recorder: represent a loaded fallback sheet; graphics calls are wrapped. */
+	static uint8_t controls_texel[4];
+	texture_controls.data = controls_texel;
     gstate.config_user.root=json_value_init_object();
     texture_font.width=texture_font.height=128;gutil_reset_font(&texture_font);
     assert(gutil_font_width("Sort",16)==44);

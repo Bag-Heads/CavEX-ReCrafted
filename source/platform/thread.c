@@ -66,6 +66,7 @@ struct stripe_record {
 };
 static struct {
 	struct thread_mutex* mutex;
+	const char* name;
 	struct stripe_record role[4];
 } s_stripes[8];
 static uint32_t s_role_id[4], s_role_phase[4];
@@ -564,6 +565,32 @@ static bool drain_owner(void) {
 	uint32_t id = __atomic_load_n(&s_drain_owner, __ATOMIC_ACQUIRE);
 	return id && id == stripe_thread_id();
 }
+/* ci-1101/37: keep the LONGEST >= 10 ms mutex wait of this window. The lock
+ * path is the only caller, and only the single drain owner ever writes it.
+ * holder is the id sampled from the mutex's own owner field BEFORE we blocked
+ * (it is 0 once we hold the lock, so it MUST be read on the wait side, never
+ * after); 0 means free or unknown. No lock, no allocation, no syscall -- the
+ * cost is one compare when the wait is short, and this bounded body plus one
+ * small copy on the rare long wait that lands. */
+static unsigned stripe_index(struct thread_mutex* mutex);
+static uint32_t stripe_role(uint32_t id);
+static void drain_wait_record(uint32_t wait_us, struct thread_mutex* m,
+							  uint32_t holder) {
+	if(wait_us < THREAD_DRAIN_WAIT_ATTRIB_US || wait_us <= s_drain_waits.wait_us)
+		return;
+	s_drain_waits.wait_us = wait_us;
+	s_drain_waits.wait_mutex = (uint32_t)(uintptr_t)m;
+	s_drain_waits.wait_holder_id = holder;
+	s_drain_waits.wait_holder_tag = holder ? stripe_role(holder) : 0;
+	unsigned idx = stripe_index(m);
+	s_drain_waits.wait_stripe = idx < 8 ? idx : 0;
+	const char* name = idx < 8 && s_stripes[idx].name ? s_stripes[idx].name : "";
+	size_t n = strlen(name);
+	if(n >= sizeof s_drain_waits.wait_mutex_name)
+		n = sizeof s_drain_waits.wait_mutex_name - 1;
+	memcpy(s_drain_waits.wait_mutex_name, name, n);
+	s_drain_waits.wait_mutex_name[n] = '\0';
+}
 bool thread_drain_wait_active(void) { return drain_owner(); }
 static struct {
 	bool enabled;
@@ -880,6 +907,16 @@ void thread_stripe_register(struct thread_mutex* mutex, unsigned stripe) {
 	if(stripe < 8) s_stripes[stripe].mutex = mutex;
 }
 
+static unsigned stripe_index(struct thread_mutex* mutex);
+
+/* ci-1101/37: borrowed operator-facing name for a registered stripe's mutex,
+ * read only on the (rare) long-drain-wait path. Call after register; a mutex
+ * registered more than once keeps the last name. */
+void thread_stripe_set_name(struct thread_mutex* mutex, const char* name) {
+	unsigned i = stripe_index(mutex);
+	if(i < 8) s_stripes[i].name = name;
+}
+
 /* A thread holds exactly ONE role. Thread ids are recycled after a thread
  * exits (glibc reuses a joined pthread_t at once; libogc reuses a freed LWP
  * handle), so a role slot can still carry a DEAD thread's id when a new thread
@@ -1089,7 +1126,13 @@ static bool stripe_mutex_trylock(struct thread_mutex* mutex) {
 #else
 	bool locked = pthread_mutex_trylock(&mutex->native) == 0;
 #endif
-	if(locked) { lease_lock_held(); main_hold(true); }
+	if(locked) {
+		/* ci-1101/37: an uncontended acquire is still a real hold; record the
+		 * owner here so a later drain wait on this mutex can name it. */
+		mutex->owner = stripe_thread_id();
+		lease_lock_held();
+		main_hold(true);
+	}
 	return locked;
 }
 static void thread_mutex_unlock_native(struct thread_mutex* mutex);
@@ -1397,6 +1440,7 @@ bool thread_mutex_init(struct thread_mutex* m) {
 	if(!m)
 		return false;
 	m->initialized = pthread_mutex_init(&m->native, NULL) == 0;
+	m->owner = 0;
 	return m->initialized;
 }
 
@@ -1405,6 +1449,7 @@ void thread_mutex_destroy(struct thread_mutex* m) {
 	if(m && m->initialized) {
 		pthread_mutex_destroy(&m->native);
 		m->initialized = false;
+		m->owner = 0;
 	}
 }
 
@@ -1417,8 +1462,16 @@ void thread_mutex_lock(struct thread_mutex* m) {
 		bool armed = drain_owner();
 		ptime_t start;
 		if(armed) start = time_get();
+		/* ci-1101/37: sample the holder BEFORE blocking; once we hold the
+		 * lock the owner field is ours, so a post-wait read would name US. */
+		uint32_t holder = m->owner;
 		pthread_mutex_lock(&m->native);
-		if(armed) s_drain_waits.lock_us += time_diff_us(start, time_get());
+		m->owner = stripe_thread_id();
+		if(armed) {
+			uint32_t waited = (uint32_t)time_diff_us(start, time_get());
+			s_drain_waits.lock_us += waited;
+			drain_wait_record(waited, m, holder);
+		}
 		tps_note(thread_tps_observe, TPS_LEAVE, TPS_MUTEX_WAIT);
 	}
 	/* The contended wait is over; the lease keeps its depth for the hold
@@ -1429,8 +1482,10 @@ void thread_mutex_lock(struct thread_mutex* m) {
 
 static void thread_mutex_unlock_native(struct thread_mutex* m) {
 	assert(m && m->initialized);
-	if(m && m->initialized)
+	if(m && m->initialized) {
+		m->owner = 0; /* release clears the owner; the next waiter names us until here */
 		pthread_mutex_unlock(&m->native);
+	}
 }
 
 bool thread_cond_init(struct thread_cond* c) {
@@ -1866,6 +1921,7 @@ bool thread_mutex_init(struct thread_mutex* m) {
 		return false;
 	m->native = LWP_MUTEX_NULL;
 	m->initialized = LWP_MutexInit(&m->native, false) == 0;
+	m->owner = 0;
 	return m->initialized;
 }
 
@@ -1875,6 +1931,7 @@ void thread_mutex_destroy(struct thread_mutex* m) {
 		LWP_MutexDestroy(m->native);
 		m->native = LWP_MUTEX_NULL;
 		m->initialized = false;
+		m->owner = 0;
 	}
 }
 
@@ -1886,8 +1943,15 @@ void thread_mutex_lock(struct thread_mutex* m) {
 		bool armed = drain_owner();
 		ptime_t start;
 		if(armed) start = time_get();
+		/* ci-1101/37: sample the holder BEFORE blocking; see the PC arm. */
+		uint32_t holder = m->owner;
 		LWP_MutexLock(m->native);
-		if(armed) s_drain_waits.lock_us += time_diff_us(start, time_get());
+		m->owner = stripe_thread_id();
+		if(armed) {
+			uint32_t waited = (uint32_t)time_diff_us(start, time_get());
+			s_drain_waits.lock_us += waited;
+			drain_wait_record(waited, m, holder);
+		}
 	}
 	/* As the PC arm: the wait is over, the lease depth stays for the hold. */
 	tick_wait_leave();
@@ -1896,8 +1960,10 @@ void thread_mutex_lock(struct thread_mutex* m) {
 
 static void thread_mutex_unlock_native(struct thread_mutex* m) {
 	assert(m && m->initialized);
-	if(m && m->initialized)
+	if(m && m->initialized) {
+		m->owner = 0; /* release clears the owner; see the PC arm */
 		LWP_MutexUnlock(m->native);
+	}
 }
 
 bool thread_cond_init(struct thread_cond* c) {
@@ -2037,6 +2103,7 @@ bool thread_mutex_try_guard(struct thread_mutex* m, struct thread_mutex_guard* g
 	if(pthread_mutex_trylock(&m->native) != 0) return false;
 #endif
 	guard->held = true;
+	m->owner = stripe_thread_id(); /* ci-1101/37: guard acquire is a hold too */
 	main_hold(true);
 	return true;
 }

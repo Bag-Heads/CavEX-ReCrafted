@@ -61,7 +61,8 @@ _Static_assert(CLIENT_GUEST_FAILED == 6,
 struct screen { void (*render3D)(struct screen*, const float*); void (*update)(struct screen*, float); };
 static struct screen screen_ingame, screen_death, screen_inventory,
     screen_crafting, screen_chest, screen_furnace, screen_dispenser,
-    screen_iron_chest, screen_sign, screen_load_world;
+    screen_iron_chest, screen_sign, screen_load_world, screen_creative_picker;
+static void screen_set(struct screen*);
 /* LOADING_TYPES (sliced from source/network/client_frame_worlds.h) */
 /* LOADING_TYPES */
 struct world { int fixture_identity; };
@@ -72,7 +73,11 @@ struct client_ctx_registry { int fixture_identity; };
 struct local_pause { bool active; };
 struct split_layout_rect { int y, height; };
 struct input_player_frame { bool connected; };
+enum { LOCAL_MENU_CREATIVE = 5 };
+struct creative_picker { int fixture_selection; };
 struct local_menu_host {
+    int mode;
+    struct creative_picker picker;
     bool active;
     bool split_owned;
     uint8_t window;
@@ -279,6 +284,19 @@ bool screen_split_container_base(uint8_t window, int width, int height) {
 void local_menu_host_reset(struct client_session* s) {
     s->menu_host.active = false;
 }
+bool local_menu_host_open_creative(struct client_session* s,unsigned p,int w,int h) {
+    assert(p==0 && w==640 && h==240);
+    s->menu_host.active=s->menu_host.split_owned=true;
+    s->menu_host.mode=LOCAL_MENU_CREATIVE;return true;
+}
+static unsigned picker_compacted, picker_expanded;
+void screen_creative_picker_to_compact(struct creative_picker* p) {
+    p->fixture_selection=17;picker_compacted++;
+}
+void screen_creative_picker_from_compact(const struct creative_picker* p) {
+    assert(p->fixture_selection==17);picker_expanded++;
+}
+void input_pointer_enable(bool enabled) {(void)enabled;}
 bool clin_show_window(uint8_t window) { (void)window; return false; }
 bool client_session_local_respawn_hidden_camera(
         const struct client_session* owner, struct camera* out) {
@@ -737,6 +755,28 @@ static void s6_respawn_viewport_continuity(void) {
     gstate.players[1].local_gameplay_ready = true;
     assert(local_container_views(&converted, false) == 2 && !converted);
 
+    /* Creative open remains two owner-local panes, just like inventory. */
+    gstate.config_creative = true;
+    inventory_pressed = true;
+    assert(local_container_views(&converted, false) == 2 && !converted);
+    inventory_pressed = false;
+    gstate.config_creative = false;
+
+    gstate.config_creative = true;
+    gstate.players[0].current_screen = &screen_creative_picker;
+    fixture_gfx_height = 576; /* menu still uses the centered 240px band */
+    assert(local_container_views(&converted, false)==2 && converted);
+    assert(picker_compacted==1 && gstate.players[0].current_screen==&screen_ingame);
+    assert(gstate.players[0].menu_host.active);
+    gstate.players[1].local_bound=false;
+    assert(local_container_views(&converted, false)==1 && converted);
+    assert(picker_expanded==1 && gstate.players[0].current_screen==&screen_creative_picker);
+    assert(!gstate.players[0].menu_host.active);
+    fixture_gfx_height = 480;
+    gstate.players[0].current_screen=&screen_ingame;
+    gstate.players[1].local_bound=true;
+    gstate.config_creative=false;
+
     /* Existing global transition remains one presentation rectangle. */
     converted = true;
     gstate.world_switch_pending = true;
@@ -1172,6 +1212,7 @@ static float s_time_on_screen;
 static unsigned load_attempts, ordinary_updates;
 static bool admit_fixture;
 static void screen_set(struct screen* s) {
+    if(s==&screen_creative_picker){gstate.players[0].current_screen=s;return;}
     assert(s == &screen_ingame);
     load_attempts++;
     if(admit_fixture) gstate.players[0].current_screen = s;

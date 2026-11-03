@@ -188,6 +188,15 @@ static bool controller_commit(void) {
 }
 
 static void controller_leave(void) {
+	/* Second Back after a failed save: discard the draft and leave. The
+	 * failed controller_commit already restored the config tree and never
+	 * applied the live look/assist values, so nothing is left to undo. Any
+	 * value edit clears save_failed and so re-arms the save-on-Back path.
+	 * Without this a card that keeps refusing writes traps the player here. */
+	if(save_failed) {
+		screen_set(&screen_options);
+		return;
+	}
 	if(controller_commit())
 		screen_set(&screen_options);
 	else
@@ -341,7 +350,9 @@ static void screen_controller_settings_render2D(struct screen* s, int width,
 		fep_outline(controller_target_rect(CT_ASSIST), opt_px(2), 48, 48, 48,
 					255);
 	if(save_failed)
-		opt_text(60, 366, 16, 520, "Could not save controller settings", false);
+		opt_text(60, 366, 16, 520,
+				 "Could not save. Press Back again to leave without saving",
+				 false);
 	struct fep_rect back = opt_footer(true);
 	if(selected == CT_DONE)
 		fep_outline(back, opt_px(3), 255, 255, 255, 255);

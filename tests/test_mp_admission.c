@@ -2426,7 +2426,7 @@ static int test_fix3a_forced_rescue_base_victim(void) {
  * (REMOTE_COLUMN_RAW_BYTES + REMOTE_DEMOTE_STAGE_BYTES). Asserted by EQUALITY
  * below, so if that file's staging size moves this case fails loudly instead
  * of quietly asserting something weaker. */
-#define ADM_RECODE_SCRATCH (ADM_RAW + (ADM_RAW + 1024u))
+#define ADM_RECODE_SCRATCH (ADM_RAW + (MP_CHUNK_INFLATED_CAP + 1024u))
 
 static void test_scratch_is_accounted(void) {
 	adm_fresh_session(ADM_WII_BACKING);
@@ -3213,6 +3213,376 @@ static void test_resent_installed_column_needs_no_reserve(void) {
 		   (unsigned)ADM_LH_WII_RESERVE);
 }
 
+/* ci-1101/04: PlayerInstance.java:145-153 rounds a top-edge bbox to
+ * y+sy=130. World.getChunkData (CFR World.java:1740; RetroMCP server
+ * World.java:1930-1931) packs ONLY y<128 into the advertised-size array,
+ * with trailing zero padding. Client World.setChunkData clamps identically.
+ * Distinct ids and all three nibble planes catch a wrong stripe/plane offset. */
+static bool adm_decode_top_region(int y, int sy, int cx,
+								 struct mp_event* event) {
+	size_t cells = 16u * (size_t)sy * 16u;
+	size_t height = (size_t)(y + sy > 128 ? 128 - y : sy);
+	size_t applied = 16u * height * 16u;
+	uint8_t* raw = calloc(1, cells * 5u / 2u);
+	assert(raw);
+	for(size_t i = 0; i < applied; i++)
+		raw[i] = (i & 1u) ? BLOCK_DIRT : BLOCK_STONE;
+	memset(raw + applied, 0x32, applied / 2);
+	memset(raw + applied * 3 / 2, 0x54, applied / 2);
+	memset(raw + applied * 2, 0x76, applied / 2);
+	uLongf n = 0;
+	uint8_t* body = adm_body_from(raw, cells * 5u / 2u, &n);
+	free(raw);
+	assert(body);
+	uint8_t header[18] = {0x33};
+	put_i32(header + 1, cx * 16);
+	put_i16(header + 5, (int16_t)y);
+	header[11] = 15;
+	header[12] = (uint8_t)(sy - 1);
+	header[13] = 15;
+	put_i32(header + 14, (int32_t)n);
+	struct mp_decoder decoder;
+	mp_decoder_init(&decoder);
+	enum mp_decode_result result = MP_DECODE_MORE;
+	for(size_t i = 0; i < sizeof(header) && result == MP_DECODE_MORE; i++)
+		result = mp_decoder_feed(&decoder, header[i], event);
+	for(size_t i = 0; i < n && result == MP_DECODE_MORE; i++)
+		result = mp_decoder_feed(&decoder, body[i], event);
+	mp_backing_free(body);
+	if(result != MP_DECODE_EVENT) {
+		fprintf(stderr, "FAIL Packet51 y=%d sy=%d decoder result=%d\n",
+			y, sy, result);
+		mp_decoder_destroy(&decoder);
+		return false;
+	}
+	assert(event->type == MP_EVENT_MAP_CHUNK);
+	assert(event->payload.map_chunk.inflated_length == cells * 5u / 2u);
+	mp_decoder_destroy(&decoder);
+	return true;
+}
+
+static void adm_check_top_column(int cx, int y) {
+	assert(adm_export(cx, 0));
+	for(int x = 0; x < 16; x++)
+		for(int z = 0; z < 16; z++)
+			for(int h = 0; h < 128; h++) {
+				size_t i = (size_t)x * 2048u + (size_t)z * 128u + h;
+				if(h < y) {
+					assert(adm_out[i] == BLOCK_AIR);
+					continue;
+				}
+				assert(adm_out[i] == ((h & 1) ? BLOCK_DIRT : BLOCK_STONE));
+				assert(adm_out[ADM_CELLS + i / 2] == 0x32);
+				assert(adm_out[ADM_CELLS + ADM_NIB + i / 2] == 0x54);
+				assert(adm_out[ADM_CELLS + 2 * ADM_NIB + i / 2] == 0x76);
+			}
+}
+
+static int test_top_full_fold_and_budget(void) {
+	int rc = 0;
+	adm_fresh_session(ADM_WII_BACKING);
+	adm_anchor(0, 0);
+	adm_retain_partial(0, 0, 128, BLOCK_AIR);
+	struct mp_event e = {0};
+	assert(adm_decode_top_region(0, 130, 0, &e));
+	assert(remote_retain_map_locked(s_r, &e));
+	mp_event_destroy(&e);
+	for(int y = 120; y <= 126; y += 2) {
+		assert(adm_decode_top_region(y, 2, 0, &e));
+		thread_mutex_lock(&s_r->lock);
+		assert(remote_retain_map_locked(s_r, &e));
+		thread_mutex_unlock(&s_r->lock);
+		mp_event_destroy(&e);
+	}
+	assert(s_r->fold.folds == 1);
+	adm_pump_n(40);
+	adm_check_top_column(0, 0);
+	if(s_r->chunks[adm_entry(0, 0)].voxels_synthetic
+	   || !s_r->load_completion_pending) {
+		fprintf(stderr, "FAIL folded full-height 130 snapshot lost genuine "
+			"provenance/loading completion\n");
+		rc = 1;
+	}
+
+	/* A clipped full-height resend still needs one column of overlap memory. */
+	assert(adm_decode_top_region(0, 130, 0, &e));
+	assert(remote_retain_map_locked(s_r, &e));
+	mp_event_destroy(&e);
+	server_remote_test_set_carve_free_bytes(REMOTE_VOXEL_COLUMN_BYTES - 1u);
+	assert(adm_promotion_step());
+	if(s_r->promotion.active) {
+		fprintf(stderr, "FAIL full-height 130 replacement bypassed overlap "
+			"memory gate\n");
+		rc = 1;
+	}
+	server_remote_test_set_carve_free_bytes(REMOTE_VOXEL_COLUMN_BYTES);
+	adm_pump_n(40);
+	server_remote_test_set_carve_free_bytes(SIZE_MAX);
+	assert(!s_r->stop_now && adm_installed(0, 0));
+	adm_check_top_column(0, 0);
+	/* Fold a padded full head on already-installed voxels, then demote it
+	 * before publication. The pending snapshot must stay newer than the
+	 * installed-content stamp, or the demotion cannot preserve their order. */
+	uint64_t installed_stamp = s_r->chunks[adm_entry(0, 0)].newest_applied;
+	assert(adm_decode_top_region(0, 130, 0, &e));
+	assert(remote_retain_map_locked(s_r, &e));
+	mp_event_destroy(&e);
+	for(int y = 120; y <= 126; y += 2) {
+		assert(adm_decode_top_region(y, 2, 0, &e));
+		thread_mutex_lock(&s_r->lock);
+		assert(remote_retain_map_locked(s_r, &e));
+		thread_mutex_unlock(&s_r->lock);
+		mp_event_destroy(&e);
+	}
+	assert(s_r->fold.folds == 2);
+	if(s_r->chunks[adm_entry(0, 0)].arrival <= installed_stamp) {
+		fprintf(stderr, "FAIL installed full-height 130 fold stamped pending "
+			"snapshot older than installed voxels\n");
+		rc = 1;
+	} else {
+		adm_anchor(100, 100);
+		adm_residency_step();
+		assert(s_r->demotions == 1 && !adm_installed(0, 0));
+		adm_anchor(0, 0);
+		adm_pump_n(80);
+		adm_check_top_column(0, 0);
+	}
+	if(!rc)
+		printf("PASS full-height 130 fold: genuine loading completion, "
+			"replacement memory gate and demotion order preserved\n");
+	return rc;
+}
+
+static int test_top_world_regions(void) {
+	int rc = 0;
+	for(int y = 126; y >= 0; y -= 126) {
+		adm_fresh_session(ADM_WII_BACKING);
+		adm_anchor(0, 0);
+		struct mp_event e = {0};
+		if(!adm_decode_top_region(y, 130 - y, 0, &e)) {
+			rc = 1;
+			continue;
+		}
+		thread_mutex_lock(&s_r->lock);
+		assert(remote_retain_map_locked(s_r, &e));
+		thread_mutex_unlock(&s_r->lock);
+		mp_event_destroy(&e);
+		adm_pump_n(40);
+		assert(!s_r->stop_now && adm_installed(0, 0));
+		adm_check_top_column(0, y);
+		/* Repeat on installed voxels: this takes the packed-slice apply path
+		 * instead of expansion onto the implicit pre-chunk. */
+		assert(adm_decode_top_region(y, 130 - y, 0, &e));
+		thread_mutex_lock(&s_r->lock);
+		assert(remote_retain_map_locked(s_r, &e));
+		thread_mutex_unlock(&s_r->lock);
+		mp_event_destroy(&e);
+		adm_pump_n(40);
+		assert(!s_r->stop_now);
+		adm_check_top_column(0, y);
+		printf("PASS Packet51 y=%d sy=%d: decode, new + installed apply, "
+			"all planes clamped below 128\n", y, 130 - y);
+	}
+	if(!rc) {
+		/* A top-edge region also passes through the read-thread fold when
+		 * three disjoint partials already follow a full-column head. */
+		adm_fresh_session(ADM_WII_BACKING);
+		adm_anchor(0, 0);
+		adm_retain_partial(0, 0, 128, BLOCK_AIR);
+		for(int y = 120; y <= 126; y += 2) {
+			struct mp_event e = {0};
+			assert(adm_decode_top_region(y, y == 126 ? 4 : 2, 0, &e));
+			thread_mutex_lock(&s_r->lock);
+			assert(remote_retain_map_locked(s_r, &e));
+			thread_mutex_unlock(&s_r->lock);
+			mp_event_destroy(&e);
+		}
+		assert(s_r->fold.folds == 1 && !s_r->stop_now);
+		adm_pump_n(40);
+		adm_check_top_column(0, 120);
+		printf("PASS top-edge partial folded in wire order, all planes intact\n");
+		/* An entirely clipped region consumes its packet without publishing
+		 * nonexistent voxels or disturbing the table's installed count. */
+		adm_fresh_session(ADM_WII_BACKING);
+		adm_anchor(0, 0);
+		struct mp_event e = {0};
+		assert(adm_decode_top_region(128, 2, 0, &e));
+		thread_mutex_lock(&s_r->lock);
+		assert(remote_retain_map_locked(s_r, &e));
+		thread_mutex_unlock(&s_r->lock);
+		mp_event_destroy(&e);
+		adm_pump_n(40);
+		assert(!s_r->stop_now && !adm_installed(0, 0)
+			&& s_r->resident_cols == 0);
+		printf("PASS y=128 sy=2: clipped packet consumed without voxel writes\n");
+		rc |= test_top_full_fold_and_budget();
+	}
+	return rc;
+}
+
+#ifndef MP_ADMISSION_HELPERS_ONLY
+/* ---- (54) ci-1101/54: the ready census never waits on a memory-refused column
+ * Real-Wii hw1102b (betamc.org, 07eccba and 53a039f, identical signature):
+ * 441 columns announced, the R=4 disk filled nearest-first at ~20/s to 67 of
+ * 81 columns by tick 8, then mem2_carve_free_kb sat at 1440 KB for the rest
+ * of the run -- far below the F4 gate's column + 6 MiB mesh reserve -- so
+ * the last 14 in-radius columns stayed RETAINED. The census still counted
+ * them (mp_ready_pending=14 flat from tick 8), the loading screen showed
+ * "Connection stalled?" and only the 30 s backstop let the player in
+ * (lw_to_admits=1 at tick 33). This replays that join deterministically:
+ * Packet50 x441, then bodies nearest-first interleaved with server block
+ * changes (a busy spawn), a carve that drains by the run's own measured
+ * per-column cost (voxels + meshes), the Wii mesh reserve injected. */
+#define ADM_54_RADIUS 4
+#define ADM_54_CX (-9) /* pos (-136, 154) -> column (-9, 9) */
+#define ADM_54_CZ 9
+#define ADM_54_CARVE_AT_JOIN (15977u * 1024u) /* tick 3, after the backing cut */
+#define ADM_54_CARVE_FLOOR (1440u * 1024u)	  /* flat from tick 9 */
+#define ADM_54_RESIDENT_SEEN 67u
+static int adm_54_cheb(int cx, int cz) {
+	return adm_cheb(cx, cz, ADM_54_CX, ADM_54_CZ);
+}
+static size_t adm_54_per_column(void) {
+	return (ADM_54_CARVE_AT_JOIN - ADM_54_CARVE_FLOOR) / ADM_54_RESIDENT_SEEN;
+}
+static void adm_54_set_carve(void) {
+	size_t spent = adm_voxel_columns() * adm_54_per_column();
+	server_remote_test_set_carve_free_bytes(
+		ADM_54_CARVE_AT_JOIN > spent ? ADM_54_CARVE_AT_JOIN - spent : 0);
+}
+static size_t adm_54_in_radius_not_resident(void) {
+	size_t n = 0;
+	for(size_t i = 0; i < REMOTE_CHUNK_ENTRY_CAPACITY; i++) {
+		const struct remote_chunk* c = &s_r->chunks[i];
+		if(c->state != REMOTE_CHUNK_UNUSED && c->state != REMOTE_CHUNK_RESIDENT
+		   && adm_54_cheb(c->chunk_x, c->chunk_z) <= ADM_54_RADIUS)
+			n++;
+	}
+	return n;
+}
+static void test_census_skips_memory_held_columns(void) {
+	adm_fresh_session(ADM_WII_BACKING);
+	adm_anchor(ADM_54_CX, ADM_54_CZ);
+	server_remote_set_admit_radius(&adm_owner, ADM_54_RADIUS);
+	size_t disk = (2 * ADM_54_RADIUS + 1) * (2 * ADM_54_RADIUS + 1);
+	/* Packet50 x441 first, exactly as PlayerInstance.addPlayer does. */
+	for(int dx = -ADM_BURST; dx <= ADM_BURST; dx++)
+		for(int dz = -ADM_BURST; dz <= ADM_BURST; dz++)
+			assert(remote_pre_chunk_locked(s_r, ADM_54_CX + dx,
+										   ADM_54_CZ + dz, true));
+	struct server_remote_ready_census census;
+	/* PC (no carve, SIZE_MAX): never held, everything announced is owed. */
+	assert(server_remote_ready_census(&adm_owner, ADM_54_CX, ADM_54_CZ,
+									  ADM_54_RADIUS, &census));
+	assert(census.memory_held == 0 && census.announced_pending == disk);
+
+	server_remote_test_set_mesh_reserve_bytes(ADM_WII_MESH_RESERVE);
+	adm_54_set_carve();
+	/* Bodies nearest-first (the order the hw1102b ticks show), each followed
+	 * by a pump and by block traffic into columns outside the disk, i.e. a
+	 * busy server: the edits park on BACKED columns. */
+	int edits = 0;
+	for(int ring = 0; ring <= ADM_BURST; ring++)
+		for(int dx = -ring; dx <= ring; dx++)
+			for(int dz = -ring; dz <= ring; dz++) {
+				if((dx < 0 ? -dx : dx) != ring && (dz < 0 ? -dz : dz) != ring)
+					continue;
+				int cx = ADM_54_CX + dx, cz = ADM_54_CZ + dz;
+				assert(adm_retain_terrain(cx, cz, cx, cz, 0));
+				int ex = (ADM_54_CX + ADM_BURST) * 16 + (edits % 16);
+				adm_edit(ex, 70, (ADM_54_CZ + (edits % 21) - 10) * 16 + 3,
+						 BLOCK_PLANKS);
+				edits++;
+				adm_54_set_carve();
+				adm_pump();
+				/* While the gate still admits, an in-radius column not yet
+				 * installed IS an obligation: no early admission. */
+				if(ring <= 1 && remote_carve_admits_cold_column()) {
+					assert(server_remote_ready_census(&adm_owner, ADM_54_CX,
+						ADM_54_CZ, ADM_54_RADIUS, &census));
+					assert(census.memory_held == 0);
+					assert(census.announced_pending
+						   == adm_54_in_radius_not_resident());
+				}
+			}
+	for(int i = 0; i < (int)disk * 8; i++) {
+		adm_54_set_carve();
+		adm_pump();
+	}
+	size_t resident = adm_count(REMOTE_CHUNK_RESIDENT);
+	size_t owed_before_fix = adm_54_in_radius_not_resident();
+	assert(resident >= 9 && resident < disk
+		   && "the carve, not the radius, stopped the disk");
+	assert(!remote_carve_admits_cold_column() && s_r->promote_deferred_memory);
+	assert(owed_before_fix == disk - resident && owed_before_fix > 0);
+	assert(server_remote_ready_census(&adm_owner, ADM_54_CX, ADM_54_CZ,
+									  ADM_54_RADIUS, &census));
+	assert(census.core_resident && "the 3x3 safe core installed first");
+	assert(census.announced_pending == 0
+		   && "THE FIX: nothing the gate refuses is owed to the screen");
+	assert(census.memory_held == owed_before_fix);
+	assert(census.resident_in_radius == resident);
+
+	/* A cold Packet50 for a coordinate inside the disk while the gate is
+	 * shut is held too (its body could not install either)... */
+	int hx = 0, hz = 0;
+	bool found = false;
+	for(size_t i = 0; i < REMOTE_CHUNK_ENTRY_CAPACITY && !found; i++) {
+		const struct remote_chunk* c = &s_r->chunks[i];
+		if(c->state == REMOTE_CHUNK_RETAINED && !c->installed
+		   && adm_54_cheb(c->chunk_x, c->chunk_z) <= ADM_54_RADIUS) {
+			hx = c->chunk_x;
+			hz = c->chunk_z;
+			found = true;
+		}
+	}
+	assert(found);
+	assert(remote_pre_chunk_locked(s_r, hx, hz, false)); /* 0x32 mode 0 */
+	adm_pump_n(4);
+	assert(remote_pre_chunk_locked(s_r, hx, hz, true)); /* re-announced */
+	assert(adm_state(hx, hz) == REMOTE_CHUNK_ANNOUNCED);
+	assert(server_remote_ready_census(&adm_owner, ADM_54_CX, ADM_54_CZ,
+									  ADM_54_RADIUS, &census));
+	assert(census.announced_pending == 0
+		   && census.memory_held == owed_before_fix);
+	assert(adm_retain_terrain(hx, hz, hx, hz, 0));
+	size_t held_before = census.memory_held;
+	/* ...but a re-send of an INSTALLED column is still owed: its own gate
+	 * (one column of carve) is open at the floor. */
+	assert(adm_retain_terrain(ADM_54_CX, ADM_54_CZ, ADM_54_CX, ADM_54_CZ, 0));
+	assert(server_remote_ready_census(&adm_owner, ADM_54_CX, ADM_54_CZ,
+									  ADM_54_RADIUS, &census));
+	assert(census.announced_pending == 1 && census.memory_held == held_before);
+	adm_pump_n(20);
+	assert(server_remote_ready_census(&adm_owner, ADM_54_CX, ADM_54_CZ,
+									  ADM_54_RADIUS, &census));
+	assert(census.announced_pending == 0 && census.core_resident);
+
+	/* Nothing was lost: once the carve allows (on the console a demotion or a
+	 * 0x32 unload), the held columns install in the background and the
+	 * census owes nothing and holds nothing. */
+	server_remote_test_set_carve_free_bytes(SIZE_MAX);
+	adm_pump_n((int)disk * 8);
+	assert(adm_count(REMOTE_CHUNK_RESIDENT) == disk);
+	assert(server_remote_ready_census(&adm_owner, ADM_54_CX, ADM_54_CZ,
+									  ADM_54_RADIUS, &census));
+	assert(census.announced_pending == 0 && census.memory_held == 0
+		   && census.resident_in_radius == disk);
+	assert(s_r->retention_evictions == 0 && s_r->backing_refusals == 0
+		   && s_r->retention_allocation_failures == 0 && s_r->mp_end == 0
+		   && !s_r->stop_now && adm_count(REMOTE_CHUNK_TOMBSTONE) == 0);
+	server_remote_test_set_mesh_reserve_bytes(SIZE_MAX);
+	printf("PASS (54) census vs memory gate: 441 announced, %d block edits "
+		   "interleaved, carve %u KB -> floor at %zu B/column; %zu of %zu "
+		   "in-radius resident, %zu memory-held (pre-fix these %zu were "
+		   "announced_pending and held the screen to the 30 s backstop), "
+		   "pending 0 with core resident; all %zu installed once the carve "
+		   "allowed, 0 losses\n",
+		   edits, (unsigned)(ADM_54_CARVE_AT_JOIN / 1024u),
+		   adm_54_per_column(), resident, disk, held_before, owed_before_fix,
+		   disk);
+}
+
 int main(int argc, char** argv) {
 	assert(svin_init() && clin_init());
 	blocks_init();
@@ -3233,6 +3603,16 @@ int main(int argc, char** argv) {
 	server_remote_test_set_retained_byte_cap(&adm_owner, 16u * 1024u * 1024u);
 	assert(mp_backing_configure(16u * 1024u * 1024u) == 16u * 1024u * 1024u);
 	clin_force_world_reset_login(WORLD_DIM_OVERWORLD, 42);
+	if(argc > 1 && strcmp(argv[1], "--top-region") == 0) {
+		int rc = test_top_world_regions();
+		server_remote_destroy(&adm_owner);
+		return rc;
+	}
+	if(argc > 1 && strcmp(argv[1], "--top-full") == 0) {
+		int rc = test_top_full_fold_and_budget();
+		server_remote_destroy(&adm_owner);
+		return rc;
+	}
 	if(argc > 1 && strcmp(argv[1], "--rel-mp-chained") == 0) {
 		int rc = adm_rel_mp_cases();
 		server_remote_destroy(&adm_owner);
@@ -3313,6 +3693,9 @@ int main(int argc, char** argv) {
 
 	/* REL-MP-LOADHANG: own fresh session; puts both platform overrides back. */
 	test_resent_installed_column_needs_no_reserve();
+	/* ci-1101/54: own fresh session; puts both platform overrides back. */
+	test_census_skips_memory_held_columns();
+	rel_mp |= test_top_world_regions();
 
 	server_remote_destroy(&adm_owner);
 	if(rel_mp) {
@@ -3322,3 +3705,4 @@ int main(int argc, char** argv) {
 	printf("PASS test_mp_admission\n");
 	return 0;
 }
+#endif

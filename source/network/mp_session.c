@@ -16,6 +16,8 @@
 #include <stdio.h>
 #include <string.h>
 
+#include "../platform/mem2.h"
+
 static struct server_remote g_remote;
 static bool g_initialized;
 
@@ -32,9 +34,18 @@ void mp_session_init(void) {
 	g_initialized = true; // handle only: local play allocates no remote state
 }
 
+/* ci-1101/59: the local server is joined and its world retired before this
+ * is called (main.c), so the column pool's slabs -- local-server-only column
+ * storage, 10,305 KiB of eager boot slabs on the Wii -- are idle for the
+ * whole remote session. Hand the empty ones back to the carve the MP client
+ * installs into (mem2.h REMOTE-SESSION HAND-BACK); release_remote re-carves
+ * them before the local server restarts. */
 bool mp_session_prepare_remote(void) {
 	mp_session_init();
-	return g_remote.impl || server_remote_init(&g_remote);
+	if(!g_remote.impl && !server_remote_init(&g_remote))
+		return false;
+	(void)mem2_pool_column_release_idle();
+	return true;
 }
 
 void mp_session_release_remote(void) {
@@ -43,6 +54,10 @@ void mp_session_release_remote(void) {
 	mp_session_note_request_dropped(status.reason[0] ? status.reason
 		: g_remote.impl ? "Disconnected" : "Could not initialize remote provider");
 	server_remote_destroy(&g_remote);
+	/* Every caller restarts the local server next (main.c). REQUEST only: the
+	 * remote client world is still resident here, so the boot slabs are
+	 * re-carved at the first local column take (mem2.h). */
+	mem2_pool_column_restore_boot();
 }
 
 void mp_session_destroy(void) {

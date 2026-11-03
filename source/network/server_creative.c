@@ -37,7 +37,13 @@ static size_t creative_find_empty_slot(struct inventory* inv) {
 
 void server_creative_handle_give(struct server_local* s,
 								 const struct server_rpc* call) {
-	assert(s && call && call->type == SRPC_CREATIVE_GIVE);
+	assert(s);
+	server_creative_handle_give_for(s, &s->player, call);
+}
+
+void server_creative_handle_give_for(struct server_local* s,
+	struct server_player* actor, const struct server_rpc* call) {
+	assert(s && actor && call && call->type == SRPC_CREATIVE_GIVE);
 
 	/* Server-side gate: a survival server ignores the RPC no matter what a
 	 * client claims (same doctrine as the phase-1 damage gate). */
@@ -56,13 +62,13 @@ void server_creative_handle_give(struct server_local* s,
 		return;
 	give.count = it->max_stack;
 
-	size_t slot = creative_find_empty_slot(&s->player.inventory);
+	size_t slot = creative_find_empty_slot(&actor->inventory);
 	if(slot == SIZE_MAX)
 		return; /* inventory full: predictable no-op */
 
-	inventory_set_slot(&s->player.inventory, slot, give);
-	/* Push the authoritative slot to the client (debug.give kit shape). */
-	clin_rpc_send(&(struct client_rpc) {
+	inventory_set_slot(&actor->inventory, slot, give);
+	/* The inventory hook tags guest replies; the host keeps its old route. */
+	server_local_window_reply(&actor->inventory, &(struct client_rpc) {
 		.type = CRPC_INVENTORY_SLOT,
 		.payload.inventory_slot.window = WINDOWC_INVENTORY,
 		.payload.inventory_slot.slot = slot,

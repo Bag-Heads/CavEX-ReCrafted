@@ -22,6 +22,8 @@ import zipfile
 from pathlib import Path, PurePosixPath
 from typing import Any, Callable, Iterator, Optional
 
+from . import nether_scene
+
 
 SCHEMA_VERSION = 1
 MANIFEST_NAME = ".cavewii-pack.json"
@@ -771,6 +773,17 @@ def _prepare(source, destination, look="crisp", progress=None, *, resources_path
             record.update({"source": logical, "category": "texture", "status": "converted"})
             written.append(record)
             report_files.append(record)
+        # Optional pack text belongs to the player's jar, with no decoding or
+        # newline conversion. Including it in the manifest makes install copy it.
+        for entry in scan["files"]:
+            logical = entry.get("logical_path", entry["path"])
+            if not audio_only and logical.casefold() == "title/splashes.txt":
+                data = _read_source(source_path, scan["source"]["kind"],
+                                    entry["path"], lim["file_bytes"])
+                record = _write_file(staging, "title/splashes.txt", data)
+                record.update({"source": logical, "category": "text", "status": "copied"})
+                written.append(record)
+                report_files.append(record)
         # Images the game never reads (title screens, achievement art, mod
         # sprites...) are listed per file but no longer raise a warning: the
         # real b1.7.3.jar always produced "22 unsupported layouts", which read
@@ -835,6 +848,29 @@ def _prepare(source, destination, look="crisp", progress=None, *, resources_path
                 written.append(row)
                 report_files.append(row)
         # An audio-only pack keeps the installed texture selection (no texture rows).
+        if "terrain.png" in converted_by_path:
+            scene_rows = []
+            _emit(progress, "convert", 0, 1, "Nether loading scene")
+            try:
+                scene = nether_scene.compose((staging / "terrain.png").read_bytes(),
+                                             (staging / "anim.png").read_bytes())
+                for rel, data in zip(nether_scene.FILES, scene):
+                    row = _write_file(staging, rel, data)
+                    row.update({"category": "texture" if rel.endswith(".png") else "text",
+                                "status": "composited", "source": "terrain.png + anim.png"})
+                    scene_rows.append(row)
+            except Exception as exc:
+                # This optional illustration must never make a usable pack fail.
+                # Remove both outputs, including a partially written file, before
+                # the normal pack transaction creates its manifest.
+                for rel in nether_scene.FILES:
+                    (staging / rel).unlink(missing_ok=True)
+                result["warnings"].append("Nether loading scene skipped: {0}. "
+                                          "All other assets will still be imported; "
+                                          "the game can use tiled netherrack.".format(exc))
+            else:
+                written.extend(scene_rows)
+                report_files.extend(scene_rows)
         if not audio_only and (beta_base / "pointer.png").is_file():
             row = _write_file(staging, "pointer.png", (beta_base / "pointer.png").read_bytes())
             row.update({"category": "texture", "status": "beta_base", "source": "beta-base/pointer.png"})
@@ -944,7 +980,8 @@ def _verify_prepared(prepared: Path, manifest: dict):
 
 
 def _boot_path(sd_root: Path) -> Optional[Path]:
-    for relative in ("apps/CavEX/boot.dol", "cavewii_v2.exe", "cavewii_v2"):
+    for relative in ("apps/CavEX/boot.dol", "CavEX-ReCrafted.exe", "CavEX-ReCrafted",
+                     "cavewii_v2.exe", "cavewii_v2"):
         candidate = sd_root / relative
         if candidate.is_file() and not candidate.is_symlink():
             return candidate
@@ -964,7 +1001,7 @@ def validate_destination(destination, select=True) -> Path:
                         "Put CavEX on the SD card first: copy the release zip's files to the "
                         "card's top folder (so sd:/apps/CavEX/boot.dol exists), then choose "
                         "that SD card here. For the PC game, choose the folder with "
-                        "cavewii_v2.exe and config.json.")
+                        "CavEX-ReCrafted.exe and config.json.")
     if select:
         with boot.open("rb") as game:
             audio_capable = b"paths.audiopack\x00" in game.read(32 * 1024 * 1024)

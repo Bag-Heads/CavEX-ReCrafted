@@ -14,7 +14,7 @@
 
 	The exact RGBA8 -> GX tile conversions the Wii texture backend
 	(wii/texture.c) has always used -- RGBA8 (AR/GB tile pairs), RGB5A3,
-	RGB565, I8, IA4, and the 4-LOD RGB5A3 atlas mip chain -- moved here
+	RGB565, I8, IA4, and the RGB5A3 atlas mip chain -- moved here
 	unchanged in arithmetic so that the PC host tool (tools/audio_cache_tool)
 	can produce the Wii's texture bytes for the pack cache. Output is written
 	as BYTES in the GX's big-endian order, so the buffer is identical on the
@@ -37,9 +37,9 @@
 #include "texture.h" /* enum tex_format, struct tex_atlas_grid */
 
 /* Bumped whenever any encoder's output for the same input could change. */
-#define TEX_GX_CONV_VERSION 1u
-/* The atlas mip chain depth (LODs 0..3). */
-#define TEX_GX_ATLAS_LODS 4
+#define TEX_GX_CONV_VERSION 2u
+/* Shared PC/GX isolation cap (LODs 0..1). */
+#define TEX_GX_ATLAS_LODS TEX_ATLAS_MIP_LEVELS
 
 /* Build the quantization tables (idempotent, cheap). */
 void tex_gx_luts_init(void);
@@ -54,12 +54,14 @@ bool tex_gx_encode(enum tex_format type, const uint8_t* rgba, size_t width,
 
 /* One RGB5A3 texel (the tex_gfx_subimage path). */
 uint16_t tex_gx_rgb5a3(const uint8_t* rgba);
+/* Inverse of tex_gx_rgb5a3: one RGB5A3 texel to 8-bit RGBA. */
+void tex_gx_rgb5a3_decode(uint16_t v, uint8_t* rgba);
 
 /* Total bytes of the RGB5A3 atlas mip chain, or 0 when a level would not be
-   4-aligned (the backend then falls back to a single LOD). */
+   4-aligned or the grid cannot isolate linear samples (nearest fallback). */
 size_t tex_gx_atlas_bytes(size_t width, size_t height);
 
-/* Encode the chain LOD 0..3 back to back into `out` (tex_gx_atlas_bytes).
+/* Encode the chain LOD 0..1 back to back into `out` (tex_gx_atlas_bytes).
    False on a temporary allocation failure (the caller falls back). */
 bool tex_gx_encode_atlas(const uint8_t* rgba, size_t width, size_t height,
 						 const struct tex_atlas_grid* grid, uint8_t* out);

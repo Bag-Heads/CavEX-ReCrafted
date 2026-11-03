@@ -6,13 +6,13 @@ param(
     [string]$User = 'WalkCap',
     [int]$InstallRadius = 4
 )
-# IN-007 capture: PC client (build-verify/cavewii_v2.exe, headless, pull-mode
+# IN-007 capture: PC client (build-verify/CavEX-ReCrafted.exe, headless, pull-mode
 # telemetry on stdout) runs the real mp_lan_walk_10m profile against the local
 # Project Poseidon b1.7.3 server through capture_tee.py, which records every
 # inbound byte. The server must already be up (tmp/poseidon/poseidon_host.ps1).
 $ErrorActionPreference = 'Stop'
 $repo = (Resolve-Path (Join-Path $PSScriptRoot '../../..')).Path
-$exe = Join-Path $repo 'build-verify/cavewii_v2.exe'
+$exe = Join-Path $repo 'build-verify/CavEX-ReCrafted.exe'
 New-Item -ItemType Directory -Path $RunDir -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $repo 'config.json') -Destination (Join-Path $RunDir 'config.json') -Force
 foreach($name in @('assets','resources')) {

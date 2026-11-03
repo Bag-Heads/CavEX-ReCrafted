@@ -51,6 +51,14 @@ void container_compact_owner_glyphs(unsigned player,
  * layout), otherwise ink on the paper panel (split). Returns drawn width. */
 int container_page_header_width(bool light);
 int container_page_header(int x, int y, bool crafting, bool light);
+/* ci-1101/07: the header's y inside its 480 (full) / 240 (split) pane. Full
+ * screen it sits in the TV-safe band -- top >= 24, the same margin the
+ * bottom hint row keeps (GUTIL_HINT_BOTTOM_FULL); B3 had moved it to 10 and
+ * the real Wii lost the top half of the glyphs to overscan. The header is
+ * CONTAINER_PAGE_HEADER_H tall (16 px glyphs + the 2 px underline at y+18);
+ * the split ink plate starts 3 px above y. */
+#define CONTAINER_PAGE_HEADER_H 20
+int container_page_header_y(bool full);
 /* Kept for the compact notice contract: the notice reservation starts at
  * this + 24 + 8, i.e. 8 px after the split page header's right edge. The
  * T12/T13 header has no Previous/Next glyphs any more. */

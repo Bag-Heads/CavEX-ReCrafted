@@ -23,6 +23,7 @@
 #include "../graphics/render_block.h" // direct include (was transitive via blocks.h pre-split)
 #include "../graphics/render_item.h" // direct include (was transitive via blocks.h pre-split)
 #include "../network/client_interface.h"
+#include "../network/inventory_chest_shared.h"
 #include "../network/inventory_logic.h"
 #include "../network/server_local.h"
 #include "../network/server_local_state.h" // full server state (split from server_local.h)
@@ -197,13 +198,17 @@ static void onRightClick(struct server_local* s, struct server_player* actor, st
 		bx, by, bz, WINDOWC_IRON_CHEST, WINDOW_TYPE_CHEST);
 }
 
-/* Does a live window own this world's chest half at (x,y,z)? Shared chest
- * views (either actor) answer first; otherwise any present body's window
- * bound to the removal world (C2 tiles, row #12). Removals run in world
- * slot 0 (block callbacks carry no world). */
-static bool live_window_owns_chest(struct server_local* s, w_coord_t x,
-								   w_coord_t y, w_coord_t z) {
-	if(server_local_has_chest_view(s, x, y, z)) return true;
+/* The live window that owns the removal world's chest half at (x,y,z), or
+ * NULL. Shared chest views (either actor) of block_world answer first;
+ * otherwise any present body's window bound to the removal world (C2 tiles,
+ * row #12). ci-1101/25: the view lookup is world-scoped -- the legacy one
+ * searched worlds[0] only, so a Nether break matched the Overworld chest at
+ * the same coordinates. */
+static struct inventory* live_window_owns_chest(struct server_local* s,
+												w_coord_t x, w_coord_t y,
+												w_coord_t z) {
+	struct inventory* view = inventory_chest_view_at_w(s, block_world(s), x, y, z);
+	if(view) return view;
 	for(unsigned i = 0; i < 2; i++) {
 		struct server_player* body = server_local_damage_candidate(s, i);
 		struct inventory* inv = body ? body->active_inventory : NULL;
@@ -215,15 +220,15 @@ static bool live_window_owns_chest(struct server_local* s, w_coord_t x,
 		if(inv->logic == &inventory_logic_chest
 		   && !(inv->orphaned_chest_halves & 1)
 		   && inv->x == x && inv->y == y && inv->z == z)
-			return true;
+			return inv;
 		if(inv->logic == &inventory_logic_double_chest
 		   && ((!(inv->orphaned_chest_halves & 1) && inv->x == x && inv->y == y
 				&& inv->z == z)
 			   || (!(inv->orphaned_chest_halves & 2) && inv->x2 == x
 				   && inv->y2 == y && inv->z2 == z)))
-			return true;
+			return inv;
 	}
-	return false;
+	return NULL;
 }
 
 static bool onItemPlace(struct server_local* s, struct server_player* actor, struct item_data* it,
@@ -360,20 +365,31 @@ static size_t getDroppedItem(struct block_info* this, struct item_data* it,
 }
 
 static void onBreak(struct server_local* s, struct block_info* this) {
-	bool window_owns_contents
+	struct inventory* owner
 		= live_window_owns_chest(s, this->x, this->y, this->z);
 	struct te_store st = server_world_tile_store(block_world(s)); /* A1b */
 	for(int i = te_store_find(&st, TE_KIND_CHEST, this->x, this->y, this->z);
 		i >= 0; i = -1) {
-		if(window_owns_contents) {
+		/* ci-1101/25 R5: ONE owner per item. A window the spill finds owns
+		 * the contents even if the spill fails (it is marked dead and its
+		 * close retries the orphan batch -- e.g. the second half of an open
+		 * double chest whose first half already invalidated it), so the row
+		 * is never dropped as well. */
+		bool window_found = false;
+		if(owner
+		   && (server_local_spill_active_container_found(
+				   s, this->x, this->y, this->z, &window_found)
+			   || window_found)) {
 			// The window is authoritative. Spill only this half now (Beta
 			// onBlockRemoval), leaving the player-owned cursor alone. On OOM the
-			// helper leaves every slot intact and close retries the orphan batch.
-			(void)server_local_spill_active_container(
-				s, this->x, this->y, this->z);
+			// helper marks the window dead but leaves every slot intact, and
+			// close retries the orphan batch.
 			te_store_free_row(&st, TE_KIND_CHEST, i);
 			memset(s->chest_items[i], 0, sizeof(s->chest_items[i]));
 		} else {
+			// No window owns it, or the spill found none and never marked the
+			// window dead (ci-1101/25: wiping the row then lost the items):
+			// the stored row is the contents.
 			if(!server_local_spawn_destroyed_container_items(
 				   s, this->x, this->y, this->z, s->chest_items[i],
 				   CHEST_SIZE_STORAGE))

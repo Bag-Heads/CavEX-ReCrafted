@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "release_version": "0.1.0",
+  "release_version": "0.1.1",
   "map_revision": "1.4.0",
   "limits": {
     "max_encoded_bytes": 33554432,

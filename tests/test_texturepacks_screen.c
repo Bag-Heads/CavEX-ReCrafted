@@ -203,11 +203,15 @@ static struct {
 	enum backdrop_bake_state poll;
 	enum backdrop_bake_error error;
 	int publish_result;
+	int scenes_remaining;
 	bool uploaded, retired;
+	bool defer_second;
 	int sounds;
 	uint8_t px[4];
 } fj;
-static int fj_state(void) { return fj.state; }
+static int fj_state(void) {
+	return fj.defer_second && fj.publishes == 1 ? 2 : fj.state;
+}
 static bool fj_start(void) { fj.starts++; fj.poll = BACKDROP_BAKE_TERRAIN; return true; }
 static enum backdrop_bake_state fj_poll(void) { return fj.poll; }
 static enum backdrop_bake_error fj_error(void) { return fj.error; }
@@ -217,7 +221,7 @@ static void fj_free(uint8_t* p) { assert(p == fj.px); fj.frees++; }
 static int fj_publish(const uint8_t* p) {
 	assert(p == fj.px);
 	fj.publishes++;
-	if(fj.publish_result == 0) fj.state = 2;
+	if(fj.publish_result == 0) fj.state = --fj.scenes_remaining > 0 ? 3 : 2;
 	return fj.publish_result;
 }
 static const char* fj_reason(int r) { return r ? "SD card is locked or full." : "ok"; }
@@ -235,6 +239,7 @@ static const struct backdrop_job_hooks fj_hooks = {
 static void fj_reset(int state) {
 	memset(&fj, 0, sizeof(fj));
 	fj.state = state;
+	fj.scenes_remaining = 1;
 	fj.uploaded = fj.retired = true;
 	fj.sounds = AUDIO_REGISTRY_READY;
 	screen_texturepacks_test_backdrop_reset();
@@ -289,6 +294,31 @@ static void backdrop_job(void) {
 	assert(screen_texturepacks_backdrop_ready_state() == BACKDROP_JOB_READY);
 	fj_frames(true, 50); /* warm: never bakes again */
 	assert(fj.starts == 1);
+
+ /* Boot exposes only the beach; optional Nether becomes eligible on title. */
+ fj_reset(3); fj.scenes_remaining = 2;
+ fj.defer_second = true;
+ fj_frames(true, 1); assert(fj.starts == 1);
+ fj.poll = BACKDROP_BAKE_DONE; fj_frames(true, 1);
+ assert(screen_texturepacks_test_backdrop_job() == BJ_IDLE);
+ assert(screen_texturepacks_backdrop_ready_state() == BACKDROP_JOB_READY);
+ fj_frames(true, 3); assert(fj.starts == 1);
+ fj.defer_second = false; /* title admitted */
+ fj.retired = false; fj_frames(true, 3); assert(fj.starts == 1);
+ assert(screen_texturepacks_test_backdrop_job() == BJ_QUEUED);
+ fj.retired = true; fj_frames(false, 3); assert(fj.starts == 1);
+ fj_frames(true, 1); assert(fj.starts == 2);
+ /* Even a completed frame is discarded if the player starts/loads first. */
+ fj.poll = BACKDROP_BAKE_DONE; fj_frames(false, 1);
+ assert(fj.publishes == 1 && fj.releases == 2);
+ assert(screen_texturepacks_test_backdrop_job() == BJ_QUEUED);
+ fj_frames(false, 3); assert(fj.starts == 2);
+ fj.retired = false; fj_frames(true, 3); assert(fj.starts == 2);
+ fj.retired = true; fj_frames(true, 1); assert(fj.starts == 3);
+ fj.poll = BACKDROP_BAKE_DONE; fj_frames(true, 1);
+ assert(fj.publishes == 2 && fj.releases == 3);
+ assert(screen_texturepacks_backdrop_ready_state() == BACKDROP_JOB_READY);
+ fj_frames(true, 10); assert(fj.starts == 3); /* cached once per pack */
 
 	/* Author art / verified cache: no bake at all. */
 	fj_reset(1); fj_frames(true, 10); assert(fj.starts == 0);

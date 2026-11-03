@@ -933,6 +933,49 @@ unsigned mem2_pool_selftest_stats(struct mem2_pool_stat* out,
 	return mem2_pool_column_occupancy(out, per_slab, cap, NULL, NULL);
 }
 
+/* ci-1101/59: a remote session handed the column boot slabs back
+ * (mem2_pool_column_release_idle); mem2_pool_column_restore_boot asked for
+ * them again. Served at the next column take, under mem2_lock. */
+static bool s_column_restore_pending;
+
+/* Re-carve the column pool up to its boot slab count. Caller holds mem2_lock
+ * inside an open CARVE_BEGIN window. Each attempt is captured exactly like a
+ * demand carve below (free/largest walk before, success after), so telemetry
+ * shows whether the heap could still spare each slab; the first refusal stops
+ * the loop and the ordinary demand growth takes over. One attempt per
+ * request: the pending flag is cleared whatever the outcome. */
+static unsigned mem2_pool_column_restore_locked(void) {
+	s_column_restore_pending = false;
+	if(s_st_armed)
+		return 0;
+	unsigned carved = 0;
+	while(mem2_pool_slabs(&s_pool_column) < MEM2_POOL_COLUMN_BOOT_SLABS) {
+		const unsigned slabs_before = mem2_pool_slabs(&s_pool_column);
+		struct mem2_pool_ev ev = {.kind = MEM2_POOL_EV_GROW};
+		struct hw_column_pool_grow* g = &ev.grow;
+		size_t free_before = 0, largest_before = 0;
+		g->before_valid
+			= mem2_carve_walk_free_locked(&free_before, &largest_before);
+		g->free_bytes_before = g->before_valid ? (uint32_t)free_before : 0u;
+		g->largest_allocatable_bytes_before = g->before_valid
+			? (uint32_t)mem2_carve_allocatable_of(largest_before) : 0u;
+		g->requested_bytes = (uint32_t)(s_pool_column.lead
+			+ mem2_pool_slab_bytes(&s_pool_column));
+		g->slabs_before = slabs_before;
+		const void* slab = mem2_pool_grow(&s_pool_column);
+		g->success = slab != NULL;
+		g->slabs_after = mem2_pool_slabs(&s_pool_column);
+		if(slab != NULL || slabs_before != s_column_grow_fail_slabs)
+			(void)mem2_pool_evq_push_locked(&s_column_evq, &ev);
+		s_column_grow_fail_slabs = slab ? UINT_MAX : slabs_before;
+		if(!slab)
+			break;
+		mem2_pool_note_slab(&s_pool_column, slab);
+		carved++;
+	}
+	return carved;
+}
+
 static void* mem2_allocate_pooled(size_t size, bool fallback,
 								  enum mem2_pool_id pool_id) {
 	const uint64_t cost0 = pool_id == MEM2_POOL_COLUMN ? gettime() : 0;
@@ -957,6 +1000,8 @@ static void* mem2_allocate_pooled(size_t size, bool fallback,
 	// request falls through to the shared heap and is counted (carve_fail
 	// separates the two, which are different findings).
 	struct mem2_pool* pool = mem2_pool_by_id(pool_id, size);
+	if(pool == &s_pool_column && s_column_restore_pending && mem2_ready)
+		(void)mem2_pool_column_restore_locked();
 	// colcap-1006 (ASTRA-CC-R2 item 5): a COLUMN-pool demand carve is captured
 	// HERE, under this lock, at the allocation instant (a periodic largest-hole
 	// sample can miss it), and published after mem2_unlock below -- no
@@ -1135,6 +1180,70 @@ static void mem2_pool_column_try_shrink_locked(void) {
 	(void)mem2_pool_evq_push_locked(&s_column_evq, &ev);
 	/* The slab count changed: a later carve failure at any count is news. */
 	s_column_grow_fail_slabs = UINT_MAX;
+}
+
+/* ci-1101/59 (mem2.h REMOTE-SESSION HAND-BACK). Same per-slab steps as
+ * mem2_pool_column_try_shrink_locked -- heap free first, detach only once
+ * libogc accepted it, CARVE_FREE note, shrink event -- with keep = 0 and no
+ * headroom, repeated until no wholly empty slab is left. */
+unsigned mem2_pool_column_release_idle(void) {
+	if(!mem2_ready)
+		return 0;
+	mem2_lock();
+	if(mem2_diag_bad() || s_st_armed) {
+		mem2_unlock();
+		return 0;
+	}
+	unsigned released = 0;
+	s_column_restore_pending = false; /* a new session: nothing to restore yet */
+	carve_note(mem2_carve_observe, CARVE_BEGIN, 0, 0, 0, 0);
+	for(;;) {
+		const int s = mem2_pool_shrink_candidate(&s_pool_column, 0u, 0u);
+		if(s < 0)
+			break;
+		void* block = (void*)mem2_pool_slab_block(&s_pool_column, (unsigned)s);
+		if(!block || !mem2_diag_free_checked_locked(block, MEM2_DIAG_POOL)) {
+			s_column_shrink_fail++;
+			break;
+		}
+		const unsigned before = mem2_pool_slabs(&s_pool_column);
+		(void)mem2_pool_shrink(&s_pool_column, (unsigned)s, 0u);
+		carve_note(mem2_carve_observe, CARVE_FREE, block, 0, 0, 0);
+		struct mem2_pool_ev ev = {.kind = MEM2_POOL_EV_SHRINK};
+		ev.shrink.slab = (uint32_t)s;
+		ev.shrink.released_bytes
+			= (uint32_t)(s_pool_column.lead + mem2_pool_slab_bytes(&s_pool_column));
+		ev.shrink.slabs_before = before;
+		ev.shrink.slabs_after = mem2_pool_slabs(&s_pool_column);
+		(void)mem2_pool_evq_push_locked(&s_column_evq, &ev);
+		released++;
+	}
+	if(released)
+		s_column_grow_fail_slabs = UINT_MAX;
+	carve_note(mem2_carve_observe, CARVE_END, 0, 0, 0, 0);
+	mem2_unlock();
+	return released;
+}
+
+/* ci-1101/59 review fix: no carve here. At session teardown the remote client
+ * world (voxels + display lists awaiting GPU retirement) is still resident, so
+ * a 2.6 MB slab carved now would land in a fragmented heap and pin it. Mark
+ * the restore pending; mem2_allocate_pooled re-carves the boot slabs at the
+ * FIRST column take afterwards (the next local world's first column), before
+ * that take is served. */
+void mem2_pool_column_restore_boot(void) {
+	if(!mem2_ready)
+		return;
+	mem2_lock();
+	if(mem2_pool_slabs(&s_pool_column) < MEM2_POOL_COLUMN_BOOT_SLABS)
+		s_column_restore_pending = true;
+	mem2_unlock();
+}
+bool mem2_pool_column_restore_pending(void) {
+	mem2_lock();
+	const bool pending = s_column_restore_pending;
+	mem2_unlock();
+	return pending;
 }
 
 void mem2_free(void* ptr) {
@@ -1397,8 +1506,14 @@ static uint32_t s_emul_takes, s_emul_grows, s_emul_shrinks, s_emul_overflow;
 static uint32_t s_emul_shrink_hw_low; /* fewest slabs after a hand-back */
 static void emul_lock(void) { while(atomic_flag_test_and_set(&s_emul_lock)) {} }
 static void emul_unlock(void) { atomic_flag_clear(&s_emul_lock); }
+static bool s_emul_restore_pending; /* ci-1101/59 */
+static unsigned s_emul_carve_refuse; /* ci-1101/59 test seam: a fragmented heap */
 static void* emul_carve(size_t bytes, void* ctx) {
 	(void)ctx;
+	if(s_emul_carve_refuse) { /* called under emul_lock */
+		s_emul_carve_refuse--;
+		return NULL;
+	}
 	/* Match the Wii carve's 32-byte alignment. Host malloc guarantees only
 	 * fundamental alignment (often 16 bytes), including for large slabs. Keep
 	 * the raw allocation immediately before the aligned block for hand-back. */
@@ -1529,6 +1644,62 @@ unsigned mem2_pool_selftest_stats(struct mem2_pool_stat* out,
 	return n;
 }
 
+/* ci-1101/59 on the PC emulation: the Wii rules (mem2.h REMOTE-SESSION
+ * HAND-BACK) against the host-side pool; plain no-ops when it is off. */
+unsigned mem2_pool_column_release_idle(void) {
+	if(emul_policy() <= 0)
+		return 0;
+	emul_lock();
+	unsigned released = 0;
+	if(!s_emul_st_armed)
+		s_emul_restore_pending = false;
+	while(!s_emul_st_armed) {
+		const int s = mem2_pool_shrink_candidate(&s_emul_pool, 0u, 0u);
+		if(s < 0)
+			break;
+		void* block = mem2_pool_shrink(&s_emul_pool, (unsigned)s, 0u);
+		if(!block)
+			break;
+		free(((void**)block)[-1]);
+		s_emul_shrinks++;
+		released++;
+	}
+	if(mem2_pool_slabs(&s_emul_pool) < s_emul_shrink_hw_low)
+		s_emul_shrink_hw_low = mem2_pool_slabs(&s_emul_pool);
+	emul_unlock();
+	return released;
+}
+void mem2_pool_column_restore_boot(void) {
+	if(emul_policy() <= 0)
+		return;
+	emul_lock();
+	if(mem2_pool_slabs(&s_emul_pool) < MEM2_POOL_COLUMN_BOOT_SLABS)
+		s_emul_restore_pending = true;
+	emul_unlock();
+}
+bool mem2_pool_column_restore_pending(void) {
+	if(emul_policy() <= 0)
+		return false;
+	emul_lock();
+	const bool pending = s_emul_restore_pending;
+	emul_unlock();
+	return pending;
+}
+/* Emulation lock held. Same contract as the Wii restore_locked. */
+static void emul_restore_locked(void) {
+	s_emul_restore_pending = false;
+	if(s_emul_st_armed)
+		return;
+	while(mem2_pool_slabs(&s_emul_pool) < MEM2_POOL_COLUMN_BOOT_SLABS
+		  && mem2_pool_grow(&s_emul_pool))
+		s_emul_grows++;
+}
+void mem2_test_column_carve_refuse(unsigned count) {
+	emul_lock();
+	s_emul_carve_refuse = count;
+	emul_unlock();
+}
+
 void* mem2_alloc_pooled(size_t size, enum mem2_pool_id pool) {
 	const int policy = pool == MEM2_POOL_COLUMN && size == MEM2_POOL_COLUMN_OBJECT
 		? emul_policy() : 0;
@@ -1539,6 +1710,8 @@ void* mem2_alloc_pooled(size_t size, enum mem2_pool_id pool) {
 											   : policy == 2;
 	void* (*take)(struct mem2_pool*) = lowest ? mem2_pool_take_lowest
 											  : mem2_pool_take;
+	if(s_emul_restore_pending)
+		emul_restore_locked();
 	void* p = take(&s_emul_pool);
 	if(!p && mem2_pool_grow(&s_emul_pool)) {
 		s_emul_grows++;

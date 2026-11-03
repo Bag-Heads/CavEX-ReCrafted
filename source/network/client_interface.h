@@ -1531,6 +1531,9 @@ void clin_test_fail_pending_alloc(bool fail);
 /* Admission limit of the ring (1..CLIN_RPC_PENDING_CAPACITY; 0 restores the
  * shipping capacity): 128 replays the pre-R20 window for parity proofs. */
 void clin_test_set_pending_capacity(unsigned cap);
+/* ci-1101/61: the exhaustion (dead-consumer) deadline in ms; 0 restores the
+ * shipping RPC_EXHAUSTION_TIMEOUT_MS. Lets a fail-closed proof run fast. */
+void clin_test_set_rpc_exhaustion_timeout_ms(uint32_t ms);
 /* G9 R21: packing on (default) / off -- the unpacked arm of equivalence
  * proofs. Only with the ring empty. */
 void clin_test_set_block_pack(bool enabled);

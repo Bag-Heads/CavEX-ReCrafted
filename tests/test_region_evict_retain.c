@@ -209,8 +209,8 @@ static void scenario_c_reload_consumes(string_t level) {
 	struct server_chunk* back = load(&w, 5, 2);
 	assert(ids_match(back, 41)
 		   && "a reload during the pending window sees the NEWEST bytes");
-	assert(back->modified
-		   && "the resident chunk now carries the retry responsibility");
+	assert(!back->modified && back->save_pending
+		   && "the resident chunk owns the pending publication without rewriting it");
 	assert(server_world_retiring_active(&w) == 0
 		   && "the retained entry was consumed by the reload");
 
@@ -219,7 +219,7 @@ static void scenario_c_reload_consumes(string_t level) {
 	server_world_destroy(&w);
 	cold_check(level, 5, 2, 41, "reload path kept the new state");
 	printf("PASS C: reloading a retiring chunk consumes its entry -- newest "
-		   "bytes, dirty, ring empty\n");
+		   "bytes, pending job, ring empty\n");
 }
 
 static void scenario_d_teardown_drains(string_t level) {
@@ -264,7 +264,7 @@ static void scenario_e_first_record_failed(string_t level) {
 	struct server_chunk* back = load(&w, 20, 6);
 	assert(ids_match(back, 60)
 		   && "a failed first-ever record is still the newest state on reload");
-	assert(back->modified);
+	assert(!back->modified && back->save_pending);
 	assert(server_world_retiring_active(&w) == 0);
 	assert(server_world_save_batch_end(&w) || true);
 	assert(server_world_sync_regions(&w) || server_world_sync_regions(&w));
@@ -286,7 +286,7 @@ static void scenario_f_save_then_evict_same_batch(string_t level) {
 	server_world_save_batch_begin(&w);
 	assert(server_world_save_chunk_obj(&w, false, 21, 6, sc)); /* delta */
 	sc = load(&w, 21, 6);
-	sc->modified = true; /* same bytes, evict now */
+	assert(!sc->modified && sc->save_pending); /* same pending bytes, evict now */
 	assert(server_world_save_chunk_obj(&w, true, 21, 6, sc));
 	assert(server_world_retiring_active(&w) == 1
 		   && "an evicting write in a batch always retains real bytes");

@@ -2253,6 +2253,33 @@ static void test_heartbeat_light_queue_v2_serialization(void) {
 		   "22 positional unsaturated uint32\n");
 }
 
+/* ci-1101/37: the drain long-wait attribution. Emitted as
+ * "lqd_w":[wait_us,mutex,holder_id,holder_tag,stripe,"name"] ONLY when
+ * lqd_wait_present, so every quiet heartbeat keeps its exact bytes (and every
+ * older tape keeps parsing). The name is JSON-escaped like every other string. */
+static void test_heartbeat_lqd_wait_attribution(void) {
+	struct hw_telemetry_heartbeat hb = {0};
+	char buf[HW_TELEMETRY_HEARTBEAT_LINE_SIZE];
+	hw_telemetry_format_heartbeat(buf, sizeof buf, "r", "perf_stress_5m", &hb);
+	assert(!strstr(buf, "lqd_w")); /* quiet window: no key at all */
+	hb.lqd_wait_present = true;
+	hb.lqd_wait_us = 71206;
+	hb.lqd_wait_mutex = 0x1f4a3c08u;
+	hb.lqd_wait_holder_id = 0xdeadbeefu;
+	hb.lqd_wait_holder_tag = 3; /* MESHER */
+	hb.lqd_wait_stripe = 1;
+	snprintf(hb.lqd_wait_name, sizeof hb.lqd_wait_name, "column_backing");
+	hw_telemetry_format_heartbeat(buf, sizeof buf, "r", "perf_stress_5m", &hb);
+	assert(strstr(buf, "\"lqd_w\":[71206,524958728,3735928559,3,1,"
+		"\"column_backing\"]"));
+	/* An empty name (unregistered stripe) still emits the key with "". */
+	hb.lqd_wait_stripe = 0;
+	hb.lqd_wait_name[0] = '\0';
+	hw_telemetry_format_heartbeat(buf, sizeof buf, "r", "perf_stress_5m", &hb);
+	assert(strstr(buf, "\"lqd_w\":[71206,524958728,3735928559,3,0,\"\"]"));
+	printf("PASS heartbeat lqd_w: drain long-wait attribution, present-only\n");
+}
+
 static void test_heartbeat_production_buffer_fits_full_payload(void) {
 	struct hw_telemetry_heartbeat hb = {
 		.build_id = "abcdef0+_12.31",
@@ -7164,6 +7191,7 @@ int main(int argc, char** argv) {
 	test_telemetry_init_rejects_out_of_range_ports();
 	test_heartbeat_json_escapes_strings();
 	test_heartbeat_light_queue_v2_serialization();
+	test_heartbeat_lqd_wait_attribution();
 	test_heartbeat_production_buffer_fits_full_payload();
 	test_overlay_spill_record();
 	test_heartbeat_reports_truncation_for_small_buffer();

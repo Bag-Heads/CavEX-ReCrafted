@@ -154,6 +154,13 @@ static bool video_commit(void) {
 static void video_leave(void) {
 	/* Beta returns to the parent GuiOptions and saves on Done
 	 * [740c583 GuiVideoSettings.actionPerformed]. */
+	/* Second Back after a failed save: discard the draft and leave. The
+	 * failed video_commit already restored the old value live and in the
+	 * tree; a later toggle clears save_failed and re-arms the save. */
+	if(save_failed) {
+		screen_set(&screen_options);
+		return;
+	}
 	if(video_commit())
 		screen_set(&screen_options);
 	else
@@ -174,6 +181,7 @@ static void video_toggle_bobbing(void) {
 	 * [740c583 GameSettings.setOptionValue:131]. */
 	view_bobbing_value = !view_bobbing_value;
 	gstate.config.view_bobbing = view_bobbing_value;
+	save_failed = false;
 	video_refresh_labels();
 }
 
@@ -219,6 +227,7 @@ static void screen_video_settings_update(struct screen* s, float dt) {
 	   && (input_pressed(IB_GUI_LEFT) || input_pressed(IB_GUI_RIGHT))) {
 		view_bobbing_value = right;
 		gstate.config.view_bobbing = view_bobbing_value;
+		save_failed = false;
 		video_refresh_labels();
 		audio_play_ui(SOUND_RANDOM_CLICK, 1.0F, 1.0F);
 	}
@@ -253,7 +262,9 @@ static void screen_video_settings_render2D(struct screen* s, int width, int heig
 	if(view_bobbing_value && selected != VC_VIEW_BOBBING)
 		fep_outline(video_target_rect(VC_VIEW_BOBBING), opt_px(2), 48, 48, 48, 255);
 	opt_text(60, 221, 16, 500, "Moves the view while walking.", true);
-	if(save_failed) opt_text(60, 304, 16, 520, "Could not save options", false);
+	if(save_failed)
+		opt_text(60, 304, 16, 520,
+			"Could not save. Press Back again to leave without saving", false);
 	struct fep_rect back = opt_footer(true);
 	if(selected == VC_DONE) fep_outline(back, opt_px(3), 255, 255, 255, 255);
 	if(pointer_available) {

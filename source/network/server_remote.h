@@ -714,6 +714,17 @@ struct server_remote_ready_census {
 	int radius_used;
 	int centre_x, centre_z;
 	bool centre_authoritative;
+	/* ci-1101/54 (hw1102b betamc): in-radius, this-epoch, NOT-installed
+	 * entries (ANNOUNCED / RETAINED) that the F4 memory gate is refusing
+	 * right now. They are NOT counted in announced_pending: the gate only
+	 * reopens when a demotion or a 0x32 unload frees the carve, neither of
+	 * which happens while the player sits on the loading screen, so counting
+	 * them held every dense-terrain join until the 30 s backstop
+	 * (mp_ready_pending=14 flat, lw_to_admits=1). They still install in the
+	 * background the moment the gate allows. PROMOTING entries and re-sends
+	 * of installed columns are never held (they are past / outside the cold
+	 * gate). Always 0 where there is no carve (PC). */
+	size_t memory_held;
 };
 bool server_remote_ready_census(struct server_remote* remote, int cx, int cz,
 								int radius,

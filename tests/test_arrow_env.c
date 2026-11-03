@@ -109,6 +109,50 @@ static void test_gravity_drag_order(void) {
 	printf("  arrow drag-then-gravity: vel[1] = -0.03 then -0.0597 (real tick) OK\n");
 }
 
+// 1b. WATER DRAG [decompile 740c583: EntityArrow.onUpdate:200-218]:
+//     the drag factor starts at 0.99 and gravity at 0.03; in water the drag
+//     factor becomes 0.8 (bubbles are spawned); all three velocity components
+//     are scaled by the drag factor, then gravity is subtracted from the
+//     vertical component.
+// Gravity stays 0.03 underwater; only the per-tick velocity multiplier swaps
+// 0.99 -> 0.8. Beta's isInWater is the bbox handleWaterMovement verdict; this
+// engine uses the arrow's own foot-cell probe (the egg precedent,
+// entity_egg.c EntityEgg.onUpdate tail).
+static void test_water_drag(void) {
+	s.player.has_pos = false;
+	s.player.finished_loading = false;
+	// A still-water cell well above the superflat surface, away from mobs.
+	assert(server_world_set_block(&s.worlds[0], 6, 80, 6,
+		(struct block_data) {.type = BLOCK_WATER_STILL}));
+	vec3 pos = {6.5f, 80.5f, 6.5f};
+	// At rest: vel[1] = 0*0.8 - 0.03 = -0.03 (gravity UNCHANGED in water).
+	struct entity* wet = spawn_arrow_now(pos, (vec3) {0.0f, 0.0f, 0.0f}, 998u);
+	wet->tick_server(wet, &s);
+	assert(feq(wet->vel[1], -ARROW_GRAVITY));
+	// Nonzero sink: drag must be 0.8, NOT 0.99. -0.5*0.8 - 0.03 = -0.43.
+	struct entity* sink
+		= spawn_arrow_now(pos, (vec3) {0.4f, -0.5f, 0.0f}, 997u);
+	sink->tick_server(sink, &s);
+	if(!feq(sink->vel[0], 0.4f * ARROW_WATER_DRAG)
+	   || !feq(sink->vel[1], -0.5f * ARROW_WATER_DRAG - ARROW_GRAVITY)) {
+		fprintf(stderr,
+			"RED water_drag: vel=(%.6f,%.6f,%.6f), want (%.6f,%.6f,%.6f) "
+			"[EntityArrow.java:200-218]\n",
+			(double)sink->vel[0], (double)sink->vel[1], (double)sink->vel[2],
+			(double)(0.4f * ARROW_WATER_DRAG),
+			(double)(-0.5f * ARROW_WATER_DRAG - ARROW_GRAVITY),
+			(double)sink->vel[2]);
+		assert(0 && "arrow water drag is not Beta's 0.8");
+	}
+	// Air control: the same velocity in a dry cell keeps the 0.99 drag.
+	// (the cell at y=90 is already air; server_world_set_block refuses id 0.)
+	vec3 dry = {6.5f, 90.5f, 6.5f};
+	struct entity* air = spawn_arrow_now(dry, (vec3) {0.0f, -0.5f, 0.0f}, 996u);
+	air->tick_server(air, &s);
+	assert(feq(air->vel[1], -0.5f * ARROW_AIR_DRAG - ARROW_GRAVITY));
+	printf("  arrow water drag 0.8 / air drag 0.99 OK\n");
+}
+
 // EntityArrow.java:107-125 and Entity.java:222-224: no air age limit; the
 // void reaps on the tick after crossing posY < -64, and a stuck arrow dies at 1200.
 static void test_arrow_reapers(void) {
@@ -1334,6 +1378,7 @@ int main(void) {
 
 	printf("test_arrow_env:\n");
 	test_gravity_drag_order();
+	test_water_drag();
 	test_arrow_reapers();
 	test_removed_stuck_block();
 	test_collision_derived_release_motion();

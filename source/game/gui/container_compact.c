@@ -412,6 +412,9 @@ int container_page_header_width(bool light) {
  return gutil_font_width("Inventory",16)+gap+gutil_font_width("|",16)+gap
   +gutil_font_width("Crafting",16);
 }
+int container_page_header_y(bool full) {
+ return full?24:20;
+}
 int container_page_header(int x,int y,bool crafting,bool light) {
  static const char* names[2]={"Inventory","Crafting"};
  int gap=light?10:6,at=x;
@@ -475,11 +478,15 @@ void container_inventory_render(const struct container_compact* v,struct window_
  int ox=x+(v->width-640)/2,oy=y+(v->height-(full?480:240))/2;
  struct inventory* inv=windowc_get_latest(wc);bool held=inventory_get_picked_item(inv,NULL);
  rect(x,y,v->width,v->height,0,180);
- machine_panel(ox+(full?134:32),oy+(full?30:8),full?372:576,full?332:188); /* B3: 44 -> 30 */
+ /* ci-1101/07: the full panel starts at 46 (B3 had 30) so the header above
+  * it is TV-safe (y 24..44); it ends at 361 so machine_panel's 2 px outer
+  * border (rect y-2 .. y+h+2) stops at 363, the hearts row, without touching
+  * it (Sol R2) -- its top 16 px held nothing (the armour column starts at 63). */
+ machine_panel(ox+(full?134:32),oy+(full?46:8),full?372:576,full?315:188);
  /* T13 approved V1: the page header replaces the in-panel title. Full: centred
   * over the washed world above the panel; split: inside the panel at 44,20. */
- if(full)container_page_header(ox+320-container_page_header_width(true)/2,oy+10,false,true);
- else container_page_header(ox+44,oy+20,false,false);
+ if(full)container_page_header(ox+320-container_page_header_width(true)/2,oy+container_page_header_y(true),false,true);
+ else container_page_header(ox+44,oy+container_page_header_y(false),false,false);
  if(full)inventory_portrait(v,inv,ox+228,oy+63,80,112);
  else inventory_portrait(v,inv,ox+74,oy+46,58,104);
  gfx_bind_texture(&texture_gui_crafting);
@@ -514,7 +521,7 @@ static void machine_render(const struct container_compact* v,struct window_conta
  int x,int y,const struct input_player_frame* prompts) {
  bool full=v->height>=480;int ox=x+(v->width-640)/2,oy=y+(v->height-(full?480:240))/2;
  int px=ox+(full?134:32),py=oy+(full?30:8),ww=full?324:204; /* B3: 44 -> 30 */
- machine_panel(px,py,full?372:576,full?332:188);
+ machine_panel(px,py,full?372:576,full?331:188);
  gutil_text_rgb(px+12,py+8,v->type==WINDOW_TYPE_FURNACE?"Furnace":"Dispenser",16,false,64,64,64);
  struct inventory* inv=windowc_get_latest(wc);bool held=inventory_get_picked_item(inv,NULL);
  for(size_t k=0;k<v->count;k++) {

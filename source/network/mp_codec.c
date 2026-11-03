@@ -858,11 +858,11 @@ static enum mp_decode_result parse_map_header(struct mp_decoder* decoder,
 	chunk->sy = (uint16_t)p[11] + 1u;
 	chunk->sz = (uint16_t)p[12] + 1u;
 	int32_t compressed = read_i32(p + 13);
-	/* Packet51 dimensions are bounded by one Beta chunk column. Validate every
-	 * sum/product before allocating network-controlled lengths. [740c583
-	 * Packet51MapChunk.readPacketData] */
-	if(chunk->sx > 16 || chunk->sy > 128 || chunk->sz > 16 || chunk->y < 0
-	   || (uint32_t)chunk->y + chunk->sy > 128 || compressed <= 0
+	/* PlayerInstance.java:145-153 can advertise y+sy=130; World.getChunkData
+	 * clamps the packed data to 128 inside that padded buffer. Validate every
+	 * sum/product before allocating network-controlled lengths. */
+	if(chunk->sx > 16 || chunk->sy > 130 || chunk->sz > 16 || chunk->y < 0
+	   || (uint32_t)chunk->y + chunk->sy > 130 || compressed <= 0
 	   || (uint32_t)compressed > MP_CHUNK_COMPRESSED_CAP)
 		return decoder_error(decoder);
 	int64_t x_end = (int64_t)chunk->x + chunk->sx - 1;
@@ -871,7 +871,7 @@ static enum mp_decode_result parse_map_header(struct mp_decoder* decoder,
 	   || z_end > INT32_MAX || z_end < INT32_MIN)
 		return decoder_error(decoder);
 	size_t cells = (size_t)chunk->sx * chunk->sy * chunk->sz;
-	if(cells > (size_t)16 * 128 * 16 || cells > SIZE_MAX / 5
+	if(cells > (size_t)16 * 130 * 16 || cells > SIZE_MAX / 5
 	   || (cells & 1u) != 0)
 		return decoder_error(decoder);
 	chunk->inflated_length = cells * 5 / 2;

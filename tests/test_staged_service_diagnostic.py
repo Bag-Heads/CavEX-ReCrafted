@@ -57,7 +57,7 @@ def main():
     helper = (ROOT / 'tools/service_diagnostic_config.ps1').read_text()
     # Mock existing fetch/put tools, retain unrelated card settings, check both mirrors.
     mock = r'''
-$script:card=@{}; $script:puts=0; $script:tamper=$false
+$script:card=@{}; $script:puts=0; $script:tamper=$false; $script:fetchFailure="not_found"
 foreach($path in @('sd:/config.json','sd:/apps/CavEX/config.json')) {
     $script:card[$path]='{"sentinel":42,"debug":{"autopilot":"walk","music_force":"off"}}'
 }
@@ -65,6 +65,11 @@ function powershell {
     $a=@($args); $remote=$a[$a.IndexOf('-RemotePath')+1]
     if(($a -join ' ') -match 'fetch_wii_stage_file') {
         $out=$a[$a.IndexOf('-OutFile')+1]
+        if(-not $script:card.ContainsKey($remote)) {
+            Write-Output ('fetch failed: {"status":"FAIL","reason":"' + $script:fetchFailure + '"}')
+            $global:LASTEXITCODE=1
+            return
+        }
         $value=$script:card[$remote]
         if($script:tamper -and $script:puts -gt 0) { $value=$value.Replace('"service_observer_int": 1','"service_observer_int": 0') }
         [IO.File]::WriteAllText($out,$value)
@@ -95,6 +100,26 @@ if(-not $caught) { throw 'bad readback accepted' }
 'PASS config mirrors, preservation, tamper rejection'
 ''')
     assert 'PASS config' in output, output
+    for reason in ('not_found', 'open_failed', 'auth_failed', 'read_failed'):
+        output = run(helper + mock + "\n$script:fetchFailure='" + reason + "'\n" + r'''
+foreach($remote in @('sd:/config.json','sd:/apps/CavEX/config.json')) {
+    $defaults=$remote -replace 'config.json$', 'config_wii.json'
+    $script:card[$defaults]=$script:card[$remote]
+    $script:card.Remove($remote)
+}
+$caught=$false
+try { Set-StagedServiceDiagnosticConfig -WiiHost localhost -Port 1 -ConnectTimeoutSeconds 1 } catch { $caught=$true }
+if($script:fetchFailure -in @('not_found', 'open_failed')) {
+    if($caught -or $script:puts -ne 2) { throw 'fresh card failed' }
+    foreach($remote in @('sd:/config.json','sd:/apps/CavEX/config.json')) {
+        $cfg=$script:card[$remote] | ConvertFrom-Json
+        Assert-ServiceDiagnosticConfig $cfg
+        if($cfg.sentinel -ne 42) { throw 'defaults lost' }
+    }
+} elseif(-not $caught -or $script:puts -ne 0) { throw 'fetch error hidden' }
+'PASS fresh-card policy'
+''')
+        assert 'PASS fresh-card policy' in output, output
     print('PASS staged ServiceDiagnostic: forwarding, 600s, exposure, config readback, 6-token/511-byte limits')
 
 

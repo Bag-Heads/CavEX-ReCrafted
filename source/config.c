@@ -12,6 +12,15 @@
 #include "util.h"
 #endif
 
+bool config_read_flag(const struct config* c, const char* key, bool fallback) {
+	JSON_Object* object = c ? json_object(c->root) : NULL;
+	if(json_object_dothas_value_of_type(object, key, JSONBoolean))
+		return json_object_dotget_boolean(object, key) == 1;
+	if(json_object_dothas_value_of_type(object, key, JSONNumber))
+		return json_object_dotget_number(object, key) != 0;
+	return fallback;
+}
+
 enum config_profiles_status config_read_profiles(const struct config* c,
 												 char out[2][CONFIG_PROFILE_ID_CAP]) {
 	if(!out)
@@ -140,14 +149,30 @@ static char* config_sibling_path(const char* filename, const char* suffix) {
  * across rotation instead of unlinking it. This is recoverable replacement,
  * not a guarantee against torn FAT metadata or power loss during SD writes.
  * Configuration writes are main-thread only, like the existing callers. */
+/* Every failure exit of config_save_tree names its step, path and errno on
+ * stderr (the game's log on PC and the Wii telemetry/console log), so a
+ * "Could not save" line on screen always has a cause in the log. There is no
+ * project-wide log macro; config.c logs with fprintf like its other paths. */
+#define CONFIG_SAVE_LOG(step, path)                                          \
+	fprintf(stderr, "config_save %s: %s failed on %s: errno %d (%s)\n",      \
+			filename, (step), (path), errno, strerror(errno))
+
 static bool config_save_tree(JSON_Value* root, const char* filename) {
 	char* temporary = config_sibling_path(filename, ".cw-tmp");
 	char* backup = config_sibling_path(filename, ".cw-backup");
-	bool ok = false, rotated = false;
+	bool ok = false, rotated = false, unverified_backup = false;
 	struct stat st;
-	if(!temporary || !backup) goto done;
+	if(!temporary || !backup) {
+		errno = ENOMEM;
+		CONFIG_SAVE_LOG("sibling path alloc", filename);
+		goto done;
+	}
 	if(stat(filename, &st) == 0) {
-		if(!S_ISREG(st.st_mode)) goto done;
+		if(!S_ISREG(st.st_mode)) {
+			errno = EISDIR;
+			CONFIG_SAVE_LOG("main is not a regular file", filename);
+			goto done;
+		}
 		/* If startup recovered the backup beside an invalid main file,
 		 * that backup is still the previous committed copy. Do not rotate
 		 * malformed main bytes over it on the next save attempt. */
@@ -159,32 +184,93 @@ static bool config_save_tree(JSON_Value* root, const char* filename) {
 				JSON_Value* old_value = json_parse_file(backup);
 				bool recoverable = old_value && json_value_get_type(old_value) == JSONObject;
 				json_value_free(old_value);
-				if(!recoverable || remove(filename) != 0
-				   || rename(backup, filename) != 0) goto done;
+				if(!recoverable) {
+					/* R9: json_parse_file also returns NULL on a transient
+					 * read/allocation failure, so "invalid" may be the only
+					 * valid copy. Keep it: the normal path below removes the
+					 * backup only after the new temporary file is written
+					 * and verified, so a failed write leaves it intact. */
+					unverified_backup = true;
+					fprintf(stderr, "config_save %s: main and backup both "
+						"unreadable; saving in-memory settings (backup %s kept "
+						"until the new copy is written)\n", filename, backup);
+				} else {
+					if(remove(filename) != 0) {
+						CONFIG_SAVE_LOG("remove invalid main", filename);
+						goto done;
+					}
+					if(rename(backup, filename) != 0) {
+						CONFIG_SAVE_LOG("restore backup over invalid main", backup);
+						goto done;
+					}
+				}
 			}
-		} else if(errno != ENOENT) goto done;
-	} else if(errno != ENOENT) goto done;
-	else if(stat(backup, &st) == 0) {
+		} else if(errno != ENOENT) {
+			CONFIG_SAVE_LOG("stat backup", backup);
+			goto done;
+		}
+	} else if(errno != ENOENT) {
+		CONFIG_SAVE_LOG("stat main", filename);
+		goto done;
+	} else if(stat(backup, &st) == 0) {
 		/* An earlier promotion and rollback both failed. Restore that old
 		 * copy before allowing a new transaction to replace its backup. */
-		if(!S_ISREG(st.st_mode) || rename(backup, filename) != 0) goto done;
-	} else if(errno != ENOENT) goto done;
+		if(!S_ISREG(st.st_mode)) {
+			errno = EISDIR;
+			CONFIG_SAVE_LOG("backup is not a regular file", backup);
+			goto done;
+		}
+		if(rename(backup, filename) != 0) {
+			CONFIG_SAVE_LOG("restore orphaned backup", backup);
+			goto done;
+		}
+	} else if(errno != ENOENT) {
+		CONFIG_SAVE_LOG("stat backup", backup);
+		goto done;
+	}
 	if(json_serialize_to_file_pretty(root, temporary) != JSONSuccess) {
+		CONFIG_SAVE_LOG("write temporary", temporary);
 		remove(temporary);
 		goto done;
 	}
+	if(unverified_backup) {
+		/* The backup is about to be replaced: prove the new copy reads back
+		 * as a settings object first. */
+		JSON_Value* written = json_parse_file(temporary);
+		bool readable = written && json_value_get_type(written) == JSONObject;
+		json_value_free(written);
+		if(!readable) {
+			errno = EIO;
+			CONFIG_SAVE_LOG("verify temporary", temporary);
+			goto discard;
+		}
+	}
 	if(stat(filename, &st) == 0) {
-		if(remove(backup) != 0 && errno != ENOENT) goto discard;
-		if(rename(filename, backup) != 0) goto discard;
+		if(remove(backup) != 0 && errno != ENOENT) {
+			CONFIG_SAVE_LOG("remove old backup", backup);
+			goto discard;
+		}
+		if(rename(filename, backup) != 0) {
+			CONFIG_SAVE_LOG("rotate main to backup", filename);
+			goto discard;
+		}
 		rotated = true;
-	} else if(errno != ENOENT) goto discard;
+	} else if(errno != ENOENT) {
+		CONFIG_SAVE_LOG("stat main before promote", filename);
+		goto discard;
+	}
 	if(rename(temporary, filename) != 0) {
-		if(rotated) (void)rename(backup, filename);
+		CONFIG_SAVE_LOG("promote temporary", temporary);
+		if(rotated && rename(backup, filename) != 0)
+			CONFIG_SAVE_LOG("roll back backup to main", backup);
 		goto discard;
 	}
 	ok = true;
-	/* If cleanup fails, the main file remains the committed authority. */
-	if(rotated) (void)remove(backup);
+	/* If cleanup fails, the main file remains the committed authority; the
+	 * stale backup is re-checked and reused by the next save (above). */
+	if(rotated && remove(backup) != 0)
+		CONFIG_SAVE_LOG("remove backup after commit (main still committed)",
+						backup);
 	goto done;
 discard:
 	remove(temporary);

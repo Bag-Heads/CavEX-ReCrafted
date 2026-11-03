@@ -538,13 +538,14 @@ bool bi_jar_extract_textures(const char* jar, const char* staging_dir,
 		ctx_fail(ctx, "Can't read the jar: %s.", bi_zip_err_str(err), NULL);
 		return false;
 	}
-	const size_t total = BI_TEXTURE_COUNT + 3; /* + gui_2, anim, pointer */
+	const size_t total = BI_TEXTURE_COUNT + 4; /* + splashes, gui_2, anim, pointer */
 	bi_progress_set(ctx, BI_TEXTURES, 0, (int)total, "Reading textures");
 
 	/* Pass 1: classify. Modern jar refusal comes first (helper order), then
 	 * "is this a client jar", then which entry supplies each texture -- last
 	 * one in archive order wins, like the helper's sequential writes. */
 	long pick[BI_TEXTURE_COUNT];
+	long splash_pick = -1;
 	for(size_t t = 0; t < BI_TEXTURE_COUNT; t++)
 		pick[t] = -1;
 	bool has_class = false;
@@ -554,6 +555,8 @@ bool bi_jar_extract_textures(const char* jar, const char* staging_dir,
 	bi_zip_entry e;
 	for(size_t i = 0; i < bi_zip_count(z); i++) {
 		bi_zip_entry_at(z, i, &e);
+		if(name_ieq(e.name, "title/splashes.txt"))
+			splash_pick = (long)i;
 		for(size_t m = 0; m < sizeof(modern) / sizeof(*modern); m++) {
 			if(name_has_prefix_i(e.name, modern[m])) {
 				bi_zip_close(z);
@@ -594,19 +597,24 @@ bool bi_jar_extract_textures(const char* jar, const char* staging_dir,
 		return false;
 	}
 
-	/* Pass 2: stream each texture to staging and validate it. */
-	for(size_t t = 0; t < BI_TEXTURE_COUNT; t++) {
+	/* Pass 2: stream textures and optional pack text. Only PNGs are decoded. */
+	for(size_t t = 0; t <= BI_TEXTURE_COUNT; t++) {
 		if(bi_cancel_requested(ctx)) {
 			bi_zip_close(z);
 			return false;
 		}
-		bi_zip_entry_at(z, (size_t)pick[t], &e);
+		long selected = t < BI_TEXTURE_COUNT ? pick[t] : splash_pick;
+		if(selected < 0)
+			continue;
+		const char* dest = t < BI_TEXTURE_COUNT ? bi_textures[t].dest
+												  : "title/splashes.txt";
+		bi_zip_entry_at(z, (size_t)selected, &e);
 		char path[BI_PATH_MAX];
-		FILE* f = open_out(staging_dir, bi_textures[t].dest, path, sizeof(path));
+		FILE* f = open_out(staging_dir, dest, path, sizeof(path));
 		if(!f) {
 			bi_zip_close(z);
 			ctx_fail(ctx, "Can't write %s to the SD card.",
-					 bi_textures[t].dest, NULL);
+					 dest, NULL);
 			return false;
 		}
 		setvbuf(f, NULL, _IOFBF, 16384);
@@ -624,8 +632,9 @@ bool bi_jar_extract_textures(const char* jar, const char* staging_dir,
 			return false;
 		}
 		char why[64];
-		if(!png_validate(path, bi_textures[t].w, bi_textures[t].h, why,
-						 sizeof(why))) {
+		if(t < BI_TEXTURE_COUNT
+		   && !png_validate(path, bi_textures[t].w, bi_textures[t].h, why,
+							 sizeof(why))) {
 			bi_zip_close(z);
 			if(strstr(why, " not "))
 				ctx_fail(ctx, "%s %s. Use the PC Pack Helper for HD packs.",
@@ -648,7 +657,7 @@ bool bi_jar_extract_textures(const char* jar, const char* staging_dir,
 				 "CavEX if this repeats.", NULL, NULL);
 		return false;
 	}
-	bi_progress_step(ctx, BI_TEXTURE_COUNT + 1);
+	bi_progress_step(ctx, BI_TEXTURE_COUNT + 2);
 	if(bi_cancel_requested(ctx))
 		return false;
 
@@ -662,7 +671,7 @@ bool bi_jar_extract_textures(const char* jar, const char* staging_dir,
 				 "CavEX if this repeats.", NULL, NULL);
 		return false;
 	}
-	bi_progress_step(ctx, BI_TEXTURE_COUNT + 2);
+	bi_progress_step(ctx, BI_TEXTURE_COUNT + 3);
 
 	char pointer[BI_PATH_MAX];
 	snprintf(pointer, sizeof(pointer), "%s/pointer.png", assets);

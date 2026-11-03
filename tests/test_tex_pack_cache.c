@@ -383,16 +383,16 @@ int main(void) {
 	/* The particle atlas (the terrain atlas's LOD 0 is re-animated in
 	   place by the water FX after the load, so its live mirror is not the
 	   published pre-FX image) and two single-LOD formats. */
-	size_t total = tex_gx_atlas_bytes(texture_particles.width,
-									  texture_particles.height);
+	size_t total = tex_gx_bytes(TEX_FMT_RGBA16, texture_particles.width,
+								texture_particles.height);
 	struct tex_atlas_grid grid;
 	assert(tex_atlas_grid_init(&grid, texture_particles.width,
 							   texture_particles.height));
 	uint8_t* want = malloc(total);
 	assert(gb && want && total
-		   && tex_gx_encode_atlas(texture_particles.data,
-								  texture_particles.width,
-								  texture_particles.height, &grid, want));
+		   && tex_gx_encode(TEX_FMT_RGBA16, texture_particles.data,
+							texture_particles.width, texture_particles.height,
+							want));
 	size_t ib = tex_gx_bytes(TEX_FMT_RGBA16, texture_items.width,
 							 texture_items.height);
 	size_t fb = tex_gx_bytes(TEX_FMT_I8, texture_font.width,
@@ -407,7 +407,7 @@ int main(void) {
 	check(gb[8] == TEX_CACHE_TARGET_WII && contains(gb, gn, want, total)
 			  && contains(gb, gn, wi, ib) && contains(gb, gn, wf, fb),
 		  "T9 the Wii generation carries the exact GX bytes: the particle "
-		  "atlas 4-LOD chain, RGB5A3 items, I8 font");
+		  "default nearest level zero, RGB5A3 items, I8 font");
 	free(want);
 	free(wi);
 	free(wf);
@@ -424,20 +424,30 @@ int main(void) {
 		  "T10 the bundled root caches beside the app, never inside assets/");
 	check(load() && status_is("hit") && state_hash() == hb, "T10 then HITS");
 
-	/* T11 (M1) */
+	/* T11: default and opt-in Wii cache shapes agree with fresh uploads. */
 	size_t ti = tex_cache_test_slot_index(&texture_terrain);
 	assert(ti != SIZE_MAX);
+	check(tex_cache_test_slot_shape_ok(
+			  TEX_CACHE_TARGET_WII, ti, 1, 256, 256,
+			  (uint32_t)tex_gx_bytes(TEX_FMT_RGBA16, 256, 256))
+			  && !tex_cache_test_slot_shape_ok(
+				  TEX_CACHE_TARGET_WII, ti, TEX_GX_ATLAS_LODS, 256, 256,
+				  (uint32_t)tex_gx_atlas_bytes(256, 256)),
+		  "T11 default accepts single level and rejects a stale mip chain");
+	JSON_Object* cfg = json_object(gstate.config_user.root);
+	assert(json_object_dotset_boolean(cfg, "render.mipmaps", 1) == JSONSuccess);
 	check(!tex_cache_test_slot_shape_ok(
 			  TEX_CACHE_TARGET_WII, ti, 1, 256, 256,
-			  (uint32_t)tex_gx_bytes(TEX_FMT_RGBA16, 256, 256)),
-		  "T11 a single-LOD Wii atlas whose chain could exist is rejected");
-	check(tex_cache_test_slot_shape_ok(
-			  TEX_CACHE_TARGET_WII, ti, TEX_GX_ATLAS_LODS, 256, 256,
-			  (uint32_t)tex_gx_atlas_bytes(256, 256))
+			  (uint32_t)tex_gx_bytes(TEX_FMT_RGBA16, 256, 256))
+			  && tex_cache_test_slot_shape_ok(
+				  TEX_CACHE_TARGET_WII, ti, TEX_GX_ATLAS_LODS, 256, 256,
+				  (uint32_t)tex_gx_atlas_bytes(256, 256))
 			  && tex_cache_test_slot_shape_ok(
 				  TEX_CACHE_TARGET_WII, ti, 1, 336, 336,
 				  (uint32_t)tex_gx_bytes(TEX_FMT_RGBA16, 336, 336)),
-		  "T11 the 4-LOD chain and a chain-less size (336) stay accepted");
+		  "T11 opt-in accepts isolated chain/unsafe-grid fallback, rejects OOM "
+		  "fallback");
+	assert(json_object_dotset_boolean(cfg, "render.mipmaps", 0) == JSONSuccess);
 
 	/* T12 (M3) */
 	check(load() && status_is("hit"), "T12 setup: the bundled root HITS");
@@ -483,6 +493,60 @@ int main(void) {
 	assert(remove("assets/item/arrows.png") == 0);
 	check(load() && !texture_arrow.data && state_hash() == no_arrow,
 		  "T14 removed fallback clears the cached arrow image");
+
+	/* NPOT native grids must accept nearest caches and reject old mip records. */
+	assert(json_object_dotset_boolean(cfg, "render.mipmaps", 1) == JSONSuccess);
+	check(tex_cache_test_slot_shape_ok(TEX_CACHE_TARGET_WII, ti, 1, 768, 768,
+			(uint32_t)tex_gx_bytes(TEX_FMT_RGBA16, 768, 768))
+		  && !tex_cache_test_slot_shape_ok(TEX_CACHE_TARGET_WII, ti,
+			TEX_GX_ATLAS_LODS, 768, 768, 768 * 768 * 2 + 384 * 384 * 2)
+		  && !tex_cache_test_slot_shape_ok(TEX_CACHE_TARGET_WII, ti,
+			TEX_GX_ATLAS_LODS, 768, 768, 0),
+		  "NPOT 768 cache accepts nearest and rejects legacy mip chain");
+	assert(json_object_dotset_boolean(cfg, "render.mipmaps", 0) == JSONSuccess);
+
+	/* T15: changing the setting invalidates both cache producers.
+	 * Native particles exercise the chain; T9 covered the 128px fallback. */
+	put_png("assets", "particles.png", 256, 256, 2);
+	assert(json_object_dotset_boolean(cfg, "render.mipmaps", 1) == JSONSuccess);
+	check(load() && status_is("written") && reason_is("content changed"),
+		  "T15 enabling mips invalidates the default cache");
+	uint64_t hm = state_hash();
+	check(load() && status_is("hit") && state_hash() == hm,
+		  "T15 enabled cache hit equals enabled fresh load");
+	GLint min_filter = 0, max_level = 0;
+	glBindTexture(GL_TEXTURE_2D, texture_terrain.id);
+	glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, &min_filter);
+	glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, &max_level);
+	check(min_filter == GL_LINEAR_MIPMAP_LINEAR && max_level == 1,
+		  "T15 real GL restored terrain has isolated mip sampler");
+	tex_cache_tool_targets(1u << TEX_CACHE_TARGET_WII);
+	check(load() && status_is("written"), "T15 bake enabled Wii generation");
+	pack_cache_records(DIR_TEX, TEX_CACHE_SCHEMA, r);
+	pack_cache_order(r, order);
+	gen_file(g, sizeof(g), DIR_TEX, r[order[0]].generation);
+	gb = slurp(g, &gn);
+	total
+		= tex_gx_atlas_bytes(texture_particles.width, texture_particles.height);
+	want = malloc(total);
+	assert(want
+		   && tex_atlas_grid_init(&grid, texture_particles.width,
+								  texture_particles.height));
+	assert(tex_gx_encode_atlas(texture_particles.data, texture_particles.width,
+							   texture_particles.height, &grid, want));
+	check(gb && gb[8] == TEX_CACHE_TARGET_WII && contains(gb, gn, want, total),
+		  "T15 enabled Wii cache contains exact isolated GX chain");
+	free(gb);
+	free(want);
+	put_png("assets", "particles.png", 128, 128, 2);
+	assert(json_object_dotset_boolean(cfg, "render.mipmaps", 0) == JSONSuccess);
+	check(load() && state_hash() == no_arrow,
+		  "T15 disabling restores byte-identical default metadata and pixels");
+	glBindTexture(GL_TEXTURE_2D, texture_terrain.id);
+	glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, &min_filter);
+	glGetTexParameteriv(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, &max_level);
+	check(min_filter == GL_NEAREST && max_level == 0,
+		  "T15 disabling restores real GL nearest level-zero sampler");
 
 	unsigned key_us, read_us, write_us;
 	tex_cache_timings(&key_us, &read_us, &write_us);

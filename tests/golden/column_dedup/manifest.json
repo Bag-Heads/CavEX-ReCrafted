@@ -1,14 +1,14 @@
 {
-  "baseline_head": "d2bb7a89cc6c4c38b629229acd48c6c4c63da04c (ci-1101/12 state and render FAST re-pin)",
-  "platform": "Linux / WSL / GCC 13 / RelWithDebInfo / IPO off / asserts enabled",
+  "baseline_head": "dee9d3edf + accepted ci-1101/39 item10 scheduled-tick fix (ci-1101/47 isolated attribution)",
+  "platform": "Windows / UCRT64 / verify preset / asserts enabled",
   "walk_ticks_per_seed": 2000,
   "server_ticks_per_seed_including_setup": 2004,
   "capture_commands": [
-    "./build-bisect/test_column_dedup_state_equiv --capture /mnt/c/tmp/cavex-jobs/ci-1101/12/head",
-    "./build-bisect/test_column_dedup_render_equiv --capture /mnt/c/tmp/cavex-jobs/ci-1101/12/head"
+    "./build-verify/test_column_dedup_state_equiv.exe --capture C:/tmp/cavex-jobs/ci-1101/47/main",
+    "./build-verify/test_column_dedup_render_equiv.exe --capture C:/tmp/cavex-jobs/ci-1101/47/main"
   ],
   "capture_summary": {
-    "state": "column-observer ticks=2004 client_boundaries=66015 rows=858992 mesh_bytes=0 status=PASS;column-observer ticks=2004 client_boundaries=54358 rows=859171 mesh_bytes=0 status=PASS;",
+    "state": "column-observer ticks=2004 client_boundaries=66033 rows=858992 mesh_bytes=0 status=PASS;column-observer ticks=2004 client_boundaries=54362 rows=859171 mesh_bytes=0 status=PASS;",
     "render": "column-observer ticks=2004 client_boundaries=0 rows=0 mesh_bytes=24859304 status=PASS;column-observer ticks=2004 client_boundaries=0 rows=0 mesh_bytes=27661112 status=PASS;"
   },
   "previous_baseline": {
@@ -61,31 +61,31 @@
   "files": [
     {
       "file": "ms2_12345_client.gz",
-      "compressed_bytes": 500986,
-      "sha256": "13caf710ca5f697f50d059613f19029c5f79607855d2833911ffeaaded2a7bd9",
-      "decoded_bytes": 2376540,
-      "decoded_sha256": "33e93fe52bf988a134e39e31713ed285aed7e5a4873bb364688e40ef6fc5f1b1"
+      "compressed_bytes": 500579,
+      "sha256": "65997e7f227d046ebce80b94664887cadd83a8350525e0bcd647694cb2bdb59e",
+      "decoded_bytes": 2377188,
+      "decoded_sha256": "32bd44b18e178e0160521e37a201aa19c86a2f8a8ab9e0eb135eb13fc06611ca"
     },
     {
       "file": "ms2_12345_render.gz",
-      "compressed_bytes": 4586907,
-      "sha256": "5137639b048223c3e5f40b83370a9e22bfa031e4d63e7c3087676285e8b7d99f",
+      "compressed_bytes": 4586921,
+      "sha256": "1ec6964bacb71288a01281d24a7566d0a0c5c9d1fe35d0ebbe880b3e70d4eecb",
       "decoded_bytes": 25187728,
-      "decoded_sha256": "8baf28eb4903638420937b014c88c501da47634da2664680f610f03e9b343636"
+      "decoded_sha256": "823a38e9f43891ab1d763ab214acdbf4396fa5826035f0f2d5f8ebd3312f701f"
     },
     {
       "file": "ms2_12345_server.gz",
-      "compressed_bytes": 29017,
-      "sha256": "e2afa463b2f30a0466193dfb9415c6cb3852caf81e1bf81c7153f356f7b0d118",
+      "compressed_bytes": 28909,
+      "sha256": "a7e67d5a1a1c8f764bdd01277052c46bfd8ace381ac9bf569fdb265c7f5e0108",
       "decoded_bytes": 56112,
-      "decoded_sha256": "9d4e4b544732f1c0bd3ea773176a0338b83ede420a46c2d1b8564bb25c0b209f"
+      "decoded_sha256": "000923ce94d4bdf2e375d89758d4b1148f884ddc4e30d538aa67eac8164dfa7d"
     },
     {
       "file": "ms2_42_client.gz",
-      "compressed_bytes": 321990,
-      "sha256": "f39fc4f83ba118b8c2b611e98f349cdcbb578d46cb9e896f9c31edfc04c897cc",
-      "decoded_bytes": 1956888,
-      "decoded_sha256": "78287fcc5f1aea875bc339a3bab88c6f27c22f4ad1acaa1f4506e04e87e243c7"
+      "compressed_bytes": 321907,
+      "sha256": "5d01df19eb7b4fa1cc4e35ff29c601a0072bcef97f1d99196fc3b451546e7d9f",
+      "decoded_bytes": 1957032,
+      "decoded_sha256": "cab2663c88e5d7c98e51db21ea3d7ea2e7e9a2ea049bc54bf083da361be5b8f9"
     },
     {
       "file": "ms2_42_render.gz",
@@ -96,10 +96,10 @@
     },
     {
       "file": "ms2_42_server.gz",
-      "compressed_bytes": 26219,
-      "sha256": "d06e0c0f345a311dc03aa4869314b8ca0665a129f3b5d2f36a2ed85436a05e93",
+      "compressed_bytes": 26217,
+      "sha256": "19b5956b5a35c79a623a3ad4e672479ad4eba959e40105592c4fb2afb7f608f8",
       "decoded_bytes": 56112,
-      "decoded_sha256": "5c509c0914850b274dd2d162c6ab2e3a10fc64d51112acf30fdec747ebbb2db1"
+      "decoded_sha256": "cb216682666aafb335d4a4bb27b154e0ebc14d2c1438698c56c3140f5ac90d34"
     }
   ],
   "fast_repin": {
@@ -372,5 +372,73 @@
       "state": "column-observer ticks=2004 client_boundaries=65820 rows=858992 mesh_bytes=0 status=PASS;column-observer ticks=2004 client_boundaries=54262 rows=859171 mesh_bytes=0 status=PASS;",
       "render": "column-observer ticks=2004 client_boundaries=0 rows=0 mesh_bytes=24859304 status=PASS;column-observer ticks=2004 client_boundaries=0 rows=0 mesh_bytes=30201652 status=PASS;"
     }
+  },
+  "ci_1101_47_repin": {
+    "date": "2026-11-02",
+    "evidence": "C:/tmp/cavex-jobs/ci-1101/47/PROOF.md",
+    "expectation_kind": "Frozen CaveWii regression streams, not Beta oracle expectations",
+    "previous_metadata": {
+      "baseline_head": "d2bb7a89cc6c4c38b629229acd48c6c4c63da04c (ci-1101/12 state and render FAST re-pin)",
+      "platform": "Linux / WSL / GCC 13 / RelWithDebInfo / IPO off / asserts enabled",
+      "capture_commands": [
+        "./build-bisect/test_column_dedup_state_equiv --capture /mnt/c/tmp/cavex-jobs/ci-1101/12/head",
+        "./build-bisect/test_column_dedup_render_equiv --capture /mnt/c/tmp/cavex-jobs/ci-1101/12/head"
+      ],
+      "capture_summary": {
+        "state": "column-observer ticks=2004 client_boundaries=66015 rows=858992 mesh_bytes=0 status=PASS;column-observer ticks=2004 client_boundaries=54358 rows=859171 mesh_bytes=0 status=PASS;",
+        "render": "column-observer ticks=2004 client_boundaries=0 rows=0 mesh_bytes=24859304 status=PASS;column-observer ticks=2004 client_boundaries=0 rows=0 mesh_bytes=27661112 status=PASS;"
+      }
+    },
+    "previous_files": [
+      {
+        "file": "ms2_12345_client.gz",
+        "compressed_bytes": 500986,
+        "sha256": "13caf710ca5f697f50d059613f19029c5f79607855d2833911ffeaaded2a7bd9",
+        "decoded_bytes": 2376540,
+        "decoded_sha256": "33e93fe52bf988a134e39e31713ed285aed7e5a4873bb364688e40ef6fc5f1b1"
+      },
+      {
+        "file": "ms2_12345_render.gz",
+        "compressed_bytes": 4586907,
+        "sha256": "5137639b048223c3e5f40b83370a9e22bfa031e4d63e7c3087676285e8b7d99f",
+        "decoded_bytes": 25187728,
+        "decoded_sha256": "8baf28eb4903638420937b014c88c501da47634da2664680f610f03e9b343636"
+      },
+      {
+        "file": "ms2_12345_server.gz",
+        "compressed_bytes": 29017,
+        "sha256": "e2afa463b2f30a0466193dfb9415c6cb3852caf81e1bf81c7153f356f7b0d118",
+        "decoded_bytes": 56112,
+        "decoded_sha256": "9d4e4b544732f1c0bd3ea773176a0338b83ede420a46c2d1b8564bb25c0b209f"
+      },
+      {
+        "file": "ms2_42_client.gz",
+        "compressed_bytes": 321990,
+        "sha256": "f39fc4f83ba118b8c2b611e98f349cdcbb578d46cb9e896f9c31edfc04c897cc",
+        "decoded_bytes": 1956888,
+        "decoded_sha256": "78287fcc5f1aea875bc339a3bab88c6f27c22f4ad1acaa1f4506e04e87e243c7"
+      },
+      {
+        "file": "ms2_42_render.gz",
+        "compressed_bytes": 5393398,
+        "sha256": "acf3f8efcb1e26ec3cd8b07e4db52b7fdb1c228309f93e7db31e72b668c909d3",
+        "decoded_bytes": 27995356,
+        "decoded_sha256": "32b24c69a73f997d47edaf7d866d30df730e657de4de3a8865192e4d7cf4a4bb"
+      },
+      {
+        "file": "ms2_42_server.gz",
+        "compressed_bytes": 26219,
+        "sha256": "d06e0c0f345a311dc03aa4869314b8ca0665a129f3b5d2f36a2ed85436a05e93",
+        "decoded_bytes": 56112,
+        "decoded_sha256": "5c509c0914850b274dd2d162c6ab2e3a10fc64d51112acf30fdec747ebbb2db1"
+      }
+    ],
+    "old_pin_control": "HEAD dee9d3edf with ONLY 211def8d8 reverted: both complete old state tapes and both complete old render tapes pass (153.42s). No stash or shared-source edits.",
+    "natural_spawn_cause": "211def8d8: Beta SpawnerAnimals.java:115 natural-spawn 3-D24 exclusion changes accepted candidates/shared rand_src. Seed12345 first server divergence tick230/byte6420 IDs260007734->3301361648 and metadata1557505533->1575163307; client record10615/byte382120. Seed42 unchanged at HEAD.",
+    "queue_cause": "ci-1101/39 item10 / DONE-redstone: applied ONLY queue TU, its three struct fields/declaration, and population-rollback resync to HEAD. Beta World scheduledTickSet and NextTickListEntry order. Full isolated state tapes exactly equal main. First client differences: seed12345 record3703/byte133288 IDs3339068583->4177604667 (observer tick80); seed42 record3759/byte135304 IDs1153145427->731918303. Seed42 first server difference tick695/byte19452 Block3556814442->1094118819. First sampled fluid-store reorder tick689, unchanged RNG1707015545.",
+    "render_cause": "211def8d8 only: seed12345 record1220/world tick1225/byte11635756 generation7->9; exactly98 generation fields change; every other header/list/vertex byte identical. Seed42 byte-identical. Queue changes neither render tape.",
+    "complete_equivalence": "All six decoded HEAD+queue-only tapes exactly equal main, including unchanged seed42 render. No other batch change needed.",
+    "stress_cause": "c16ebd6bd alone: reverting only launch height2.83->2.43 at HEAD reproduces04c925c187fcfb46; HEAD equals main307259424-byte stress stream; newba1ba693ff721f0e. First divergence tick1/entity11(arrow)/byte285 position: Y6.290963173->6.547310829.",
+    "unmodified_checks": "All original full-tape comparators, assertions, fixture inputs and format retained; seed42 render file unchanged."
   }
 }

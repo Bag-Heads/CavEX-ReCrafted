@@ -1328,6 +1328,23 @@
   },
   {
    "attribution_required": "none (CC0)",
+   "attribution_where": "assets/gui/nether-background.md",
+   "author": "CaveWii project (Earth & Ash textures)",
+   "group": "menu-background",
+   "licence": "CC0-1.0",
+   "licence_file": "assets/CC0-1.0.txt",
+   "notes": "In-game render of CaveWii's own Nether generator (seed 42, fixed camera, bundled Earth & Ash textures), cropped and nearest-neighbour scaled to 1024x576.",
+   "paths": [
+    "assets/gui/nether-background.png",
+    "apps/CavEX/assets/gui/nether-background.png"
+   ],
+   "sha256": "8fe6db87d9c963b16552ee61f01d9b8776eadbc4bf7002c4d5763490558ea846",
+   "ships": "release-zip",
+   "source": "assets/gui/nether-background.provenance.json",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "none (CC0)",
    "attribution_where": "assets/README.md",
    "author": "CaveWii project",
    "group": "misc-colormaps",
@@ -2539,6 +2556,24 @@
     "packs/isabella-ii/gui/menu-background.png"
    ],
    "sha256": "e65d85d5809c0835e7335ace2805c19a078f0470df239ddfaa35d29bcab016ba",
+   "ships": "release-zip (optional pack texturepacks/isabella-ii/)",
+   "source": "http://www.minecraftforum.net/topic/242175-Isabella/ (thread dead); 'Isabella 2 1.2vb1.zip'",
+   "status": "ok"
+  },
+  {
+   "attribution_required": "yes: credit Bonemouse, link licence, state changes",
+   "attribution_where": "LICENSES/Isabella-II/ (About Isabella.txt, LICENSE.txt); packs/isabella-ii/{README.txt,About Isabella.txt,LICENSE.txt}; NOTICE; README.md Credits",
+   "author": "Bonemouse (Isabella II)",
+   "group": "isabella-ii",
+   "licence": "CC-BY-3.0",
+   "licence_file": "LICENSES/Isabella-II/LICENSE.txt",
+   "licence_url": "https://creativecommons.org/licenses/by/3.0/",
+   "notes": "MODIFIED for CaveWii_v2: in-game render of the CaveWii Nether generator drawn with Isabella II textures, cropped and scaled to 1024x576.",
+   "paths": [
+    "packs/isabella-ii/gui/nether-background.png",
+    "texturepacks/isabella-ii/gui/nether-background.png"
+   ],
+   "sha256": "af81bc9a158bd405410abaf9f2da74cdfb382c77833c16735496f5c815958927",
    "ships": "release-zip (optional pack texturepacks/isabella-ii/)",
    "source": "http://www.minecraftforum.net/topic/242175-Isabella/ (thread dead); 'Isabella 2 1.2vb1.zip'",
    "status": "ok"

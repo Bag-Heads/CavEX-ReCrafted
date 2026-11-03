@@ -138,10 +138,11 @@ void render_sign_text_pass(mat4 view, sign_text_iter_fn iter, void* ctx) {
 			pos[i * 3 + 2] = verts[i].z + (float)z;
 			uv[i * 2 + 0] = verts[i].u;
 			uv[i * 2 + 1] = verts[i].v;
-			// Solid black, alpha 1 -- see the "Text colour" citation above.
-			col[i * 4 + 0] = 0;
-			col[i * 4 + 1] = 0;
-			col[i * 4 + 2] = 0;
+			// Black unless a colour code changed it (render_sign_text.c);
+			// alpha 1 -- see the "Text colour" citation above.
+			col[i * 4 + 0] = verts[i].r;
+			col[i * 4 + 1] = verts[i].g;
+			col[i * 4 + 2] = verts[i].b;
 			col[i * 4 + 3] = 255;
 		}
 

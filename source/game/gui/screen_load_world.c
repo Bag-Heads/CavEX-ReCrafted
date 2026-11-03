@@ -21,6 +21,8 @@
 #include <stdio.h>
 
 #include "../../graphics/gui_util.h"
+#include "../../graphics/texture_atlas.h"
+#include "../../graphics/render_block.h" /* TEX_OFFSET, as gutil_bg */
 #include "../../graphics/gfx_settings.h"
 #include "../../network/client_interface.h"
 #include "../../network/client_world_payload.h" /* B2: player 0's payload */
@@ -1017,7 +1019,10 @@ void lworld_draw_loading_status(bool remote, int width, int height,
     }
 		return;
 	}
-	lworld_center_text(width,split?24:150,"Building terrain",24,false);
+	/* Keep ordinary world-load wording; portal episodes use Beta's title. */
+	bool portal = !strcmp(heading,"Entering the Nether")
+		|| !strcmp(heading,"Leaving the Nether");
+	lworld_center_text(width,split?24:150,portal?heading:"Building terrain",24,false);
 	int name_size = 18;
 	if(gutil_font_width(world_name,name_size) > width-32) name_size = 12;
 	char fitted_name[sizeof s_world_name];
@@ -1076,12 +1081,58 @@ int lworld_local_loading_status(unsigned owner, bool generating,
 	return progress->percent;
 }
 
+void lworld_draw_loading_backdrop(enum loading_reason reason, int width,
+	int height, float elapsed_s, int style) {
+	/* The scene is an engine render with this pack. Netherrack is only the
+	 * missing-image fallback (Beta Block.java cell103 via active remap). */
+	if((reason==PORTAL_IN || reason==PORTAL_OUT)
+	   && texture_nether_background.data) {
+		/* Centre-crop to fill; no panorama stretch in a split pane. */
+		float u0=0,v0=0,u1=1,v1=1;
+		float aspect=(float)width/height, source=1024.0F/576.0F;
+		if(aspect<source) { u0=(1-aspect/source)*0.5F; u1=1-u0; }
+		else { v0=(1-source/aspect)*0.5F; v1=1-v0; }
+		uint8_t shade=255; /* Same unmodified scene + black wash as beach. */
+		uint8_t colors[16];
+		for(int k=0;k<16;k++) colors[k]=k%4==3?255:shade;
+		gfx_bind_texture(&texture_nether_background);
+		gfx_draw_quads_flt(4,(float[]){0,0,-2,width,0,-2,width,height,-2,0,height,-2},
+			colors,(float[]){u0,v0,u1,v0,u1,v1,u0,v1});
+		fep_fill(fep_rect(0,0,width,height),0,0,0,72);
+		return;
+	}
+	if((reason == PORTAL_IN || reason == PORTAL_OUT)
+	   && texture_terrain.data
+	   && texture_terrain.width && texture_terrain.height) {
+		const int tile = 64; /* same density as the ordinary dirt fallback */
+		uint8_t cell = tex_atlas_lookup(TEXAT_NETHERRACK);
+		uint8_t s = TEX_OFFSET(TEXTURE_X(cell));
+		uint8_t t = TEX_OFFSET(TEXTURE_Y(cell));
+		uint8_t shade = style == 1 ? 64 : 96;
+		gfx_bind_texture(&texture_terrain);
+		/* hw1102c: same texcoord path as gutil_bg's dirt -- the float-UV
+		 * draw tiled the whole atlas as a grid on the Wii. Edge tiles clip
+		 * both geometry and the 16-texel source. */
+		for(int y = 0; y < height; y += tile) {
+			int h = height - y < tile ? height - y : tile;
+			for(int x = 0; x < width; x += tile) {
+				int w = width - x < tile ? width - x : tile;
+				gutil_texquad_col(x, y, s, t, 16 * w / tile, 16 * h / tile, w,
+								  h, shade, shade, shade, 0xFF);
+			}
+		}
+		return;
+	}
+	if(!fep_backdrop_at(width,height,72,elapsed_s,true)) gutil_bg();
+}
+
 static void lworld_render_loading_art(unsigned owner,int width,int height,
 	uint64_t now_ms,float elapsed_s, const char* stage) {
 	(void)stage; /* remote counts remain in log/F3, as before */
-	if(!fep_backdrop_at(width,height,72,elapsed_s,true)) gutil_bg();
 	bool split = height <= 240;
 	enum loading_reason reason = loading_reason_get(owner);
+	/* The selected pack owns its Nether scene. Missing art uses netherrack. */
+	lworld_draw_loading_backdrop(reason,width,height,elapsed_s,1);
 	const char* local_stage = "Loading level";
 	int percent = -1;
 	if(!gstate.remote_session)

@@ -51,6 +51,7 @@
 #include "entity/entity_primed_tnt.h"
 #include "entity/combat.h" // PLAYER_EYE_HEIGHT
 #include "game/game_state.h"
+#include "game/gui/loading_tips.h"
 #include "item/items.h"
 #include "network/client_interface.h"
 #include "network/complex_block_archive.h"
@@ -5679,6 +5680,8 @@ int main(void) {
 		size_t live_entities = dict_entity_size(gstate.entities);
 		struct client_rpc begin_switch = {.type = CRPC_BEGIN_WORLD_SWITCH};
 		clin_process(&begin_switch);
+		assert(loading_reason_get(0) == (gstate.world.dimension == WORLD_DIM_NETHER
+			? PORTAL_OUT : PORTAL_IN));
 		assert(gstate.world_switch_pending);
 		assert(!gstate.paused);
 		assert(gstate.players[0].current_screen == &screen_load_world);
@@ -5738,6 +5741,7 @@ int main(void) {
 		assert(cancel_ack_capture.count == 1);
 		assert(cancel_ack_capture.ack_index == 0
 			   && cancel_ack_capture.ack_epoch == 222);
+		assert(loading_reason_get(0) == UNKNOWN);
 		puts("  portal: reversible loading feedback preserves live client aliases");
 
 		// A non-world-reset GUI open has the same two allocation layers. On

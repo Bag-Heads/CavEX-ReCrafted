@@ -661,6 +661,19 @@ def process_textures(zf: zipfile.ZipFile, dest_root: Path, dry_run: bool,
                                     else "optional_gated_feature" if dest in OPTIONAL_NO_FALLBACK_DEST
                                     else "bundled_default")
         results.append(entry)
+    # Text is optional and copied verbatim; it is not a texture-map entry.
+    splash = "title/splashes.txt"
+    if splash in jar_names:
+        data = zf.read(splash)
+        entry = {"category": "text", "dest": splash, "source": splash,
+                 "required": False, "status": "copied", "size": len(data),
+                 "source_sha256": sha256_bytes(data)}
+        if not dry_run:
+            out_path = dest_root / splash
+            out_path.parent.mkdir(parents=True, exist_ok=True)
+            out_path.write_bytes(data)
+            entry["dest_sha256"] = entry["source_sha256"]
+        results.append(entry)
     return results
 
 

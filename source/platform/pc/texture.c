@@ -24,11 +24,7 @@
 
 #include "../texture.h"
 
-// Mirrors wii/texture.c's tex_build_mip_chain_rgba16 LOD count: 4 levels
-// (0..3). PC has no RGB5A3 4x4-block constraint, so unlike the Wii path this
-// is a soft cap -- tex_gfx_load_atlas builds as many of these as the atlas
-// dimensions actually support and uses GL_TEXTURE_MAX_LEVEL to stop there.
-enum { PC_ATLAS_MAX_LODS = 4 };
+#include "../../game/game_state.h"
 
 void tex_init_pre() { }
 void tex_init_post() { }
@@ -128,53 +124,29 @@ bool tex_gfx_load_atlas(struct tex_gfx* tex, void* img, size_t width,
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
 				 GL_UNSIGNED_BYTE, img);
 
-	// DC-GRASS G3: the terrain atlas samples like Beta 1.7.3 -- RenderEngine
-	// .java:20 `useMipmaps = false` and :168-169 GL_NEAREST for both MIN and
-	// MAG in setupTexture -- so level 0 only, no mip chain. Every terrain path
-	// (fresh load, pack reload, pack-cache restore) funnels through here with
-	// &texture_terrain. Other atlases (particles) keep the mip chain below.
-	// PC only: the Wii GX path keeps nearest-mag/trilinear-min (recorded
-	// deviation, Astra DC-GRASS ruling 3).
-	if(tex == &texture_terrain) {
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-	} else {
-		// Box-filter LODs 1.. from the SAME atlas-aware downsampler the Wii GX path
-		// uses (tex_mip_downsample_rgba8, platform/texture_mip.c): every output
-		// texel clamps its sample box to the logical atlas cell it falls in, so a
-		// cell boundary can never bleed a neighbouring tile into a mip level. Plain
-		// box filtering (or glGenerateMipmap, which knows nothing about the atlas
-		// grid) would reintroduce exactly that bleed at LOD>=1. Builds however many
-		// of the PC_ATLAS_MAX_LODS levels the atlas size actually supports (the
-		// downsampler returns NULL once a level would be 0px) instead of hard-
-		// failing like the Wii path does -- there is no block-encoder alignment
-		// constraint to fail against here, so a smaller atlas (e.g. particles.png)
-		// just gets a shallower, still bleed-free, chain.
-		int built = 0;
-		for(int n = 1; n < PC_ATLAS_MAX_LODS; n++) {
+	/* Beta RenderEngine.java:20,164-170: useMipmaps=false, NEAREST/NEAREST.
+	 * The opt-in chain is capped to the grid's isolated sampling footprint. */
+	bool mipmaps = config_read_flag(&gstate.config_user, "render.mipmaps", false)
+		&& tex_atlas_mip_levels(grid) > 1;
+	int built = 0;
+	if(mipmaps) {
+		for(unsigned n = 1; n < tex_atlas_mip_levels(grid); n++) {
 			uint8_t* mip
-				= tex_mip_downsample_rgba8(img, width, height, grid, (unsigned)n);
+				= tex_mip_downsample_rgba8(img, width, height, grid, n);
 			if(!mip)
 				break;
-			glTexImage2D(GL_TEXTURE_2D, n, GL_RGBA, (GLsizei)(width >> n),
-						 (GLsizei)(height >> n), 0, GL_RGBA, GL_UNSIGNED_BYTE, mip);
+			glTexImage2D(GL_TEXTURE_2D, (GLint)n, GL_RGBA,
+						 (GLsizei)(width >> n), (GLsizei)(height >> n), 0,
+						 GL_RGBA, GL_UNSIGNED_BYTE, mip);
 			free(mip);
-			built = n;
+			built = (int)n;
 		}
-
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, built);
-		// Trilinear minification (linear within a LOD + linear between LODs) so
-		// distant terrain stays clean instead of shimmering -- matches the Wii GX
-		// path's GX_LIN_MIP_LIN. Magnification stays GL_LINEAR, unchanged from the
-		// single-LOD load this replaces (the Wii path's GX_NEAR blocky magnifier is
-		// a separate, unscoped visual-parity decision, not part of "add mipmaps").
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-						built > 0 ? GL_LINEAR_MIPMAP_LINEAR : GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, built);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+					built ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -196,7 +168,7 @@ bool tex_gfx_load_atlas(struct tex_gfx* tex, void* img, size_t width,
 	tex->id = new_id;
 	tex->data_bytes = width * height * 4;
 	tex->lods = 1;
-	tex->linear = true;
+	tex->linear = built > 0;
 	return true;
 }
 

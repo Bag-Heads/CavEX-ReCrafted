@@ -11,6 +11,7 @@ from unittest import mock
 from PIL import Image
 
 from tools.pack_helper import core
+from tools.pack_helper import owned_importer
 
 # Never let a synthetic jar pick up this computer's own .minecraft through the
 # launcher-location fallback; the tests that need it patch minecraft_roots.
@@ -51,6 +52,14 @@ def importer_map(path):
 
 
 class InspectTests(unittest.TestCase):
+    def test_pc_destination_accepts_current_and_legacy_program_names(self):
+        for name in ("CavEX-ReCrafted.exe", "CavEX-ReCrafted",
+                     "cavewii_v2.exe", "cavewii_v2"):
+            with self.subTest(name=name), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                (root / name).write_bytes(b"synthetic PC paths.audiopack\x00")
+                self.assertEqual(core.validate_destination(root), root.resolve())
+
     def test_legacy_archive_is_structured(self):
         with tempfile.TemporaryDirectory() as td:
             source = Path(td) / "classic.zip"
@@ -115,6 +124,93 @@ class InspectTests(unittest.TestCase):
 
 
 class PrepareTests(unittest.TestCase):
+    def test_nether_scene_uses_imported_atlases_and_is_manifested(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "owned.zip"
+            legacy_zip(source)
+            result = core.prepare(source, root / "prepared")
+            self.assertTrue(result["ok"], result)
+            pack = Path(result["path"])
+            expected = core.nether_scene.compose((pack / "terrain.png").read_bytes(),
+                                                 (pack / "anim.png").read_bytes())
+            for rel, data in zip(core.nether_scene.FILES, expected):
+                self.assertEqual((pack / rel).read_bytes(), data)
+                self.assertIn(rel, {row["path"] for row in result["manifest"]["files"]})
+            with Image.open(pack / core.nether_scene.FILES[0]) as image:
+                self.assertEqual(image.size, (1024, 576))
+
+    def test_nether_composer_failure_skips_only_scene(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "owned.zip"
+            legacy_zip(source)
+            good = core.prepare(source, root / "good")
+            with mock.patch.object(core.nether_scene, "compose", side_effect=RuntimeError("injected failure")):
+                failed = core.prepare(source, root / "failed")
+            self.assertTrue(good["ok"], good)
+            self.assertTrue(failed["ok"], failed)
+            self.assertTrue(any("Nether loading scene skipped: injected failure" in w
+                                for w in failed["warnings"]))
+            excluded = set(core.nether_scene.FILES) | {core.MANIFEST_NAME}
+            for path in Path(good["path"]).rglob("*"):
+                rel = path.relative_to(good["path"]).as_posix()
+                if path.is_file() and rel not in excluded:
+                    self.assertEqual(path.read_bytes(), (Path(failed["path"]) / rel).read_bytes())
+            self.assertTrue(all(not (Path(failed["path"]) / p).exists()
+                                for p in core.nether_scene.FILES))
+
+    def test_nether_scene_partial_write_is_removed(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "owned.zip"
+            legacy_zip(source)
+            original = core._write_file
+
+            def fail_note(staging, rel, data):
+                if rel == core.nether_scene.FILES[1]:
+                    original(staging, rel, b"partial")
+                    raise OSError("injected scene write failure")
+                return original(staging, rel, data)
+
+            with mock.patch.object(core, "_write_file", side_effect=fail_note):
+                result = core.prepare(source, root / "prepared")
+            self.assertTrue(result["ok"], result)
+            self.assertTrue(any("injected scene write failure" in w for w in result["warnings"]))
+            self.assertTrue(all(not (Path(result["path"]) / p).exists()
+                                for p in core.nether_scene.FILES))
+
+    def test_cancel_before_nether_scene_still_cancels_import(self):
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            source = root / "owned.zip"
+            legacy_zip(source)
+
+            def cancel(event):
+                if event.get("path") == "Nether loading scene":
+                    raise InterruptedError("cancelled by user")
+
+            result = core.prepare(source, root / "prepared", progress=cancel)
+            self.assertFalse(result["ok"], result)
+            self.assertEqual(list((root / "prepared").iterdir()), [])
+
+    def test_nether_map_hash_is_pinned_and_corruption_is_rejected(self):
+        import hashlib
+        scene = core.nether_scene
+        # Deliberate generated-data revision: update only with paired-render proof.
+        self.assertEqual(hashlib.sha256(scene.map_path().read_bytes()).hexdigest(),
+                         "fc66c89946b9ffe38a330793d8688670dddea556b3a92ae36a183b603a2fbc11")
+        scene._read_map.cache_clear()
+        try:
+            with tempfile.TemporaryDirectory() as td:
+                corrupt = Path(td) / "map.bin"
+                corrupt.write_bytes(b"not the approved synthetic map")
+                with mock.patch.object(scene, "map_path", return_value=corrupt):
+                    with self.assertRaisesRegex(ValueError, "checksum"):
+                        scene._read_map()
+        finally:
+            scene._read_map.cache_clear()
+
     def test_rejected_nested_destination_leaves_source_untouched(self):
         with tempfile.TemporaryDirectory() as td:
             source = Path(td) / "owned"
@@ -307,7 +403,7 @@ class InstallTests(unittest.TestCase):
                     if pc:
                         destination = root / "pc"
                         destination.mkdir()
-                        (destination / "cavewii_v2.exe").write_bytes(b"synthetic PC paths.audiopack\x00")
+                        (destination / "CavEX-ReCrafted.exe").write_bytes(b"synthetic PC paths.audiopack\x00")
                     else:
                         destination = self.sd(root)
                     config = {"paths": {"texturepack": "texturepacks/my-look"}, "video": {"fullscreen": True}}
@@ -569,6 +665,8 @@ def client_jar(path, drop=(), replace=None):
     with zipfile.ZipFile(path, "w", zipfile.ZIP_DEFLATED) as archive:
         archive.writestr("a.class", b"\xca\xfe\xba\xbe")
         archive.writestr("META-INF/MANIFEST.MF", b"Manifest-Version: 1.0\n")
+        if "title/splashes.txt" not in drop:
+            archive.writestr("title/splashes.txt", b"Synthetic splash!\r\nAnother \xff splash\n")
         for index, dest in enumerate(core.client_jar_textures(conversion_map)):
             source = conversion_map["assets"][dest]["source_names"][0]
             if dest in drop or source in drop:
@@ -582,6 +680,38 @@ def client_jar(path, drop=(), replace=None):
 class JarImportAuditTests(unittest.TestCase):
     """2026-10-30 jar-import audit: F1/F9 config location, F2/F5/F8
     validation, F3 colour maps + HUD composite, clear messages."""
+
+    def test_install_preserves_optional_jar_splashes(self):
+        for missing in (False, True):
+            with self.subTest(missing=missing), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                jar = root / "b1.7.3.jar"
+                client_jar(jar, drop=("title/splashes.txt",) if missing else ())
+                result = core.prepare(jar, root / "prepared")
+                self.assertTrue(result["ok"], result)
+                installed = core.install(result["path"], self.sd(root), select=False)
+                self.assertTrue(installed["ok"], installed)
+                splash = Path(installed["path"]) / "title/splashes.txt"
+                if missing:
+                    self.assertFalse(splash.exists())
+                else:
+                    with zipfile.ZipFile(jar) as archive:
+                        self.assertEqual(splash.read_bytes(), archive.read("title/splashes.txt"))
+
+    def test_owned_importer_preserves_optional_jar_splashes(self):
+        for missing in (False, True):
+            with self.subTest(missing=missing), tempfile.TemporaryDirectory() as td:
+                root = Path(td)
+                jar = root / "b1.7.3.jar"
+                client_jar(jar, drop=("title/splashes.txt",) if missing else ())
+                with zipfile.ZipFile(jar) as archive, mock.patch.object(
+                        owned_importer, "FROZEN_MAPPING", {"texture_paths": []}):
+                    owned_importer.process_textures(archive, root / "pack", False)
+                    splash = root / "pack/title/splashes.txt"
+                    if missing:
+                        self.assertFalse(splash.exists())
+                    else:
+                        self.assertEqual(splash.read_bytes(), archive.read("title/splashes.txt"))
 
     def sd(self, root, configs=True):
         sd = root / "sd"

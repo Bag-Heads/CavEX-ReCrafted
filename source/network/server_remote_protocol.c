@@ -1879,9 +1879,14 @@ bool process_event(struct server_remote* owner,
 				= mp_byte_angle_to_degrees(pkt->payload.named_entity_spawn.pitch);
 			struct client_rpc call = {.type = CRPC_SPAWN_PLAYER};
 			call.payload.spawn_player.entity_id = (uint32_t)id;
-			if(!mp_utf16_to_utf8(&pkt->payload.named_entity_spawn.name,
-								 call.payload.spawn_player.username,
-								 sizeof(call.payload.spawn_player.username)))
+			/* The name is only ever DRAWN (the name tag), so it uses the
+			 * same single-byte display charset as Packet3 chat and Packet130
+			 * signs: U+00A7 -> the byte 0xA7 the shared Beta colour parser
+			 * reads (mp_utf16_to_display). UTF-8 put a stray 0xC2 glyph in
+			 * front of every colour code. [ci-1101/30] */
+			if(!mp_utf16_to_display(&pkt->payload.named_entity_spawn.name,
+									call.payload.spawn_player.username,
+									sizeof(call.payload.spawn_player.username)))
 				call.payload.spawn_player.username[0] = '\0';
 			call.payload.spawn_player.pos[0]
 				= (float)mp_fixed32_to_double(entry->server_x);

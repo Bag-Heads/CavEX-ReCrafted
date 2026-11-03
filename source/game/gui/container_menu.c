@@ -1082,9 +1082,14 @@ void container_menu_sort_render(const struct container_menu* menu, struct window
 	 * Match opacity on the glyph/text themselves, without a dark rectangle. */
 	int cell = frame ? frame->glyphs[IB_GUI_CLICK] : -1;
 	if((held || busy) && cell >= 0 && cell < INPUT_GLYPH_CELLS) {
-		gfx_bind_texture(texture_approved_controls.data&&cell<42?&texture_approved_controls:&texture_controls);
-		gutil_texquad_col(ax, fy, cell % 8 * 32, cell / 8 * 32, 32, 32,
-			32, 32, 255, 255, 255, 102);
+		struct tex_gfx* sheet = texture_approved_controls.data && cell < 42
+			? &texture_approved_controls : &texture_controls;
+		/* An unloaded sheet would sample whatever is bound (the font). */
+		if(sheet->data) {
+			gfx_bind_texture(sheet);
+			gutil_texquad_col(ax, fy, cell % 8 * 32, cell / 8 * 32, 32, 32,
+				32, 32, 255, 255, 255, 102);
+		}
 		gutil_text_rgba(ax + 36, fy + 8, "Apply", 16, true, 255, 255, 255, 102);
 	} else gutil_menu_hint_owned(frame, ax, fy, IB_GUI_CLICK, "Apply");
 	gutil_menu_hint_owned(frame, bx, fy, IB_INVENTORY, "Back");

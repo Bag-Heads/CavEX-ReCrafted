@@ -143,7 +143,7 @@ extern struct tex_gfx texture_controls;
  * entry here, so it inherits the same GPU fence/lifecycle. Consumers MUST check
  * .data (frontend_presentation.h's fep_backdrop does) and fall back to the
  * tiled-dirt menu background when it is absent. */
-extern struct tex_gfx texture_menu_background;
+extern struct tex_gfx texture_menu_background, texture_nether_background;
 /* Original title logo + subtitle tablet; bundled-only, optional, exact RGBA8. */
 extern struct tex_gfx texture_title_logo;
 extern struct tex_gfx texture_menu_reception;
@@ -166,6 +166,15 @@ extern struct tex_gfx texture_shadow;
 extern struct tex_gfx texture_map_bg;
 extern struct tex_gfx texture_map_icons; /* optional pack misc/mapicons.png */
 extern struct tex_gfx texture_map_live;
+// ci-1101/23: the SECOND split viewport's live map surface. Both viewports
+// draw in one GX frame, and a texture upload does not wait for the queued
+// draw of the other viewport, so each viewport owns its own 128x128 surface
+// (render_item_map_live_texture(viewport)). Single player uses texture_map_live.
+extern struct tex_gfx texture_map_live_split;
+// (Re)create both live map surfaces zero-filled (pack load, cache restore,
+// pack reload) and bump the generation the held-map upload gate keys on.
+void tex_map_live_init(void);
+uint32_t tex_map_live_generation(void);
 extern struct tex_gfx texture_water;
 // Beta 1.7.3 misc/dial.png -- TextureWatchFX's rotated dial-ring texture. Mojang
 // IP, never bundled (same policy as every other Beta-exclusive asset absent from
@@ -206,6 +215,13 @@ uint8_t* tex_read(const char* filename, size_t* width, size_t* height);
 /* True for the controller-art sheets that always load from the bundled
  * assets (SD-root assets/ on Wii) and never from a texture pack. */
 bool tex_bundled_only(const char* filename);
+/* The roots a bundled-only file (and the boot credits) is looked up in, in
+   order: Wii {"sd:/assets", "assets"} (the app-folder copy when the player
+   installed only apps/CavEX/), PC {"assets"}. Returns the count written
+   (at most `max`). The _for variant takes the platform explicitly so a PC
+   test can check the Wii list. */
+size_t tex_bundled_roots_for(bool wii, const char** roots, size_t max);
+size_t tex_bundled_roots(const char** roots, size_t max);
 uint8_t* tex_read_gfx(const char* filename, size_t* width, size_t* height,
 					  enum tex_format type);
 uint8_t* tex_read_atlas(const char* filename, size_t* width, size_t* height);
@@ -263,6 +279,10 @@ bool tex_gfx_load_file(struct tex_gfx* tex, const char* filename,
 #define TEX_PREVIEW_DIM 40
 bool tex_preview_load(struct tex_gfx* tex, const char* pack_root);
 void tex_gfx_clear(struct tex_gfx* tex);
+/* Optional pack-owned Nether scene. Never falls back to another pack. */
+int tex_scene_backdrop_state_of(const char* pack, bool nether);
+int tex_scene_backdrop_publish(const char* pack, const uint8_t* rgba, unsigned w, unsigned h, bool nether);
+bool tex_scene_background_load(bool nether);
 /* pack-cache-0927 backend hooks (texture_cache.c). The texel buffer a cache
    hit reads into is allocated where the backend's own loader would put it
    (Wii: MEM2 CARVE_TEXTURE; PC: malloc). tex_gfx_restore installs it exactly
@@ -313,6 +333,18 @@ void water_fx_anim_tick(void);
 // degrade gracefully to the pre-existing static icon, never a crash.
 void item_needle_fx_init(void);
 void item_needle_fx_tick(bool enabled);
+// ci-1101/31: split screen. Every local player (gstate.players[v]) has its own
+// damped-spring needle state. Viewport 0 keeps writing the atlas cells exactly
+// as before (single player and viewport 0 are byte-identical). Viewport 1's
+// compass and clock are composited into a PRIVATE 16x16 texture pair instead
+// (the atlas cell cannot be rewritten between the two viewport passes: both
+// draw in one GX frame and tex_gfx_subimage never waits for the queued draw --
+// the same hazard as the held map, ci-1101/23). The item draw path
+// (render_item_flat) binds that texture, whole, for a compass/clock drawn in
+// viewport 1. Returns NULL for viewport 0, for an unarmed FX, for a viewport
+// whose player has no body, or before the first enabled tick wrote it -- the
+// caller then samples the atlas cell as usual.
+struct tex_gfx* item_needle_fx_split_texture(unsigned viewport, bool clock);
 
 /* BG-BAKE-1028/3: the pack's menu backdrop (texture.c). States/results are
  * int-valued: tex_backdrop_state_of returns 0 bundled, 1 author art,

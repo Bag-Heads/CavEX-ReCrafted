@@ -20,6 +20,7 @@
 #include <assert.h>
 
 #include "../block/blocks.h"
+#include "items.h" // items[ITEM_SHEARS]: ci-1101/44 shears dig speed
 
 int tool_tier_divider(enum tool_tier tier) {
 	switch(tier) {
@@ -64,6 +65,27 @@ int tool_dig_delay_env_ms(struct block* type, struct item* it, bool in_water,
 	// truncation still lands on floor(hardness*env/divider) -- dividing first
 	// would throw away up to (divider-1) ms and then scale the loss by 25,
 	// making us finish EARLY, which is precisely what a Beta server refuses.
+	// ci-1101/44 [mcb173-retromcp ItemShears.java:22-24] getStrVsBlock:
+	//   web/leaves ? 15.0F : (cloth ? 5.0F : super (1.0F)).
+	// All three are on Block.blockStrength's canHarvest arm (Block.java:314):
+	// leaves/cloth materials are harvestable, and web (Material.java:30
+	// setNoHarvest) is harvested via ItemShears.canHarvestBlock
+	// (ItemShears.java:18-20) -- so env applies and the delay is
+	// hardness*env/strength. Shears are TOOL_TYPE_ANY (a plain Item), so they
+	// are matched by definition pointer; every other block falls through to
+	// the generic chain below with Item's 1.0F, which already equals a hand.
+	if(it && it == items[ITEM_SHEARS]) {
+		int shears_str = 0;
+		if(type == blocks[BLOCK_COBWEB] || type == blocks[BLOCK_LEAVES])
+			shears_str = 15;
+		else if(type == blocks[BLOCK_WOOL])
+			shears_str = 5;
+		if(shears_str) {
+			delay = delay * env / shears_str;
+			return (delay + 49) / 50 * 50; // round up to next tick
+		}
+	}
+
 	if(type->digging.tool == item_type && item_tier >= type->digging.min) {
 		delay *= env;
 		if(item_type == TOOL_TYPE_SWORD) {

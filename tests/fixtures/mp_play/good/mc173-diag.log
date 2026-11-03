@@ -1,0 +1,186 @@
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=login_accept since_accept_ms=4100
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=snapshot x=8.500 y=65.620 z=8.500 dim=0 inv=[5:0:0:0,6:0:0:0,7:0:0:0,8:0:0:0,9:0:0:0,10:0:0:0,11:0:0:0,12:0:0:0,13:0:0:0,14:0:0:0,15:0:0:0,16:0:0:0,17:0:0:0,18:0:0:0,19:0:0:0,20:0:0:0,21:0:0:0,22:0:0:0,23:0:0:0,24:0:0:0,25:0:0:0,26:0:0:0,27:0:0:0,28:0:0:0,29:0:0:0,30:0:0:0,31:0:0:0,32:0:0:0,33:0:0:0,34:0:0:0,35:0:0:0,36:0:0:0,37:0:0:0,38:0:0:0,39:0:0:0,40:0:0:0,41:0:0:0,42:0:0:0,43:0:0:0,44:0:0:0] inv_hash=11476a7f6d000091fb831249f96ff03b7aad7612480bd21a17f33dba107eaf29
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=health h=20
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=8.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=dig x=8 y=64 z=8 old_id=2 old_meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=9.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=10.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=11.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=12.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=13.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=14.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=15.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=16.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=dig x=16 y=64 z=8 old_id=2 old_meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=17.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=click window=0 action=102 slot=36 button=0 shift=0 accepted=true
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=slot_state window=0 slot=36 item=0 count=0 damage=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=slot_state window=0 slot=-1 item=3 count=1 damage=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=click window=0 action=103 slot=40 button=0 shift=0 accepted=true
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=slot_state window=0 slot=40 item=3 count=1 damage=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=slot_state window=0 slot=-1 item=0 count=0 damage=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=place x=17 y=64 z=8 id=3 meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=18.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=19.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=20.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=21.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=22.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=23.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=24.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=25.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=dig x=24 y=64 z=8 old_id=2 old_meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=place x=25 y=64 z=8 id=3 meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=26.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=27.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=28.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=29.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=30.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=31.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=32.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=33.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=34.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=dig x=32 y=64 z=8 old_id=2 old_meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=click window=0 action=104 slot=36 button=0 shift=0 accepted=true
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=slot_state window=0 slot=36 item=0 count=0 damage=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=slot_state window=0 slot=-1 item=3 count=1 damage=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=click window=0 action=105 slot=40 button=0 shift=0 accepted=true
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=slot_state window=0 slot=40 item=3 count=1 damage=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=slot_state window=0 slot=-1 item=0 count=0 damage=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=place x=33 y=64 z=8 id=3 meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=35.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=36.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=37.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=38.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=39.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=40.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=41.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=42.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=dig x=40 y=64 z=8 old_id=2 old_meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=43.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=place x=41 y=64 z=8 id=3 meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=44.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=45.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=46.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=47.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=48.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=49.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=50.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=51.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=dig x=48 y=64 z=8 old_id=2 old_meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=click window=0 action=106 slot=36 button=0 shift=0 accepted=true
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=slot_state window=0 slot=36 item=0 count=0 damage=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=slot_state window=0 slot=-1 item=3 count=1 damage=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=click window=0 action=107 slot=40 button=0 shift=0 accepted=true
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=slot_state window=0 slot=40 item=3 count=1 damage=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=slot_state window=0 slot=-1 item=0 count=0 damage=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=place x=49 y=64 z=8 id=3 meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=52.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=53.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=54.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=55.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=56.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=57.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=58.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=59.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=dig x=56 y=64 z=8 old_id=2 old_meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=60.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=place x=57 y=64 z=8 id=3 meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=61.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=62.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=63.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=64.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=65.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=66.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=67.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=80.500 y=65.620 z=8.500 dim=0 tp=1
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=dig x=64 y=64 z=8 old_id=2 old_meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=click window=0 action=108 slot=36 button=0 shift=0 accepted=true
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=slot_state window=0 slot=36 item=0 count=0 damage=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=slot_state window=0 slot=-1 item=3 count=1 damage=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=click window=0 action=109 slot=40 button=0 shift=0 accepted=true
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=slot_state window=0 slot=40 item=3 count=1 damage=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=slot_state window=0 slot=-1 item=0 count=0 damage=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=place x=65 y=64 z=8 id=3 meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=81.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=82.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=83.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=84.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=85.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=86.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=87.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=88.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=89.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=dig x=72 y=64 z=8 old_id=2 old_meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=place x=73 y=64 z=8 id=3 meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=90.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=91.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=92.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=93.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=94.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=95.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=96.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=97.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=dig x=80 y=64 z=8 old_id=2 old_meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=98.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=place x=81 y=64 z=8 id=3 meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=99.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=100.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=101.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=102.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=103.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=104.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=105.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=106.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=dig x=88 y=64 z=8 old_id=2 old_meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=place x=89 y=64 z=8 id=3 meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=107.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=108.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=109.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=110.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=111.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=112.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=113.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=114.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=dig x=96 y=64 z=8 old_id=2 old_meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=115.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=place x=97 y=64 z=8 id=3 meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=116.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=117.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=118.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=119.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=120.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=121.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=122.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=123.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=dig x=104 y=64 z=8 old_id=2 old_meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=place x=105 y=64 z=8 id=3 meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=124.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=125.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=126.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=127.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=128.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=129.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=130.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=131.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=132.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=dig x=112 y=64 z=8 old_id=2 old_meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=place x=113 y=64 z=8 id=3 meta=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=133.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=134.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=135.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=136.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=137.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=138.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=139.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=pos x=140.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=snapshot x=140.500 y=65.620 z=8.500 dim=0 inv=[5:0:0:0,6:0:0:0,7:0:0:0,8:0:0:0,9:0:0:0,10:0:0:0,11:0:0:0,12:0:0:0,13:0:0:0,14:0:0:0,15:0:0:0,16:0:0:0,17:0:0:0,18:0:0:0,19:0:0:0,20:0:0:0,21:0:0:0,22:0:0:0,23:0:0:0,24:0:0:0,25:0:0:0,26:0:0:0,27:0:0:0,28:0:0:0,29:0:0:0,30:0:0:0,31:0:0:0,32:0:0:0,33:0:0:0,34:0:0:0,35:0:0:0,36:3:2:0,37:0:0:0,38:0:0:0,39:0:0:0,40:3:1:0,41:0:0:0,42:0:0:0,43:0:0:0,44:0:0:0] inv_hash=58010c61c6f9bd8435360bf0cb62db7a2a64663598a875d9db30b36eac3faeb0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=1 ev=disconnect reason=quit detail=disconnect.quit
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=2 ev=login_accept since_accept_ms=3800
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=2 ev=snapshot x=140.500 y=65.620 z=8.500 dim=0 inv=[5:0:0:0,6:0:0:0,7:0:0:0,8:0:0:0,9:0:0:0,10:0:0:0,11:0:0:0,12:0:0:0,13:0:0:0,14:0:0:0,15:0:0:0,16:0:0:0,17:0:0:0,18:0:0:0,19:0:0:0,20:0:0:0,21:0:0:0,22:0:0:0,23:0:0:0,24:0:0:0,25:0:0:0,26:0:0:0,27:0:0:0,28:0:0:0,29:0:0:0,30:0:0:0,31:0:0:0,32:0:0:0,33:0:0:0,34:0:0:0,35:0:0:0,36:3:2:0,37:0:0:0,38:0:0:0,39:0:0:0,40:3:1:0,41:0:0:0,42:0:0:0,43:0:0:0,44:0:0:0] inv_hash=58010c61c6f9bd8435360bf0cb62db7a2a64663598a875d9db30b36eac3faeb0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=2 ev=pos x=140.500 y=65.620 z=8.500 dim=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=2 ev=click window=0 action=1 slot=36 button=0 shift=0 accepted=true
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=2 ev=slot_state window=0 slot=36 item=0 count=0 damage=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=2 ev=slot_state window=0 slot=-1 item=3 count=2 damage=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=2 ev=click window=0 action=2 slot=37 button=0 shift=0 accepted=true
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=2 ev=slot_state window=0 slot=37 item=3 count=2 damage=0
+[2m2026-09-21T12:00:47.533115Z[0m [33m WARN[0m mc173_server: [mp-play] n=cw4c926a g=2 ev=slot_state window=0 slot=-1 item=0 count=0 damage=0

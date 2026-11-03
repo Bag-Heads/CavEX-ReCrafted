@@ -20,6 +20,7 @@
 #include <assert.h>
 #include <string.h>
 
+#include "beta_text_color.h"
 #include "render_name_tag.h"
 
 // Same font-pixel convention as render_sign_text.c (y increasing DOWNWARD,
@@ -89,9 +90,8 @@ size_t name_tag_build_quads(const char* username, const vec3 entity_pos,
 	// [FontRenderer.getStringWidth]: sum of per-char charWidth, where
 	// charWidth[ch] == glyph_width[ch]+1 (this engine's split representation
 	// -- see render_sign_text.c's identical citation).
-	int total_width = 0;
-	for(size_t i = 0; i < len; i++)
-		total_width += (int) glyph_width[(unsigned char) username[i]] + 1;
+	// A colour code (0xA7 + selector) adds 0 [FontRenderer.java:190-191].
+	int total_width = beta_text_width(username, len, glyph_width);
 
 	// [RenderLiving.renderLivingLabel]: `-fontrenderer.getStringWidth(str)/2`
 	// (Java int division truncates toward zero, matched by C's `/` on signed
@@ -124,11 +124,26 @@ size_t name_tag_build_quads(const char* username, const vec3 entity_pos,
 		bg_out[k].z = world[2];
 		bg_out[k].u = 0.0f;
 		bg_out[k].v = 0.0f;
+		bg_out[k].coded = false;
+		bg_out[k].r = bg_out[k].g = bg_out[k].b = 0;
 	}
 
+	// [FontRenderer.java:147-161] 0xA7 + selector switches colour for the
+	// rest of the label and draws neither char.
+	bool coded = false;
+	uint8_t rgb[3] = {255, 255, 255};
 	size_t count = 0;
 	for(size_t i = 0; i < len; i++) {
+		if(beta_text_is_code(username, i, len)) {
+			beta_text_code_rgb(beta_text_code_index(username[i + 1]), false,
+							   rgb);
+			coded = true;
+			i++;
+			continue;
+		}
 		unsigned char ch = (unsigned char) username[i];
+		if(ch == (unsigned char) BETA_TEXT_SECTION)
+			continue; // lone trailing 167: not in font.txt, draws nothing
 		uint8_t w = glyph_width[ch];
 
 		// Space glyphs are ink-free: skip the quad (T1, matches
@@ -172,6 +187,10 @@ size_t name_tag_build_quads(const char* username, const vec3 entity_pos,
 				text_out[count].z = world[2];
 				text_out[count].u = uv[k][0];
 				text_out[count].v = uv[k][1];
+				text_out[count].coded = coded;
+				text_out[count].r = rgb[0];
+				text_out[count].g = rgb[1];
+				text_out[count].b = rgb[2];
 				count++;
 			}
 		}
@@ -180,4 +199,18 @@ size_t name_tag_build_quads(const char* username, const vec3 entity_pos,
 	}
 
 	return count;
+}
+
+void name_tag_text_color(const struct name_tag_vertex* v, uint8_t pass_alpha,
+						 uint8_t out[4]) {
+	assert(v && out);
+	if(v->coded) {
+		out[0] = v->r;
+		out[1] = v->g;
+		out[2] = v->b;
+		out[3] = 255;
+	} else {
+		out[0] = out[1] = out[2] = 255;
+		out[3] = pass_alpha;
+	}
 }

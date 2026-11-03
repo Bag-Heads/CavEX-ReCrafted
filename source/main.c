@@ -69,6 +69,7 @@
 #include "graphics/gui_util.h"
 #include "graphics/gfx_settings.h"
 #include "graphics/render_entity.h"
+#include "graphics/render_item.h" /* ci-1101/31: per-viewport needle */
 #include "graphics/render_entity_fire.h"
 #include "graphics/render_name_tag_draw.h"
 #include "graphics/render_piston_moving.h"
@@ -1730,6 +1731,16 @@ static void emit_hw_heartbeat(uint32_t tick, int far_view_distance, int far_effe
 		 * yield calls, lock waits and recovery sleeps (not CPU time). */
 		struct server_world_light_drain_hb d;
 		server_world_light_drain_hb_take(&d);
+		/* ci-1101/37: the longest >= 10 ms drain mutex wait this window, with
+		 * the contended lock named and its holder (hw1101c: 71,206 us inside
+		 * the server tick's light drain). Emitted only when one happened. */
+		hb.lqd_wait_present = d.wait_attrib.wait_us > 0;
+		hb.lqd_wait_us = d.wait_attrib.wait_us;
+		hb.lqd_wait_mutex = d.wait_attrib.mutex;
+		hb.lqd_wait_holder_id = d.wait_attrib.holder_id;
+		hb.lqd_wait_holder_tag = d.wait_attrib.holder_tag;
+		hb.lqd_wait_stripe = d.wait_attrib.stripe;
+		memcpy(hb.lqd_wait_name, d.wait_attrib.name, sizeof hb.lqd_wait_name);
 		/* R5 points 9-10: the window maxima of rt/wt (every tick graded),
 		 * the checkpoint split and the RPC token-pool wait of this window */
 		uint32_t rt_max = 0, wt_max = 0, rpc_sum = 0, rpc_max = 0, rpc_n = 0;
@@ -3209,13 +3220,13 @@ static unsigned local_container_views(bool* converted, bool transitioning) {
   &&guest->local_player&&gfx_height()>=480;
  if(admitted&&!gstate.paused&&lworld_admit_gameplay()) {
   if(primary->current_screen==&screen_death)return 2;
-  if(primary->current_screen==&screen_ingame) {
-   /* Decide before camera/pre-render setup, including screens opened by this
-    * frame's gameplay update. No late viewport-count/projection mismatch. */
-   /* As screen_ingame_death_trigger documents, an open GUI retains death until Back. */
-   bool global_edge=!local_menu_host_active(primary)&&!local_pause_active(&primary->pause)
-    &&gstate.config_creative&&input_pressed(IB_OPEN_INVENTORY);
-   if(!global_edge)return 2;
+  if(primary->current_screen==&screen_ingame)return 2;
+  if(primary->current_screen==&screen_creative_picker
+   &&local_menu_host_open_creative(primary,0,gfx_width(),240)) {
+   screen_creative_picker_to_compact(&primary->menu_host.picker);
+   primary->current_screen=&screen_ingame;
+   if(primary->local_player)primary->local_player->data.local_player.capture_input=false;
+   input_pointer_enable(true);*converted=true;return 2;
   }
   struct screen* current=primary->current_screen;
   bool inventory=current==&screen_inventory;
@@ -3228,10 +3239,17 @@ static unsigned local_container_views(bool* converted, bool transitioning) {
  }
  if(!transitioning&&local_menu_host_active(primary)&&primary->menu_host.split_owned
   &&primary->current_screen==&screen_ingame&&gstate.world_loaded&&!gstate.world_switch_pending&&!gstate.paused&&lworld_admit_gameplay()) {
-  uint8_t window=primary->menu_host.window;bool valid=primary->windows[window]==primary->menu_host.window_identity;
-  int visible=primary->visible_window;local_menu_host_reset(primary);
-  if(valid&&clin_show_window(window))primary->visible_window=visible;
-  else primary->visible_window=-1;
+  if(primary->menu_host.mode==LOCAL_MENU_CREATIVE) {
+   struct creative_picker picker=primary->menu_host.picker;
+   local_menu_host_reset(primary);
+   screen_set(&screen_creative_picker);
+   screen_creative_picker_from_compact(&picker);
+  } else {
+   uint8_t window=primary->menu_host.window;bool valid=primary->windows[window]==primary->menu_host.window_identity;
+   int visible=primary->visible_window;local_menu_host_reset(primary);
+   if(valid&&clin_show_window(window))primary->visible_window=visible;
+   else primary->visible_window=-1;
+  }
   *converted=true;
  }
  if(local_menu_host_active(primary)&&primary->menu_host.split_owned&&primary->local_player)
@@ -3687,7 +3705,7 @@ static bool bake_host_scene_begin(void* user,
 	if(s_bake.world_live) return false;
 	s_bake.recipe = r;
 	world_create(&s_bake.scene_world);
-	s_bake.scene_world.dimension = WORLD_DIM_OVERWORLD;
+	s_bake.scene_world.dimension = r->dimension;
 	s_bake.world_live = true;
 	s_bake.pre_rendered = false;
 	s_bake.ready_streak = 0;
@@ -3851,7 +3869,9 @@ static bool bake_host_render_capture(void* user, backdrop_bake_rows_fn sink,
 	float daytime = (float)(r->world_time % DAY_LENGTH_TICKS)
 		/ (float)DAY_LENGTH_TICKS;
 	vec3 top, bottom, atmos;
-	daytime_sky_colors(daytime, top, bottom, atmos);
+	/* Beta WorldProviderHell.func_4096_a: fog (0.2,0.03,0.03);
+	 * use the existing dimension-aware engine colours and no Nether sky/clouds. */
+	daytime_sky_colors_dimension(daytime, r->dimension, top, bottom, atmos);
 	gfx_scissor(false, 0, 0, 0, 0);
 	gfx_set_viewport(0, 0, gfx_width(), gfx_height());
 	gfx_fog_color(atmos[0], atmos[1], atmos[2]);
@@ -3870,9 +3890,9 @@ static bool bake_host_render_capture(void* user, backdrop_bake_rows_fn sink,
 	gfx_blending(MODE_BLEND);
 	gfx_alpha_test(true);
 	gfx_fog(false);
-	gfx_update_light(daytime_light_sun_dimension(daytime, WORLD_DIM_OVERWORLD),
+	gfx_update_light(daytime_light_sun_dimension(daytime, r->dimension),
 		0.0F, 0.0F, world_dimension_light(w));
-	gutil_sky_box_owned(s_bake.cam.view, daytime_celestial_angle(daytime), top,
+	if(r->dimension == WORLD_DIM_OVERWORLD) gutil_sky_box_owned(s_bake.cam.view, daytime_celestial_angle(daytime), top,
 		bottom, &s_bake.cam);
 	(void)world_render(w, &s_bake.cam, false);
 	gfx_fog(true);
@@ -3881,8 +3901,8 @@ static bool bake_host_render_capture(void* user, backdrop_bake_rows_fn sink,
 	(void)world_render(w, &s_bake.cam, true);
 #endif
 #ifdef GFX_CLOUDS
-	gutil_clouds_owned(s_bake.cam.view,
-		daytime_brightness_dimension(daytime, WORLD_DIM_OVERWORLD), &s_bake.cam,
+	if(r->dimension == WORLD_DIM_OVERWORLD) gutil_clouds_owned(s_bake.cam.view,
+		daytime_brightness_dimension(daytime, r->dimension), &s_bake.cam,
 		now);
 #endif
 	gfx_mode_gui();
@@ -3966,6 +3986,7 @@ static void bake_emit(struct backdrop_bake* b) {
 		s_bake.light_calls, s_bake.mesh_deferred, s_bake.budget_max_us,
 		s_bake.legacy ? 1 : 0);
 	printf("[bake] %s\n", line);
+	if(s_bake.selftest_owned) fflush(stdout);
 	(void)hw_telemetry_emit_observer(line);
 }
 
@@ -3976,8 +3997,33 @@ void screen_texturepacks_set_backdrop_hooks(const struct backdrop_job_hooks* h);
 static const char* bake_job_pack(void) {
 	return config_read_path(&gstate.config_user, "paths.texturepack", "assets");
 }
+static bool s_bg_nether;
+static struct tex_gfx* bake_job_texture(void) {
+ return s_bg_nether ? &texture_nether_background : &texture_menu_background;
+}
+/* hw1102c: the job polls this every frame; re-hashing the cached 1.1 MB
+ * PNG on the SD card each frame ran the Wii title at ~2 fps. Keep the beach
+ * answer per pack until this job publishes or reloads. */
+static char s_bg_state_pack[700];
+static int s_bg_state_beach = -1;
 static int bake_job_state(void) {
-	return tex_backdrop_state_of(bake_job_pack());
+ const char* pack = bake_job_pack();
+ if(s_bg_state_beach < 0 || strncmp(s_bg_state_pack, pack, sizeof(s_bg_state_pack))) {
+  s_bg_state_beach = tex_scene_backdrop_state_of(pack, false);
+  snprintf(s_bg_state_pack, sizeof(s_bg_state_pack), "%s", pack);
+ }
+ int beach = s_bg_state_beach;
+ /* Optional portal art never holds boot credits or an opaque Apply. */
+ s_bg_nether = beach < 3 && !s_bake_loading_frontend
+     && gstate.players[0].current_screen == &screen_title;
+#ifdef PLATFORM_WII
+ /* hw1102c: on Broadway the Nether scene bake (Nether light drain is 10-15x
+  * the Overworld's, tmp/jobs/nether-1030) ran for minutes at ~3 fps on the
+  * title and held the bake world, so no world could start. Packs without a
+  * shipped nether-background.png use the tiled netherrack fallback on Wii. */
+ s_bg_nether = false;
+#endif
+ return s_bg_nether ? tex_scene_backdrop_state_of(bake_job_pack(), true) : beach;
 }
 /* A bake that SUCCEEDED but could not be saved to the SD card (texture.c
  * publish: ALLOC 3 encode workspace, DIR 4, OPEN 5, WRITE 6, CLOSE 7,
@@ -3992,7 +4038,7 @@ static bool bake_job_start(void) {
 	s_bg_cache_write_failed = false; /* a new attempt */
 	s_bg_upload_failed = false;
 	s_bg_pixels_uploaded = false;
-	return backdrop_bake_request(&err);
+	return backdrop_bake_request_recipe(s_bg_nether ? backdrop_bake_nether_recipe() : NULL, &err);
 }
 static enum backdrop_bake_state bake_job_poll(void) {
 	struct backdrop_bake* b = backdrop_bake_active();
@@ -4025,15 +4071,16 @@ static bool bake_job_upload_pixels(const uint8_t* rgba) {
 	bool ok = false;
 	if(copy) {
 		memcpy(copy, rgba, n);
-		ok = tex_gfx_load(&texture_menu_background, copy, BACKDROP_BAKE_OUT_W,
+		ok = tex_gfx_load(bake_job_texture(), copy, BACKDROP_BAKE_OUT_W,
 						  BACKDROP_BAKE_OUT_H, TEX_FMT_RGBA16, false);
 	}
 	boot_gate_mem_close("job_pixels");
-	return ok && texture_menu_background.data != NULL;
+	return ok && bake_job_texture()->data != NULL;
 }
 static int bake_job_publish(const uint8_t* rgba) {
-	int r = tex_backdrop_publish(bake_job_pack(), rgba, BACKDROP_BAKE_OUT_W,
-								 BACKDROP_BAKE_OUT_H);
+	s_bg_state_beach = -1; /* the cache files are about to change */
+	int r = tex_scene_backdrop_publish(bake_job_pack(), rgba, BACKDROP_BAKE_OUT_W,
+								 BACKDROP_BAKE_OUT_H, s_bg_nether);
 	s_bg_pixels_uploaded = false;
 	if(r == 0 && rgba) /* PUBLISHED: the cache now holds exactly these pixels */
 		s_bg_pixels_uploaded = bake_job_upload_pixels(rgba);
@@ -4056,6 +4103,7 @@ static const char* bake_job_publish_reason(int r) {
 										  : tex_backdrop_publish_reason(r);
 }
 static void bake_job_reload(void) {
+	s_bg_state_beach = -1;
 	if(s_bg_pixels_uploaded) { /* already on the GPU from the pixels */
 		s_bg_pixels_uploaded = false;
 		return;
@@ -4063,11 +4111,11 @@ static void bake_job_reload(void) {
 	gfx_wait_idle(); /* the menu drew the old slot last frame */
 	boot_gate_mem_open();
 	/* The result is the witness below: a loaded slot has GPU data. */
-	(void)tex_menu_background_load();
+	(void)tex_scene_background_load(s_bg_nether);
 	boot_gate_mem_close("job_reload");
 	/* The job fails with "couldn't be uploaded" next; the save itself worked,
 	 * so the boot gate admits the title with the dirt (never a hang). */
-	s_bg_upload_failed = texture_menu_background.data == NULL;
+	s_bg_upload_failed = bake_job_texture()->data == NULL;
 	if(s_bg_upload_failed) {
 		const char* line = "{\"event\":\"backdrop_upload_failed\"}";
 		printf("[credits] %s\n", line);
@@ -4077,7 +4125,7 @@ static void bake_job_reload(void) {
 /* T2b witnesses: the background really is on the GPU; the scratch world and
  * its mesher jobs are really retired. */
 static bool bake_job_uploaded(void) {
-	return texture_menu_background.data != NULL;
+	return bake_job_texture()->data != NULL;
 }
 static bool bake_job_retired(void) {
 	return !s_bake.world_live && !s_bake.retire_pending;
@@ -4378,20 +4426,28 @@ static void boot_gate_preinit(void) {
  * (assets missing) -- the caller keeps the old boot notice. Registers the
  * loader service either way (watchdog/gap only without cards). */
 static bool boot_gate_begin(struct hw_run_config* run) {
-	const char* dir =
-#ifdef PLATFORM_WII
-		"sd:/assets/gui/startup-credits";
-#else
-		"assets/gui/startup-credits";
-#endif
 	/* boot_gate_preinit installed the services before gfx_setup; its PNG
 	 * window covered the boot tex_init (textures + cached background). */
 	boot_gate_mem_close("boot_tex_init");
 	s_gate.run = run;
-	int r = startup_credits_load(&s_gate.data, dir);
+	/* ci-1101/18: the same bundled roots the texture resolver walks (Wii:
+	 * sd:/assets, then the app-folder assets/; PC: assets/), so a player who
+	 * installed only apps/CavEX/ still gets the credit cards. */
+	const char* roots[2];
+	size_t nroots = tex_bundled_roots(roots, 2);
+	int r = SC_LOAD_ERR_MANIFEST;
+	char dir[96] = "";
+	for(size_t k = 0; k < nroots; k++) {
+		snprintf(dir, sizeof(dir), "%s/gui/startup-credits", roots[k]);
+		r = startup_credits_load(&s_gate.data, dir);
+		if(r == SC_LOAD_OK)
+			break;
+		fprintf(stderr, "[credits] %s not loaded (%d)%s\n", dir, r,
+				k + 1 < nroots ? "; trying the next bundled root" : "");
+	}
 	if(r != SC_LOAD_OK) {
-		fprintf(stderr, "[credits] %s not loaded (%d); boot notice instead\n",
-				dir, r);
+		fprintf(stderr, "[credits] no bundled root had the credits; boot "
+				"notice instead\n");
 		return false;
 	}
 	for(int k = 0; k < s_gate.data.ntextures; k++) {
@@ -5313,8 +5369,19 @@ int main(int argc, char** argv) {
 	// retunable live with the hotbar +/- buttons while the F3 overlay is up (see
 	// the input handler below; the hotbar scroll is suppressed in that mode).
 	// Clamped to the loaded view distance -- you can't skin past what is loaded.
+	// Default 4 on Wii (whole view on PC). 2 skinned rings 3-5 inside Beta's own
+	// reach, so buildings popped in (maintainer betamc report 2026-11-01).
+	// Real-Wii 53a039f (hw1101f/g, same stats): r2 perf_stress 27 frames >30 ms
+	// / far_walk 49; r4 24 / 0; r5 71 / 49; oom/trunc/spill 0 at every radius.
+	// Maintainer picked 4.
 	{
-		int r = config_read_int(&gstate.config_user, "lod.high_detail_radius", 2);
+#ifdef PLATFORM_PC
+		int lod_default = MAX_VIEW_DISTANCE;
+#else
+		int lod_default = 4;
+#endif
+		int r = config_read_int(&gstate.config_user, "lod.high_detail_radius",
+								lod_default);
 		if(r < 0)
 			r = 0;
 		if(r > MAX_VIEW_DISTANCE)
@@ -5618,17 +5685,14 @@ int main(int argc, char** argv) {
 	// faithful row set, and View Bobbing lives in GuiVideoSettings).
 	gstate.config.view_bobbing
 		= config_read_int(&gstate.config_user, "render.view_bobbing", 1) != 0;
-	// candidate(gfx): TextureCompassFX/TextureWatchFX item-needle animation
-	// (T2, source/platform/texture.c's item_needle_fx_tick). Default ON for
-	// PC, OFF for Wii until a real-hardware bytes/frame + DCFlush measurement
-	// exists -- see game_state.h's item_needle_anim comment.
-#ifdef PLATFORM_WII
+	// Beta TextureCompassFX.onTick / TextureWatchFX.onTick always animate.
+	// gfx.item_needle_anim=0 is the explicit visual/performance opt-out.
 	gstate.config.item_needle_anim
-		= config_read_int(&gstate.config_user, "gfx.item_needle_anim", 0) != 0;
-#else
-	gstate.config.item_needle_anim
-		= config_read_int(&gstate.config_user, "gfx.item_needle_anim", 1) != 0;
-#endif
+		= json_object_dothas_value_of_type(json_value_get_object(gstate.config_user.root),
+			"gfx.item_needle_anim", JSONBoolean)
+		? json_object_dotget_boolean(json_value_get_object(gstate.config_user.root),
+			"gfx.item_needle_anim") == 1
+		: config_read_int(&gstate.config_user, "gfx.item_needle_anim", 1) != 0;
 #ifdef PLATFORM_WII
 	if(hw_run.enabled) gfx_guard_scan_benchmark(s_guard_scan_us);
 #endif
@@ -6246,12 +6310,13 @@ int main(int argc, char** argv) {
 									"debug.painting_demo", "off"),
 				 "on")
 		  == 0;
-	// Debug ("debug.map_demo"): held-map render capture stage -- gives and
-	// selects a fresh map post-load (server_local.c map_demo_drive).
+	// Debug ("debug.map_demo"): replace the selected slot with a fresh map
+	// after an ordinary load (server_local.c's deferred map give).
 	server.map_demo = strcmp(config_read_string(&gstate.config_user,
 												"debug.map_demo", "off"),
 							 "on")
-		== 0;
+		== 0
+		|| config_read_int(&gstate.config_user, "debug.map_demo", 0) == 1;
 	server.piston_demo = strcmp(config_read_string(&gstate.config_user,
 												   "debug.piston_demo", "off"),
 								"on")
@@ -7247,6 +7312,16 @@ resume_main_loop:
 		 * below, so the next host tick consumes it even when this frame runs
 		 * no tick. Ineligible frames clear it. entity_local_player.h. */
 		entity_local_player_ride_action_frame();
+		/* Creative double-tap uses frame edges, independently for both
+		 * owners, even when this frame executes no 20 Hz physics tick. */
+		struct input_player_frame flight_host = {.connected = true};
+		const struct input_player_frame* flight_owner = input_player_frame(0);
+		flight_host.connected = gstate.autopilot.active
+			|| !flight_owner || flight_owner->connected;
+		flight_host.pressed[IB_JUMP] = input_pressed(IB_JUMP);
+		ptime_t flight_now = time_get();
+		entity_local_player_flight_input(0, &flight_host, flight_now);
+		entity_local_player_flight_input(1, input_player_frame(1), flight_now);
 		int catch_up = 0;
 		ptime_t t_tick = time_get();
 		while(tick_delta >= 1.0F && catch_up < 3) {
@@ -7283,9 +7358,9 @@ resume_main_loop:
 #ifndef GFX_FANCY_LIQUIDS
 				water_fx_anim_tick();
 #endif
-				// Beta TextureCompassFX/TextureWatchFX (T2, opt-in): see
-				// game_state.h's item_needle_anim comment. A no-op call when
-				// the toggle is off (checked first thing inside).
+				// Beta TextureCompassFX/TextureWatchFX: default ON on PC and Wii.
+				// Opt out with gfx.item_needle_anim=0; the call is then a no-op
+				// (checked first thing inside).
 				item_needle_fx_tick(gstate.config.item_needle_anim);
 				// Chat lines age every client tick regardless of the active
 				// screen or the entities gate [740c583 GuiIngame.updateTick].
@@ -8480,9 +8555,9 @@ resume_main_loop:
      recovery_frame=*frame;recovery_frame.pointer_valid=false;frame=&recovery_frame;
     }
     bool pause=local_pause_active(&owner->pause);
-    bool opening=frame&&frame->connected&&frame->pressed[IB_HOME];
-    bool creative_toggle=gstate.config_creative&&!local_menu_host_active(owner)&&owner->visible_window<0;
-    if(!menu_consumed[p]&&(pause||opening||creative_toggle||view_rect[p].height<240)) {
+    bool opening=frame&&frame->connected&&frame->pressed[IB_HOME]
+     &&owner->menu_host.mode!=LOCAL_MENU_CREATIVE;
+    if(!menu_consumed[p]&&(pause||opening||view_rect[p].height<240)) {
      menu_consumed[p]=local_menu_host_recovery_frame(owner,p,frame,0,vy,gfx_width(),vh);
      if(!menu_consumed[p]&&(pause||opening))menu_consumed[p]=local_pause_frame(owner,p,frame,vy,vh);
     }
@@ -8495,7 +8570,7 @@ resume_main_loop:
     bool synthetic_guest=hw_run.enabled&&p==1&&(hw_run.split_guest_walk||s_split_recovery_act.drive_guest_body||s_vehicle_act.drive_guest_body)
      &&!owner->local_reply_failed&&!local_menu_host_active(owner)
      &&owner->visible_window<0&&!local_pause_active(&owner->pause);
-    if(!menu_consumed[p]&&!creative_toggle&&!synthetic_guest)menu_consumed[p]=local_menu_host_frame(owner,p,frame,0,vy,gfx_width(),vh,gstate.stats.dt,local_container_send,&source);
+    if(!menu_consumed[p]&&!synthetic_guest)menu_consumed[p]=local_menu_host_frame(owner,p,frame,0,vy,gfx_width(),vh,gstate.stats.dt,local_container_send,&source);
     /* The hardware harness drives player 0 through the autopilot with NO
      * physical controller (wpad -1): its steering rides the same capture
      * path, so "a device is connected" must not be the gate for it -- the
@@ -8797,6 +8872,9 @@ resume_main_loop:
 			ptime_t draw_time = time_get();
 			for(unsigned viewport = 0; viewport < view_count; viewport++) {
 				struct client_session* owner = &gstate.players[viewport];
+				/* ci-1101/31: item draws in this pass pick this player's
+				 * compass/clock needle (render_item_flat). */
+				render_item_set_viewport(viewport);
 				bool render_view=render_world&&fw.draw_view[viewport];
 				struct camera* render_camera=render_cameras[viewport];
 				int view_y = view_rect[viewport].y;
@@ -9082,6 +9160,7 @@ resume_main_loop:
 				screen_stats_save_render(viewport, input_player_frame(viewport), gfx_width(), view_height);
 				clin_world_view_leave(&vscope);
 			} /* viewports */
+			render_item_set_viewport(0);
 			// Menu centering can change the viewport even with view_count=1.
 			gfx_scissor(false, 0, 0, 0, 0);
 			gfx_set_viewport(0, 0, gfx_width(), gfx_height());

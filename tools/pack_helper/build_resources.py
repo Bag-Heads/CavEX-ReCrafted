@@ -126,6 +126,10 @@ def build(repo, destination, cc="cc"):
     (destination / "mapping.json").write_text(json.dumps(mapping, indent=2),
                                               encoding="utf-8", newline="\n")
     shutil.copyfile(repo / "tools/pack_helper/conversion_map.json", destination / "conversion_map.json")
+    # Generated geometry/shading only. Never bundle a game executable or a
+    # user's textures to compose the optional imported-pack loading scene.
+    for name in ("nether_scene_map.bin", "nether_scene_map.json"):
+        shutil.copyfile(repo / "tools/pack_helper/scene_data" / name, destination / name)
     suffix = ".exe" if os.name == "nt" else ""
     native = destination / ("sound_transcode" + suffix)
     args = [cc, "-O2", "-std=c99", "-I", str(repo / "source"), "-I", str(repo / "third_party"),

@@ -52,7 +52,13 @@ static struct server_local* split_fixture(void) {
 	return s;
 }
 static void split_destroy(struct server_local* s) {
+	/* Every slot owns archives in the session's shared pool. Discard them
+	 * before freeing s so the I/O helper cannot retain an embedded archive. */
+	for(unsigned k = 1; k < SERVER_LOCAL_WORLD_SLOTS; k++)
+		if(server_world_chunks_ready(&s->worlds[k]))
+			server_world_discard(&s->worlds[k]);
 	server_world_discard(&s->world);
+	region_pool_destroy(&s->region_pool);
 	level_archive_discard(&s->level);
 	server_world_populate_scratch_destroy(s->world_populate_scratch);
 	inventory_destroy(&s->player.inventory, &s->player);

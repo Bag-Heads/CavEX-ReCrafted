@@ -77,6 +77,18 @@ static const struct backdrop_bake_recipe s_default_recipe = {
 	.crop_y1 = 456,
 };
 
+const struct backdrop_bake_recipe* backdrop_bake_nether_recipe(void) {
+ static const struct backdrop_bake_recipe r = {
+  .dimension = WORLD_DIM_NETHER, .seed = 42,
+  .eye = {-59.5F, 36.62F, 100.5F}, .yaw_deg = 90, .pitch_deg = 78,
+  .world_time = 6000, .fov_deg = 70, .frame_w = 640, .frame_h = 480,
+  .render_distance = 112, .fog_distance = 80, .fog_clip = 1.13F,
+  .lod_near_radius = 6, .view_radius = 6,
+  .crop_x0 = 0, .crop_y0 = 96, .crop_x1 = 640, .crop_y1 = 456,
+ };
+ return &r;
+}
+
 const struct backdrop_bake_recipe* backdrop_bake_default_recipe(void) {
 	return &s_default_recipe;
 }
@@ -110,6 +122,7 @@ struct backdrop_bake {
 	bool cancel_requested;
 	bool scene_open;
 	struct worldgen* wg;
+	struct java_random hell_rng;
 
 	int min_cx, min_cz, span_x, span_z; /* bounding box of T */
 	struct bb_column* cols;             /* span_x * span_z */
@@ -386,7 +399,8 @@ static bool bb_plan(struct backdrop_bake* b) {
 }
 
 static bool bb_recipe_valid(const struct backdrop_bake_recipe* r) {
-	return r && r->frame_w > 0 && r->frame_h > 0 && r->fov_deg > 0
+	return r && (r->dimension == WORLD_DIM_OVERWORLD || r->dimension == WORLD_DIM_NETHER)
+		&& r->frame_w > 0 && r->frame_h > 0 && r->fov_deg > 0
 		&& r->render_distance > 0 && r->fog_distance > 0 && r->fog_clip > 0
 		&& r->view_radius >= 0 && r->view_radius <= 16
 		&& r->crop_x0 >= 0 && r->crop_y0 >= 0 && r->crop_x1 > r->crop_x0
@@ -428,13 +442,15 @@ struct backdrop_bake* backdrop_bake_create(const struct backdrop_bake_host* host
 		*err = BACKDROP_BAKE_ERR_ALLOC;
 		return NULL;
 	}
-	b->wg = worldgen_create(recipe->seed, WORLD_DIM_OVERWORLD);
+	b->wg = worldgen_create(recipe->seed, recipe->dimension);
 	if(!b->wg) {
 		bb_release_all(b);
 		free(b);
 		*err = BACKDROP_BAKE_ERR_ALLOC;
 		return NULL;
 	}
+	if(recipe->dimension == WORLD_DIM_NETHER)
+		worldgen_hell_initial_rng(b->wg, &b->hell_rng);
 	return b;
 }
 
@@ -455,7 +471,8 @@ static bool bb_terrain_one(struct backdrop_bake* b, size_t i) {
 		return false;
 	}
 	memset(&c->sc, 0, sizeof(c->sc));
-	if(!worldgen_generate_chunk_provider(b->wg, &c->sc, cx, cz, NULL)) {
+	if(!worldgen_generate_chunk_provider(b->wg, &c->sc, cx, cz,
+		b->recipe.dimension == WORLD_DIM_NETHER ? &b->hell_rng : NULL)) {
 		server_chunk_arrays_free(&c->sc);
 		b->error = BACKDROP_BAKE_ERR_GENERATE;
 		return false;
@@ -484,11 +501,15 @@ static void bb_populate_one(struct backdrop_bake* b, size_t i) {
 		.chunks_exist = bbv_chunks_exist,
 	};
 	v.self = &view;
-	/* server_world.c's populate call: corner biome at +16,+16, tree density
-	 * at the block origin. */
-	enum biome corner = worldgen_biome_at(b->wg, qx * 16 + 16, qz * 16 + 16);
-	double density = worldgen_tree_density(b->wg, qx * 16, qz * 16);
-	worldgen_populate(b->recipe.seed, qx, qz, &view, corner, density);
+	/* Same Nether provider/RNG as server_world.c. Beta ChunkProviderHell:
+	 * no per-quadrant reseed; this offline scene uses fixed row-major order. */
+	if(b->recipe.dimension == WORLD_DIM_NETHER) {
+		worldgen_hell_populate(&b->hell_rng, qx, qz, &view);
+	} else {
+		enum biome corner = worldgen_biome_at(b->wg, qx * 16 + 16, qz * 16 + 16);
+		double density = worldgen_tree_density(b->wg, qx * 16, qz * 16);
+		worldgen_populate(b->recipe.seed, qx, qz, &view, corner, density);
+	}
 	b->rep.quads_done++;
 }
 
@@ -497,7 +518,7 @@ static bool bb_install_one(struct backdrop_bake* b, size_t i) {
 	if(!c->member) return true;
 	int cx = b->min_cx + (int)(i / b->span_z);
 	int cz = b->min_cz + (int)(i % b->span_z);
-	worldgen_lighting(&c->sc, false, WORLD_DIM_OVERWORLD);
+	worldgen_lighting(&c->sc, false, b->recipe.dimension);
 	if(!bb_alloc_allowed()) {
 		b->error = BACKDROP_BAKE_ERR_ALLOC;
 		return false;
@@ -740,13 +761,18 @@ void backdrop_bake_register_host(const struct backdrop_bake_host* host) {
 }
 
 bool backdrop_bake_request(enum backdrop_bake_error* err) {
+	return backdrop_bake_request_recipe(NULL, err);
+}
+
+bool backdrop_bake_request_recipe(const struct backdrop_bake_recipe* recipe,
+	enum backdrop_bake_error* err) {
 	enum backdrop_bake_error dummy;
 	if(!err) err = &dummy;
 	if(s_active || !s_host_set) {
 		*err = BACKDROP_BAKE_ERR_SCENE;
 		return false;
 	}
-	s_active = backdrop_bake_create(&s_host, NULL, err);
+	s_active = backdrop_bake_create(&s_host, recipe, err);
 	return s_active != NULL;
 }
 

@@ -112,9 +112,19 @@ bool spawner_hostile_light_value_ok(struct random_gen* rng, int raw_sky_light,
  * burst (updateDelay(); return), it does not skip to the next member.
  * emit receives the member's exact double position (setLocationAndAngles
  * var11/var13/var15, :72-75), not a block-centred cell. */
+/* spot_ok (ci-1101/45, HUNT-14 #2b): the member's EntityLiving.getCanSpawnHere
+ * GEOMETRY at its exact setLocationAndAngles position (x, y = feet/bb.minY,
+ * z): checkIfAABBIsClear && no colliding block box && !getIsAnyLiquid over
+ * the member's own width x height box [EntityLiving.java:781-783]. Beta has
+ * NO floor clause and NO "cell is air" clause on this path. The live server
+ * ALWAYS supplies it (server_local.c sl_spawner_spot_ok: the same canonical
+ * box helpers the natural spawns use). NULL falls back to spawner_spot_ok's
+ * legacy cell test -- kept ONLY for the headless block-table-less harness
+ * (tests/test_spawner.c), which has no collision boxes to test against. */
 struct spawner_member_ops {
 	void (*construct)(void* ctx);
 	bool (*too_many_nearby)(void* ctx);
+	bool (*spot_ok)(void* ctx, double x, double y, double z);
 	bool (*can_spawn)(void* ctx, int raw_sky_light, int block_light_value);
 	void (*emit)(void* ctx, double x, double y, double z);
 };

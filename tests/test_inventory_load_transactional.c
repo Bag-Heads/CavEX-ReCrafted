@@ -84,6 +84,41 @@ static void append_invalid_tail_entry(nbt_node* inv_list_node) {
 	list_add_tail(&bad_entry->entry, &inv_list_node->payload.tag_list->entry);
 }
 
+/* ci-1101/41 item 14: append one plain Beta inventory compound
+ * {Slot:byte, id:short, Count:byte, Damage:short} (ItemStack.writeToNBT
+ * order, InventoryPlayer.writeToNBT adds Slot first). */
+static void append_entry(nbt_node* inv_list_node, int8_t slot, int16_t id,
+						 int8_t count, int16_t damage) {
+	nbt_node fields[4] = {
+		{.type = TAG_BYTE, .name = "Slot", .payload.tag_byte = slot},
+		{.type = TAG_SHORT, .name = "id", .payload.tag_short = id},
+		{.type = TAG_BYTE, .name = "Count", .payload.tag_byte = count},
+		{.type = TAG_SHORT, .name = "Damage", .payload.tag_short = damage},
+	};
+	struct nbt_list wraps[4];
+	struct nbt_list sentinel = {.data = NULL};
+	INIT_LIST_HEAD(&sentinel.entry);
+	/* slot < 0: write the record WITHOUT a Slot tag. */
+	for(int k = slot < 0 ? 1 : 0; k < 4; k++) {
+		wraps[k].data = &fields[k];
+		list_add_tail(&wraps[k].entry, &sentinel.entry);
+	}
+	nbt_node* c = nbt_clone(&(nbt_node) {
+		.type = TAG_COMPOUND, .payload.tag_compound = &sentinel});
+	assert(c);
+	struct nbt_list* e = malloc(sizeof(*e));
+	assert(e);
+	e->data = c;
+	list_add_tail(&e->entry, &inv_list_node->payload.tag_list->entry);
+}
+
+static size_t list_len(const nbt_node* l) {
+	size_t n = 0;
+	struct list_head* p;
+	list_for_each(p, &l->payload.tag_list->entry) n++;
+	return n;
+}
+
 int main(void) {
 	char base[128];
 	test_fixture_dir("test_inventory_load_transactional_tmp", base, sizeof base);
@@ -140,16 +175,130 @@ int main(void) {
 	int snapshot_hotbar_slot = live.hotbar_slot;
 
 	bool loaded = level_archive_read_inventory(&la, &live);
-	/* Slice 2: retain an unmappable imported record by pinning the whole
-	 * inventory. It may be saved unchanged, but edits must refuse atomically. */
+	/* ci-1101/41 item 14 (was: Slice 2 pinned the WHOLE inventory read-only
+	 * for one unmappable record). Beta InventoryPlayer.readFromNBT
+	 * (RetroMCP InventoryPlayer.java:226-237) places each record by its own
+	 * Slot and simply skips one outside 0..35/100..103; the others load as
+	 * ordinary, editable stacks. CaveWii keeps the unplaceable record's bytes
+	 * verbatim on rewrite (no data loss), but it no longer pins anything. */
 	assert(loaded);
-	for(size_t k=INVENTORY_SLOT_ARMOR;k<INVENTORY_SIZE;k++)
-		assert(item_data_pinned(&live.items[k]) && live.items[k].id);
+	assert(live.items[INVENTORY_SLOT_HOTBAR + 0].id == ITEM_DIAMOND_SWORD
+		   && live.items[INVENTORY_SLOT_HOTBAR + 0].durability == 3
+		   && !item_data_pinned(&live.items[INVENTORY_SLOT_HOTBAR + 0]));
+	assert(live.items[INVENTORY_SLOT_MAIN + 4].id == ITEM_APPLE
+		   && live.items[INVENTORY_SLOT_MAIN + 4].count == 7
+		   && !item_data_pinned(&live.items[INVENTORY_SLOT_MAIN + 4]));
+	assert(live.items[INVENTORY_SLOT_ARMOR + ARMOR_TYPE_CHESTPLATE].id
+		   == ITEM_IRON_CHESTPLATE);
+	for(size_t k = 0; k < INVENTORY_SIZE; k++)
+		assert(!item_data_pinned(&live.items[k]));
+	assert(live.items[INVENTORY_SLOT_MAIN + 20].id == 0); /* empty, not stone */
+	size_t before_len = list_len(inv_list_node);
 	assert(level_archive_write_inventory(&la,&live));
-	live.items[INVENTORY_SLOT_MAIN].count--;
-	assert(!level_archive_write_inventory(&la,&live));
+	live.items[INVENTORY_SLOT_MAIN + 4].count--;
+	live.items[INVENTORY_SLOT_MAIN + 20]
+		= (struct item_data) {.id = ITEM_COAL, .count = 9, .durability = 0};
+	assert(level_archive_write_inventory(&la,&live));
+	inv_list_node = nbt_find_by_path(la.data, LEVEL_PLAYER_INVENTORY.name);
+	assert(list_len(inv_list_node) == before_len + 1);
+	{
+		/* The Slot-50 record is still on disk, byte for byte. */
+		bool found = false;
+		struct list_head* p;
+		list_for_each(p, &inv_list_node->payload.tag_list->entry) {
+			nbt_node* c = list_entry(p, struct nbt_list, entry)->data;
+			nbt_node* slot = nbt_find_by_path(c, ".Slot");
+			if(c->type == TAG_COMPOUND && slot && slot->type == TAG_BYTE
+			   && slot->payload.tag_byte == 50)
+				found = true;
+		}
+		assert(found);
+	}
+	struct item_data reread_items[INVENTORY_SIZE] = {{0}};
+	struct inventory reread = {.items = reread_items, .capacity = INVENTORY_SIZE};
+	assert(level_archive_read_inventory(&la, &reread));
+	assert(reread.items[INVENTORY_SLOT_MAIN + 4].count == 6);
+	assert(reread.items[INVENTORY_SLOT_MAIN + 20].id == ITEM_COAL);
 	(void)snapshot_items; (void)snapshot_picked; (void)snapshot_hotbar_slot;
-	puts("  T1/T2 PASS: ambiguous inventory pinned; changed scope refused");
+	puts("  T1/T2 PASS: unmappable record skipped, real items editable, "
+		 "record kept verbatim");
+
+	/* T1b: InventoryPlayer.readFromNBT (InventoryPlayer.java:228-233) places
+	 * a stack iff getItem() != null. id 0 has no Item -> slot empty, record
+	 * dropped (CaveWii used to show a pinned STONE). A real item with Count 0
+	 * IS placed and written back -> it keeps its own id in its slot (pinned,
+	 * byte-preserved), never a stone. */
+	{
+		struct level_archive lz;
+		assert(level_archive_create_new(&lz, dir, 779,
+										(vec3) {0.5F, 70.0F, 0.5F}));
+		struct item_data none[INVENTORY_SIZE] = {{0}};
+		struct inventory nv = {.items = none, .capacity = INVENTORY_SIZE};
+		assert(level_archive_write_inventory(&lz, &nv));
+		nbt_node* l = nbt_find_by_path(lz.data, LEVEL_PLAYER_INVENTORY.name);
+		append_entry(l, 0, 0, 1, 0);           /* id 0 in hotbar 0 */
+		append_entry(l, 1, ITEM_APPLE, 0, 0);  /* Count 0 in hotbar 1 */
+		append_entry(l, 2, ITEM_BREAD, 3, 0);  /* a real stack */
+		struct item_data got[INVENTORY_SIZE] = {{0}};
+		struct inventory gv = {.items = got, .capacity = INVENTORY_SIZE};
+		assert(level_archive_read_inventory(&lz, &gv));
+		assert(got[INVENTORY_SLOT_HOTBAR + 0].id == 0
+			   && !item_data_pinned(&got[INVENTORY_SLOT_HOTBAR + 0]));
+		assert(got[INVENTORY_SLOT_HOTBAR + 1].id == ITEM_APPLE
+			   && got[INVENTORY_SLOT_HOTBAR + 1].count == 0
+			   && item_data_pinned(&got[INVENTORY_SLOT_HOTBAR + 1]));
+		assert(got[INVENTORY_SLOT_HOTBAR + 2].id == ITEM_BREAD
+			   && got[INVENTORY_SLOT_HOTBAR + 2].count == 3);
+		/* The freed slots are usable. */
+		got[INVENTORY_SLOT_HOTBAR + 0]
+			= (struct item_data) {.id = ITEM_STICK, .count = 2};
+		assert(level_archive_write_inventory(&lz, &gv));
+		struct item_data back[INVENTORY_SIZE] = {{0}};
+		struct inventory bv = {.items = back, .capacity = INVENTORY_SIZE};
+		assert(level_archive_read_inventory(&lz, &bv));
+		assert(back[INVENTORY_SLOT_HOTBAR + 0].id == ITEM_STICK
+			   && back[INVENTORY_SLOT_HOTBAR + 0].count == 2);
+		assert(back[INVENTORY_SLOT_HOTBAR + 1].id == ITEM_APPLE
+			   && back[INVENTORY_SLOT_HOTBAR + 1].count == 0);
+		assert(back[INVENTORY_SLOT_HOTBAR + 2].id == ITEM_BREAD);
+		level_archive_discard(&lz);
+		puts("  T1b PASS: id==0 dropped, Count==0 kept in place like Beta");
+	}
+
+	/* T1c: a record WITHOUT a Slot tag. Beta reads getByte("Slot") & 255
+	 * (InventoryPlayer.java:229) and NBTTagCompound.getByte defaults an
+	 * absent tag to 0, so it lands in slot 0 (hotbar 0). */
+	{
+		struct level_archive ls;
+		assert(level_archive_create_new(&ls, dir, 780,
+										(vec3) {0.5F, 70.0F, 0.5F}));
+		struct item_data none[INVENTORY_SIZE] = {{0}};
+		struct inventory nv = {.items = none, .capacity = INVENTORY_SIZE};
+		assert(level_archive_write_inventory(&ls, &nv));
+		nbt_node* l = nbt_find_by_path(ls.data, LEVEL_PLAYER_INVENTORY.name);
+		append_entry(l, -1, ITEM_BREAD, 4, 0); /* no Slot tag */
+		append_entry(l, 9, ITEM_APPLE, 2, 0);  /* main slot 0 */
+		struct item_data got[INVENTORY_SIZE] = {{0}};
+		struct inventory gv = {.items = got, .capacity = INVENTORY_SIZE};
+		assert(level_archive_read_inventory(&ls, &gv));
+		assert(got[INVENTORY_SLOT_HOTBAR + 0].id == ITEM_BREAD
+			   && got[INVENTORY_SLOT_HOTBAR + 0].count == 4);
+		assert(got[INVENTORY_SLOT_MAIN + 0].id == ITEM_APPLE);
+		/* Editing another slot keeps it in slot 0, not a second copy. */
+		got[INVENTORY_SLOT_MAIN + 0].count = 1;
+		assert(level_archive_write_inventory(&ls, &gv));
+		struct item_data back[INVENTORY_SIZE] = {{0}};
+		struct inventory bv = {.items = back, .capacity = INVENTORY_SIZE};
+		assert(level_archive_read_inventory(&ls, &bv));
+		assert(back[INVENTORY_SLOT_HOTBAR + 0].id == ITEM_BREAD
+			   && back[INVENTORY_SLOT_HOTBAR + 0].count == 4
+			   && !item_data_pinned(&back[INVENTORY_SLOT_HOTBAR + 0]));
+		assert(back[INVENTORY_SLOT_MAIN + 0].count == 1);
+		assert(list_len(nbt_find_by_path(ls.data,
+										 LEVEL_PLAYER_INVENTORY.name)) == 2);
+		level_archive_discard(&ls);
+		puts("  T1c PASS: Slot-less record placed in slot 0 like Beta");
+	}
 
 	// --- T3: happy path still fully replaces. Reuses the same 3 valid
 	// entries, but in a fresh archive with NO invalid tail entry. ----------

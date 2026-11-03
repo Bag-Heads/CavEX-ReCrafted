@@ -446,39 +446,59 @@ int main(void) {
 		assert(clear_ok(MONSTER_ZOMBIE, 8, Y, 8)
 			   && "departed guest coordinates must not suppress later spawns");
 
-		/* The real anchor/member proximity predicate consumes no RNG. Preserve
-		 * Cave's existing horizontal 16-block strict boundary for the host, then
-		 * require the same decision for a guest while the host is far away.
-		 * Beta's all-player authority is World.getClosestPlayer's playerEntities
-		 * loop [SpawnerAnimals.java:101-134; World.java:1924-1937]. */
-		double saved_x = s.player.x, saved_z = s.player.z;
+		/* The real anchor/member proximity predicate consumes no RNG. It is
+		 * Beta's 3-D 24-block getClosestPlayer query, strict at the boundary
+		 * [SpawnerAnimals.java:115; World.java:2166-2181; Entity.getDistanceSq
+		 * Entity.java:644-649 -- posY on BOTH sides]. ci-1101/43 item 8. */
+		double saved_x = s.player.x, saved_y = s.player.y, saved_z = s.player.z;
 		s.player.x = 8.5;
+		s.player.y = Y + PLAYER_EYE_HEIGHT;
 		s.player.z = 8.5;
-		assert(server_local_test_mob_spawn_far_from_players(&s, 24.5F, 8.5F));
-		assert(!server_local_test_mob_spawn_far_from_players(&s, 24.49F, 8.5F));
-		/* Anchor generation already used the host-centred ring. Its flooring
-		 * can put the cell centre at 15.6 from a fractional host coordinate;
-		 * host-only must retain the old accepted path. A bound guest activates
-		 * the explicit all-present guard for all three category anchors. */
+		/* Horizontal boundary at the SAME feet-y: candidate x = 8.5 + d;
+		 * 24.5 far, 23.99 near (strict < 24). */
+		assert(server_local_test_mob_spawn_far_from_players(
+			&s, 8.5F + 24.5F, (float)Y, 8.5F));
+		assert(!server_local_test_mob_spawn_far_from_players(
+			&s, 8.5F + 23.99F, (float)Y, 8.5F));
+		/* The gate is 3-D, not horizontal: a candidate 20 blocks out
+		 * horizontally but 8 up is at 3-D ~21.5 < 24 -> EXCLUDED (the old
+		 * horizontal-16 code accepted it). RED before the fix. */
+		assert(!server_local_test_mob_spawn_far_from_players(
+			&s, 28.5F, (float)Y + 8.0F, 8.5F)
+			&& "3-D 24: 20 horizontal + 8 up is inside the exclusion");
+		/* ...and a candidate only 10 blocks out horizontally but 24 up is at
+		 * 3-D ~26 > 24 -> ACCEPTED (the old horizontal-16 code excluded it). */
+		assert(server_local_test_mob_spawn_far_from_players(
+			&s, 18.5F, (float)Y + 24.0F, 8.5F)
+			&& "3-D 24: 10 horizontal but 24 up clears the 24-sphere");
+		/* Strict boundary on the diagonal: 3-D exactly 24 is accepted. */
+		assert(server_local_test_mob_spawn_far_from_players(
+			&s, 8.5F + 24.0F, (float)Y, 8.5F));
+		/* Anchor generation already used the host-centred ring. Host-only
+		 * (fewer than two eligible actors) keeps the pre-split accepted path.
+		 * A bound guest activates the explicit all-present guard for all three
+		 * category anchors. */
 		s.player.x = 0.9;
 		s.player.z = 0.5;
 		assert(server_local_test_mob_spawn_anchor_far_from_players(
-			&s, 16.5F, 0.5F)
-			&& "host-only fractional anchor must preserve the old ring decision");
+			&s, 25.5F, (float)Y, 0.5F)
+			&& "host-only anchor must preserve the accepted path");
 		s.player.x = -12.5;
 		s.player.z = -12.5;
 		guest.x = 8.5;
+		guest.y = Y + PLAYER_EYE_HEIGHT;
 		guest.z = 8.5;
 		s.guest_actor = &guest;
 		s.guest_generation = 92;
-		assert(!server_local_test_mob_spawn_far_from_players(&s, 8.5F, 8.5F)
+		assert(!server_local_test_mob_spawn_far_from_players(&s, 8.5F, (float)Y, 8.5F)
 			   && "guest alone must exclude a point-blank natural-spawn candidate");
 		assert(!server_local_test_mob_spawn_anchor_far_from_players(
-			&s, 8.5F, 8.5F)
+			&s, 8.5F, (float)Y, 8.5F)
 			&& "bound guest must activate the all-present anchor guard");
 		s.guest_actor = NULL;
 		s.guest_generation = 0;
 		s.player.x = saved_x;
+		s.player.y = saved_y;
 		s.player.z = saved_z;
 		fprintf(stderr, "  S3: getCanSpawnHere gate -- blocks/liquid/entities/player\n");
 	}

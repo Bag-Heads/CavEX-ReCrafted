@@ -1125,17 +1125,18 @@ static inline float mob_turn_toward(float current, float target,
 #define ARROW_SPREAD_PER_DEVIATION 0.0075f
 
 // Beta EntitySkeleton.attackEntity arrow LAUNCH GEOMETRY (parity fix 2026-06-19; target
-// corrected 2026-06-19). The arrow spawns at the skeleton's feet + eye height 1.53 - 0.1
-// (EntityArrow ctor) + 1.0 (the attack lifts the arrow a block) = feet + 2.43, and aims at the
+// corrected 2026-06-19; launch height corrected to the decompile 2026-11-01). The arrow spawns
+// at the skeleton's feet + eye height 1.53 - 0.1 (EntityArrow ctor) + 1.4 (`var7.posY +=
+// (double)1.4F` [EntitySkeleton.java:40], NOT a 1.0 lift) = feet + 2.83, and aims at the
 // target's posY + eye height - 0.2 = player.posY + 0.12 - 0.2 = player.posY - 0.08. The player's
 // posY IS the eye/camera (EntityPlayer.yOffset 1.62), which is exactly CaveWii's
 // s->player.y -- so the target is s->player.y - SKELETON_ARROW_TARGET_DY (the head), NOT
 // the player FEET. (The first parity pass mis-derived this as feet-0.08 by treating Beta's
-// player.posY as the feet; that buried the shot 0.08 below the feet -- ddy -2.51 instead of
-// the correct -0.89 on flat ground. The launch height was right; only the target was off by
-// a full eye-height.) The pre-fix engine launched at feet+1.55 and aimed at the eye (ddy
-// +0.07 -- slightly high, no +1.0 lift).
-#define SKELETON_ARROW_LAUNCH_DY 2.43f   // 1.53 eye - 0.1 ctor + 1.0 (one-block lift)
+// player.posY as the feet; that buried the shot 0.08 below the feet -- ddy -2.91 instead of
+// the correct -1.29 on flat ground. Flat-ground ddy = player_eye(1.62) - 0.08 - 2.83 =
+// -1.29.) The pre-fix engine launched at feet+1.55 and aimed at the eye (ddy +0.07 --
+// slightly high, no lift at all).
+#define SKELETON_ARROW_LAUNCH_DY 2.83f   // 1.53 eye - 0.1 ctor + 1.4 (EntitySkeleton.java:40)
 #define SKELETON_ARROW_TARGET_DY 0.08f   // aim at the player's eye-level posY minus 0.08 (0.2 minus eye height 0.12)
 
 // Beta EntityArrow.onUpdate widens each candidate target's bounding box by 0.3 per axis
@@ -1155,6 +1156,9 @@ static inline void arrow_apply_spread(float dir[3], float g0, float g1,
 }
 #define ARROW_GRAVITY 0.03f              // per-tick downward accel (NOT the 0.05 bow path)
 #define ARROW_AIR_DRAG 0.99f             // per-tick velocity multiplier
+// Beta EntityArrow.onUpdate:200-218 selects a 0.8 per-tick multiplier while the
+// arrow is in water (`var20 = 0.8F`), keeping the same 0.03 gravity.
+#define ARROW_WATER_DRAG 0.8f            // per-tick velocity multiplier in water
 #define ARROW_DAMAGE (4 * (COMBAT_HEALTH_PER_HEART / 2)) // 32 = 2 hearts (PLAYER scale)
 // AUDIT #18 ITEM 6 (faithfulness DOC fix): this is a NON-BETA, Wii-FEEL value, NOT a
 // Beta-derived constant. b1.7.3's EntityArrow.onUpdate hit branch does ONLY

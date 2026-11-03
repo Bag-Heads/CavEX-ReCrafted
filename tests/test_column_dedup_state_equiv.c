@@ -1,3 +1,15 @@
+/* ci-1101/47 FAST re-pin (2026-11-02): HEAD dee9d3edf with ONLY accepted
+ * natural-spawn exclusion 211def8d8 reverted reproduces both old state tapes
+ * and both old render tapes. 211def8d8 changes spawn acceptance/shared RNG:
+ * seed12345 server tick230/byte6420 IDs+metadata; client record10615.
+ * Applying ONLY ci-1101/39 item10 (Beta scheduled-tick dedup/order) to HEAD
+ * reproduces every byte of both current state tapes: client IDs first change
+ * at records3703/3759 (bytes133288/135304); seed42 server Block light first
+ * changes at tick695/byte19452. No other batch change is needed.
+ * Old/new decoded SHA256 and full toggle/capture proof: manifest.json
+ * ci_1101_47_repin; C:/tmp/cavex-jobs/ci-1101/47/PROOF.md.
+ * Frozen CaveWii regression streams, not Beta oracle expectations.
+ */
 /* ci-1101/12 FAST re-pin (2026-11-01): P=354809385 passes the old tapes;
  * all three private-history bisects identify accepted IN-005 aa1ec22fb.
  * First server difference: tick2/offset48, torch 448875->3357488978 (12345),

@@ -8,6 +8,7 @@
 #include "../../platform/input_glyph.h"
 #include "../../platform/menu_sound.h"
 #include "../achievements/achievements_api.h"
+#include "../game_state.h"
 #include "achievement_notice.h"
 #include "screen_achievements.h"
 
@@ -216,7 +217,15 @@ bool achievement_notice_render(unsigned owner,
 	struct notice_view* v = &views[owner];
 	struct ach_notice n;
 	bool toast = achievements_notice_peek(owner, &n);
-	if(blocked || (!toast && !n.hint_active))
+	/* ci-1101/14: the hint is only a prompt for an award this owner can earn.
+	 * local_menu_host never sends GE_INVENTORY_OPENED in creative or online
+	 * (Beta has no creative picker; ACH-1 MP choice (b)), while the module
+	 * re-arms hint_active every tick until openInventory unlocks, so the
+	 * presenter alone must hide it there. Queued award toasts (a real server's
+	 * Packet 200) are never suppressed. */
+	bool hint = n.hint_active && !gstate.config_creative
+		&& !gstate.remote_session;
+	if(blocked || (!toast && !hint))
 		return false;
 	if(!toast || v->front != n.ach_id) {
 		v->front = toast ? n.ach_id : -1;

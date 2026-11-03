@@ -415,11 +415,15 @@ void recipe_browser_geometry_grid(unsigned grid,int height,unsigned family,unsig
  unsigned variant,unsigned variants,struct recipe_browser_geometry* g) {
  *g=(struct recipe_browser_geometry){0};
  bool full=height>=480,page=grid==2;
- g->panel_y=full ? (page?32:24) : (page?8:16);g->footer_y=footer_y(grid,height);
+ /* ci-1101/07: the full Crafting page's panel starts at 46 (was 32) so the
+  * page header above it sits in the TV-safe band (24..44, see
+  * container_page_header_y); it still ends at 362, above the hearts. */
+ g->panel_y=full ? (page?46:24) : (page?8:16);g->footer_y=footer_y(grid,height);
  /* 2026-10-31 part B: the prompts left the panel for the bottom hint row,
   * so the panel ends above it -- full screen also above the gameplay hearts
-  * (y 363); the content's lowest row (inventory grid / costs) still fits. */
- g->panel_h=full ? 320 : page ? 184 : 176;
+  * (y 363); the content's lowest row (inventory grid / costs, to panel+308)
+  * still fits. */
+ g->panel_h=full ? (page?316:320) : page ? 184 : 176;
  /* Split Crafting page: the header row (y 20) pushes tabs/strip down by
   * 28 px and the name row up against the strip (approved v1-6). */
  bool split_page=page&&!full;
@@ -723,8 +727,8 @@ void recipe_browser_render(const struct recipe_browser* b,const struct inventory
  /* T13: the personal guide is the inventory's Crafting PAGE. */
  int header_w=0;
  if(b->grid==2) {
-  if(full)header_w=container_page_header(bx+320-container_page_header_width(true)/2,by+10,true,true);
-  else header_w=container_page_header(bx+44,by+20,true,false);
+  if(full)header_w=container_page_header(bx+320-container_page_header_width(true)/2,by+container_page_header_y(true),true,true);
+  else header_w=container_page_header(bx+44,by+container_page_header_y(false),true,false);
  }
  struct recipe_browser_entry e={0};bool valid=recipe_browser_selected(b,b->details?b->detail_shape:0,&e);
  struct recipe_browser_stock stock[9];size_t n=valid?recipe_browser_stock(&e,inv,base,stock):0;

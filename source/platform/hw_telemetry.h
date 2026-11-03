@@ -9,6 +9,11 @@
 
 #include "../tps_observer.h"
 #include "g9_priority_lease.h"
+/* ci-1101/46: no thread.h here -- under PLATFORM_WII it pulls <gccore.h>, which the
+ * host-compiled Wii-backend tests (test_anchor_measurement_clock) cannot see. Only this
+ * size is needed; thread.h defines the SAME token sequence, so a TU that sees both gets
+ * a redefinition diagnostic if they ever diverge (C99 6.10.3p2). */
+#define THREAD_DRAIN_WAIT_MUTEX_NAME_MAX 24u
 #include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -867,6 +872,22 @@ struct hw_telemetry_heartbeat {
 	// 14..21 unchanged. All elapsed; residual includes other preemption.
 #define HW_TELEMETRY_LQD_N 22
 	uint32_t lqd[HW_TELEMETRY_LQD_N];
+	// ci-1101/37 (diagnostic): the longest >= 10 ms server-drain mutex wait of
+	// this heartbeat window, with the contended lock named and its holder.
+	// Emitted as "lqd_w":[wait_us,mutex,holder_id,holder_tag,stripe,"name"] ONLY when
+	// lqd_wait_present (wait_us > 0), so every quiet heartbeat -- and every
+	// older tape -- keeps its exact bytes (the blc/ssw rskip rule). mutex is
+	// the lock's address low 32 bits; stripe is its thread_stripe_register
+	// index (0 = unregistered, name then ""); holder_id is the stripe thread
+	// id of the thread that held it (0 = free/unknown) and holder_tag its
+	// enum thread_stripe_tag. Values are unsaturated.
+	bool lqd_wait_present;
+	uint32_t lqd_wait_us;
+	uint32_t lqd_wait_mutex;
+	uint32_t lqd_wait_holder_id;
+	uint32_t lqd_wait_holder_tag;
+	uint32_t lqd_wait_stripe;
+	char lqd_wait_name[THREAD_DRAIN_WAIT_MUTEX_NAME_MAX];
 	bool g9p_present;
 	uint32_t g9p[22]; /* g9p_v=1: thread.h THREAD_PACING_WORDS layout */
 	// Monotonic neighbour-notify handler dispatches since boot, summed over BOTH

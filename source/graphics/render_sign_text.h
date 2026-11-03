@@ -63,6 +63,9 @@
 struct sign_text_vertex {
 	float x, y, z;
 	float u, v;
+	// Glyph colour: Beta's sign base colour 0 (black) until a colour code
+	// (0xA7 + selector, beta_text_color.h) changes it for the rest of the line.
+	uint8_t r, g, b;
 };
 
 #define SIGN_TEXT_QUAD_LINES 4 // TileEntitySign.signText.length -- always 4

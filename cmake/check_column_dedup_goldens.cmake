@@ -68,16 +68,19 @@
 # Beta corrections d8b3595d/aa8bfa1c/b0931e6e/d2e471b6), originally 624cfc2.
 # FAST re-pin 2026-10-11 (maintainer ruling; integ-1011 V6 F2a/F3/F4-RNG, P=625ac64d4, 8/8):
 # previous hashes 9e9e479f861c e481b603c996 fbb140e71861 d8833e7b1bb3 3bb85eefa816 3b149323b355.
+# FAST re-pin 2026-11-02 (ci-1101/47, C:/tmp/cavex-jobs/ci-1101/DONE-47.md): 211def8d8 natural-spawn
+# 3-D 24 exclusion (SpawnerAnimals.java:115) + ci-1101/39 scheduled-tick dedup/order (World.java:1161);
+# seed-42 render unchanged. Previous hashes 13caf710ca5f 5137639b0482 e2afa463b2f3 f39fc4f83ba1 acf3f8efcb1e d06e0c0f345a.
 set(_column_baseline_files
     ms2_12345_client.gz ms2_12345_render.gz ms2_12345_server.gz
     ms2_42_client.gz ms2_42_render.gz ms2_42_server.gz)
 set(_column_baseline_hashes
-    13caf710ca5f697f50d059613f19029c5f79607855d2833911ffeaaded2a7bd9
-    5137639b048223c3e5f40b83370a9e22bfa031e4d63e7c3087676285e8b7d99f
-    e2afa463b2f30a0466193dfb9415c6cb3852caf81e1bf81c7153f356f7b0d118
-    f39fc4f83ba118b8c2b611e98f349cdcbb578d46cb9e896f9c31edfc04c897cc
+    65997e7f227d046ebce80b94664887cadd83a8350525e0bcd647694cb2bdb59e
+    1ec6964bacb71288a01281d24a7566d0a0c5c9d1fe35d0ebbe880b3e70d4eecb
+    a7e67d5a1a1c8f764bdd01277052c46bfd8ace381ac9bf569fdb265c7f5e0108
+    5d01df19eb7b4fa1cc4e35ff29c601a0072bcef97f1d99196fc3b451546e7d9f
     acf3f8efcb1e26ec3cd8b07e4db52b7fdb1c228309f93e7db31e72b668c909d3
-    d06e0c0f345a311dc03aa4869314b8ca0665a129f3b5d2f36a2ed85436a05e93)
+    19b5956b5a35c79a623a3ad4e672479ad4eba959e40105592c4fb2afb7f608f8)
 foreach(_i RANGE 0 5)
     list(GET _column_baseline_files ${_i} _file)
     list(GET _column_baseline_hashes ${_i} _expected)

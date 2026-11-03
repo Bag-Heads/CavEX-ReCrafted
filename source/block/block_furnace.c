@@ -248,10 +248,17 @@ static void onBreak(struct server_local* s, struct block_info* this) {
 	 * so the TE's own stacks are the ones that drop. Either way every
 	 * remaining window is detached afterwards. */
 	if(viewer && viewer->owner == &s->player) {
-		(void)server_local_spill_active_container(s, this->x, this->y, this->z);
-		furnace_te_free_w(w, this->x, this->y, this->z);
-		furnace_detach_windows(s, w, this->x, this->y, this->z);
-		return;
+		/* ci-1101/25: a spill that found no window and never marked this
+		 * one dead must not free the TE unspilled -- fall through to the
+		 * TE's own stacks instead. */
+		bool window_found = false;
+		if(server_local_spill_active_container_found(
+			   s, this->x, this->y, this->z, &window_found)
+		   || window_found) {
+			furnace_te_free_w(w, this->x, this->y, this->z);
+			furnace_detach_windows(s, w, this->x, this->y, this->z);
+			return;
+		}
 	}
 
 	if(server_local_spawn_destroyed_container_items(

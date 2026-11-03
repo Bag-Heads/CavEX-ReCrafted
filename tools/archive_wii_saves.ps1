@@ -682,7 +682,14 @@ try {
         $configRead = $false
         $configErr = ""
         try {
-            $cfgBytes = Get-CwStageFetchBytes -Stream $stream -RemotePath 'sd:/config.json' -MaxBytes 262144
+            try {
+                $cfgBytes = Get-CwStageFetchBytes -Stream $stream -RemotePath 'sd:/config.json' -MaxBytes 262144
+            } catch {
+                # Fresh cards ship defaults only; Stage reports open_failed for absence.
+                # Authentication, read, and parse failures remain ambiguous.
+                if($_.Exception.Message -notmatch '^fetch failed:.*"reason"\s*:\s*"(?:not_found|open_failed)"') { throw }
+                $cfgBytes = Get-CwStageFetchBytes -Stream $stream -RemotePath 'sd:/config_wii.json' -MaxBytes 262144
+            }
             $cfg = [System.Text.Encoding]::UTF8.GetString($cfgBytes) | ConvertFrom-Json
             $configRead = $true
             if(($cfg.PSObject.Properties.Name -contains 'paths') -and ($null -ne $cfg.paths) -and
@@ -694,7 +701,7 @@ try {
             $configErr = $_.Exception.Message
         }
         if(-not $configRead) {
-            Write-CwFail ("ROOT BINDING STOP: signal (a) could not be READ -- fetching or parsing sd:/config.json failed ($configErr). That is not the same as a card whose config has no paths key, and this tool will not treat it as one. Astra change 1: count alone is insufficient; stop on ambiguity.")
+            Write-CwFail ("ROOT BINDING STOP: signal (a) could not be READ -- fetching or parsing sd:/config.json (or fresh-card config_wii.json) failed ($configErr). That is not the same as a card whose config has no paths key, and this tool will not treat it as one. Astra change 1: count alone is insufficient; stop on ambiguity.")
             $exitCode = $script:CwSavesExit.RootAmbiguous
             exit $exitCode
         }

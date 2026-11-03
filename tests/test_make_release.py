@@ -522,9 +522,7 @@ def test_full_package_layout_and_provenance(scratch_repo: Path, bash: str, tmp: 
             "apps/CavEX/boot.dol",
             "apps/CavEX/meta.xml",
             "apps/CavEX/icon.png",
-            "apps/CavEX/config.json",
             "apps/CavEX/config_wii.json",
-            "config.json",
             "config_wii.json",
             "texturepacks/README.txt",
             "LICENSE",
@@ -537,19 +535,28 @@ def test_full_package_layout_and_provenance(scratch_repo: Path, bash: str, tmp: 
         if missing:
             raise AssertionError(f"release zip is missing required entries: {missing}")
 
-        # config.json must carry the WII controller mapping (small integer
+        # The zip must never carry a config.json (ci-1101/05): that is the
+        # player's own file (MP name, server list, Options), and unzipping an
+        # update over an installed card used to overwrite it. Only the
+        # config_wii.json fallback template ships (main.c default_config +
+        # config_load_user_or_default read it when config.json is missing).
+        shipped_user_cfgs = [n for n in names if n in ("config.json", "apps/CavEX/config.json")]
+        if shipped_user_cfgs:
+            raise AssertionError(f"release zip must not ship the player's config.json: {shipped_user_cfgs}")
+
+        # config_wii.json must carry the WII controller mapping (small integer
         # WPAD/PAD button codes), never the PC/GLFW keyboard codes the
         # repo-root config.json uses for dev/testing (this was a real
         # finding during this pipeline's design: shipping the PC config to
         # a Wii SD card would leave every physical controller unmapped).
-        cfg = json.loads(zf.read("apps/CavEX/config.json"))
+        cfg = json.loads(zf.read("apps/CavEX/config_wii.json"))
         if cfg["paths"]["texturepack"] != "assets":
             raise AssertionError(f"expected the bundled default pack path 'assets', got {cfg['paths']['texturepack']!r}")
         fwd = cfg["input"]["player_forward"]
         if 87 in fwd:  # GLFW_KEY_W -- the PC keyboard code, must never appear here
-            raise AssertionError(f"release config.json looks like the PC/GLFW keyboard mapping, not Wii: player_forward={fwd}")
+            raise AssertionError(f"release config_wii.json looks like the PC/GLFW keyboard mapping, not Wii: player_forward={fwd}")
 
-        # --- meta.xml: product name "CavEX: Re-Crafted Edition" (maintainer
+        # --- meta.xml: product name "CavEX: ReCrafted" (maintainer 2026-11-02; was "CavEX: Re-Crafted Edition" from
         # decision 2026-10-10; was "CaveWii" from 2026-09-02), version sourced from the scratch repo's VERSION file.
         # Parsed with a regex over the <app>...</app> element, not
         # xml.etree, because tools/meta.xml.in's own header COMMENT contains
@@ -565,8 +572,8 @@ def test_full_package_layout_and_provenance(scratch_repo: Path, bash: str, tmp: 
         app_xml = app_match.group(0)
         meta_root = ET.fromstring(app_xml)
         meta_name = meta_root.findtext("name")
-        if meta_name != "CavEX: Re-Crafted Edition":
-            raise AssertionError(f"expected meta.xml <name>CavEX: Re-Crafted Edition</name>, got {meta_name!r}")
+        if meta_name != "CavEX: ReCrafted":
+            raise AssertionError(f"expected meta.xml <name>CavEX: ReCrafted</name>, got {meta_name!r}")
         # No --version override on this run, so RELEASE_VERSION resolves to
         # "<VERSION file>+<git describe>" (see make_release.sh step 5) --
         # same "+describe" suffix the zip-name check above already expects.
@@ -888,6 +895,8 @@ ISA_PACK_PNGS = (
     # 2026-10-28: Isabella-palette menu backdrop render and player skin (both modified, CC BY 3.0).
     "gui/menu-background.png",
     "mob/char.png",
+    # 2026-11-02: Isabella-palette Nether loading scene render (modified, CC BY 3.0; ci-1101/57f).
+    "gui/nether-background.png",
 )
 ISA_PACK_ABOUT = "About Isabella.txt"
 ISA_PACK_LICENSE = "LICENSE.txt"
@@ -994,7 +1003,7 @@ def assert_isabella_pack_in_zip(src_repo: Path, scratch: Path, zip_path: Path, b
             raise AssertionError(f"ISA-001: NOTICE ({branch}) does not mention the optional texturepacks/isabella-ii pack")
 
         # The default is untouched: config still selects assets ...
-        for cfg_name in ("config.json", "apps/CavEX/config.json"):
+        for cfg_name in ("config_wii.json", "apps/CavEX/config_wii.json"):
             cfg = json.loads(zf.read(cfg_name))
             if cfg["paths"]["texturepack"] != "assets":
                 raise AssertionError(
@@ -1264,6 +1273,11 @@ def test_missing_and_unusable_inputs_refused(src_repo: Path, bash: str, tmp: Pat
         ("config_wii.json", json.dumps(capture).encode(), "debug.autopilot"),
         ("config_wii.json", json.dumps(dict(MINIMAL_CONFIG_WII_JSON, debug={"overlay": "on"})).encode(),
          "forces the debug overlay on"),
+        # The template is the ONLY shipped config (no derived config.json), so
+        # a dev pack path in it would be the release default: refused.
+        ("config_wii.json", json.dumps(dict(MINIMAL_CONFIG_WII_JSON,
+         paths={"texturepack": "texturepacks/beta-1.7.3", "worlds": "saves"})).encode(),
+         "paths.texturepack must be the bundled 'assets' pack"),
     ]
     dol_dir = tmp / "rel01b_inputs_dol"
     dol_dir.mkdir()
@@ -1327,9 +1341,10 @@ def test_tutorial_world_failures_refused(src_repo: Path, bash: str, tmp: Path) -
 
 def test_usable_fallback_defaults(src_repo: Path, bash: str, tmp: Path) -> None:
     """The REAL shipped config_wii.json is packaged, byte-for-byte, as the
-    fallback template beside config.json at BOTH boot CWDs (SD root and
-    apps/CavEX/), config.json is that file with only the release paths
-    set, and the default pack directory it names is in the zip at both."""
+    ONLY config at BOTH boot CWDs (SD root and apps/CavEX/): no config.json
+    is shipped (it is the player's file, ci-1101/05), the template already
+    names the release paths, and the default pack directory it names is in
+    the zip at both."""
     repo = build_scratch_repo(src_repo, tmp, name="scratch_repo_rel01b_defaults")
     shutil.copyfile(src_repo / "config_wii.json", repo / "config_wii.json")
     git(repo, "add", "config_wii.json")
@@ -1343,15 +1358,15 @@ def test_usable_fallback_defaults(src_repo: Path, bash: str, tmp: Path) -> None:
         for root in ("", "apps/CavEX/"):
             if zf.read(root + "config_wii.json") != committed:
                 raise AssertionError(f"REL-01b: {root}config_wii.json is not the committed fallback template")
-            cfg = json.loads(zf.read(root + "config.json"))
-            expected = dict(template, paths=dict(template.get("paths", {}), texturepack="assets", worlds="saves"))
-            if cfg != expected:
-                raise AssertionError(f"REL-01b: {root}config.json differs from the template beyond paths")
-            pack_dir = root + cfg["paths"]["texturepack"] + "/"
+            if root + "config.json" in names:
+                raise AssertionError(f"REL-01b: {root}config.json shipped; an update would wipe the player's MP name/servers")
+            if template["paths"]["texturepack"] != "assets" or template["paths"]["worlds"] != "saves":
+                raise AssertionError("REL-01b: the shipped template does not name the release paths (assets, saves)")
+            pack_dir = root + template["paths"]["texturepack"] + "/"
             if not any(n.startswith(pack_dir) for n in names):
-                raise AssertionError(f"REL-01b: default pack {pack_dir} named by {root}config.json is not in the zip")
+                raise AssertionError(f"REL-01b: default pack {pack_dir} named by {root}config_wii.json is not in the zip")
         assert_sums_cover_zip(zf, "defaults zip")
-    print("PASS: real config_wii.json ships as the fallback template beside config.json at both boot CWDs")
+    print("PASS: real config_wii.json ships as the only config (fallback template) at both boot CWDs; no config.json")
 
 
 def main() -> int:

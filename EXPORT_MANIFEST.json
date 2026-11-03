@@ -1,5 +1,5 @@
 {
- "allowlist_sha256": "36a63e17278db013ba88328cc0b6ca7005721c9253d8b7c9661c92c5f04bb35b",
+ "allowlist_sha256": "a781c1016161685fb44268e67eb96da077d5daf1f57c63d0ee85e12a9b6928f8",
  "files": [
   {
    "path": ".clang-format",
@@ -18,13 +18,18 @@
   },
   {
    "path": ".github/workflows/ci.yml",
-   "sha256": "2262d4f0732c65adb6922cb94a937f552a8adf2ec99e321c9e3a5267ab6ba7a4",
-   "size": 4896
+   "sha256": "200b399c0e37904d3d54583c462b330ca5d7fd19ab3815b48c39a804dc51eeb2",
+   "size": 4666
   },
   {
    "path": ".github/workflows/pack-helper.yml",
    "sha256": "e1e77cb98ca90fd814c208069f3bb86cdfebce3ed76430e7f75088db90695a3d",
    "size": 3083
+  },
+  {
+   "path": ".github/workflows/publish-pack-helper.yml",
+   "sha256": "0d3df4e78b60a9593afdb3fb7911d62c92085ca822891537eadd0ed87afd3bfc",
+   "size": 1649
   },
   {
    "path": ".github/workflows/release.yml",
@@ -48,8 +53,8 @@
   },
   {
    "path": "CMakeLists.txt",
-   "sha256": "8ea7e3fed4da919755bdd7bf8485b7794fa4884ae3b6710f1675e6977189cd76",
-   "size": 905168
+   "sha256": "8bc67b3c9318501f0e10b0881a80b58103f40ce3e64e973eec9289c8ed187d59",
+   "size": 933589
   },
   {
    "path": "CMakePresets.json",
@@ -58,8 +63,8 @@
   },
   {
    "path": "DEPENDENCIES.md",
-   "sha256": "8eed4fe2d1d782e957ad07576eba51a07b664be01ee83bb88cf093867eec2f69",
-   "size": 6777
+   "sha256": "ff0b225cca917a915e6ca1c064bf00c6dceebe59e84ffd6bfd0a3aaf5378e182",
+   "size": 8142
   },
   {
    "path": "KNOWN_ISSUES.md",
@@ -168,17 +173,17 @@
   },
   {
    "path": "NOTICE",
-   "sha256": "8267dd81ee62e1fc37b1af93ddc840843a986b3fd5ee1d1b458f6d387573c397",
-   "size": 16043
+   "sha256": "55f338f053dff04c261bf22ba8cb8a80052a6be8096d01cfd40831ca2ad5ab52",
+   "size": 17034
   },
   {
    "path": "README.md",
-   "sha256": "7ce07324f09179300de3687e94a9bf11bb0b7b96192eaf61236cb6225d9d232b",
-   "size": 7019
+   "sha256": "420a56db06ced4f958b89a336d903cb42af8022ab8532d4314955e287151ff0e",
+   "size": 13272
   },
   {
    "path": "VERSION",
-   "sha256": "e9dd8507f4bf0c6f42458e41aea833ad0bd3f6127272335eee9bf4d58541ed67",
+   "sha256": "80447316529fc62014fbaa047fb67c51ac30e32830cda370405349d8d66d196c",
    "size": 6
   },
   {
@@ -350,6 +355,21 @@
    "path": "assets/gui/menu-background.provenance.json",
    "sha256": "9b7c0c45a5b563e75cdad964235b869ef35fff0f328be1e41f1763865adc49af",
    "size": 761
+  },
+  {
+   "path": "assets/gui/nether-background.md",
+   "sha256": "3d76fcd681eac6b6183edde432a9d9d00780bde0dc1c8ac7613b5ebc4344f9dc",
+   "size": 917
+  },
+  {
+   "path": "assets/gui/nether-background.png",
+   "sha256": "8fe6db87d9c963b16552ee61f01d9b8776eadbc4bf7002c4d5763490558ea846",
+   "size": 255036
+  },
+  {
+   "path": "assets/gui/nether-background.provenance.json",
+   "sha256": "a79b4471ca35d9abf6b89f4ce481ca70c8a7f7f85f612465022b79ad7da38d50",
+   "size": 891
   },
   {
    "path": "assets/gui/reception.png",
@@ -917,9 +937,19 @@
    "size": 215
   },
   {
+   "path": "assets/title/splashes.txt",
+   "sha256": "62fdb1602c1b53ec21461ee3175594b9228f89f2f80a639ed89a4befe1bc86d7",
+   "size": 426
+  },
+  {
+   "path": "cmake/PublicTestInputs.cmake",
+   "sha256": "b91a8621040e204b6c39c5384e7f84487fa5d554cd8412a2ca58739c28a91950",
+   "size": 2230
+  },
+  {
    "path": "cmake/check_column_dedup_goldens.cmake",
-   "sha256": "c17505711500276629bcb0f750e554d9d70e7572d2712732ebdeea79443c1c68",
-   "size": 6427
+   "sha256": "0657216ccc3d208190b7af495ac4093d81d9f1c2f0ffd3116e654792ad4d96e8",
+   "size": 7027
   },
   {
    "path": "cmake/check_no_test_marker.cmake",
@@ -933,8 +963,8 @@
   },
   {
    "path": "config_wii.json",
-   "sha256": "0ae4e9459c5506edff92850052cc8085f3ab5e56bc5075b58e52527f9dc424ff",
-   "size": 1863
+   "sha256": "ec1884325753d1732d6f3981b77bfc9f35ca2a2dbe8ce7d0b8f3d5e13e4d4a33",
+   "size": 1899
   },
   {
    "path": "controls.md",
@@ -945,6 +975,76 @@
    "path": "docs/controls_sheet.md",
    "sha256": "7d70bbf0e3af22841a1ac47953a42955b49565e39d64e9aa21b3a672b1154098",
    "size": 43996
+  },
+  {
+   "path": "docs/readme/build.png",
+   "sha256": "89950b6a45fa8c05676c800969256f190b1ac71d58a7a737a349a6b4c78753d9",
+   "size": 581150
+  },
+  {
+   "path": "docs/readme/explore.png",
+   "sha256": "222c57571967dee51f128bc5c6e2769f5d34e4c2dac4210b9434e22231d31004",
+   "size": 594830
+  },
+  {
+   "path": "docs/readme/logo.png",
+   "sha256": "62e29c600bf49d485e214ad3288b34719eb08f96d3c076be4e3ee617e7d53269",
+   "size": 5283
+  },
+  {
+   "path": "docs/readme/mine.png",
+   "sha256": "1d1a132e6c12ef9cf4f25af4d20dbd48202648186517a0a812f1d9c3680e0571",
+   "size": 443529
+  },
+  {
+   "path": "docs/readme/nether.png",
+   "sha256": "31f19576a72cb6c83ab1e5d2abac31f4b1f5efd913a497d12cbd663c85ce60d8",
+   "size": 365143
+  },
+  {
+   "path": "docs/readme/pack-earth-ash-night.png",
+   "sha256": "6d284279935c5f87d3875b352e159b72d17ef4232e27420f09cc27296617efb2",
+   "size": 265012
+  },
+  {
+   "path": "docs/readme/pack-isabella-base.png",
+   "sha256": "9d516864090817e933be0684374fcec39ef8d1744c9853ec173938f228b1db34",
+   "size": 384700
+  },
+  {
+   "path": "docs/readme/portal.png",
+   "sha256": "9e925ada8a57ebcc474c861497b0856e1ecdde7fb1a66bdd7e8ae53238ea603f",
+   "size": 521896
+  },
+  {
+   "path": "docs/readme/split-screen.png",
+   "sha256": "6ec1e61f8d8ec056fe3664b0c368032c35ed847df099a7115c49ab150a268a96",
+   "size": 785037
+  },
+  {
+   "path": "docs/readme/trailer.gif",
+   "sha256": "8957286e0f9743ba06954b45a20da99c4ee9c2f48c49601098eb97b31a06e83d",
+   "size": 3190344
+  },
+  {
+   "path": "docs/readme/ui-chest.png",
+   "sha256": "d4e91e77a9779a211c7509aaba870831be823f5a44440c8556d10637fd325760",
+   "size": 402805
+  },
+  {
+   "path": "docs/readme/ui-crafting.png",
+   "sha256": "962b04d166623c4208f2589e1081b79efbf0aa529857e1fded19922be44211a8",
+   "size": 464641
+  },
+  {
+   "path": "docs/readme/ui-disconnect-card.png",
+   "sha256": "eaa1518fd4b80897e840bd1e57a4d51ab66023980dd4dce7b129d4650b203392",
+   "size": 441628
+  },
+  {
+   "path": "docs/readme/ui-pause.png",
+   "sha256": "b00b6bbb4fa93bdbec11781e74e8df9630482db3dc9fd97fb7028a66d5dbbda4",
+   "size": 408435
   },
   {
    "path": "docs/release-install.md",
@@ -1013,33 +1113,33 @@
   },
   {
    "path": "launchers/PLAY_IN_DOLPHIN_DEV.cmd",
-   "sha256": "223587fa08aca07c3c06571ad7dc2250d9aa85088ef5a83ca0da5467395bb1f0",
-   "size": 68
+   "sha256": "0436d3b578b7a84e8baf91b3321c51ecc065a0e47e5728f90f2a871fc3c0008f",
+   "size": 72
   },
   {
    "path": "launchers/PLAY_IN_DOLPHIN_FRESH.cmd",
-   "sha256": "24053482aa52d8ea717211eb4c5cfdfddd5499b490f2d705a40ddb3e99e4181c",
-   "size": 70
+   "sha256": "9fe35eae6fd7103681ee70d79fa3894b92c9b31ceaeda801d67d2fdfa7bd071b",
+   "size": 74
   },
   {
    "path": "launchers/PLAY_IN_DOLPHIN_STABLE.cmd",
-   "sha256": "309f4c65c02deed14e6e41f37a754de9c4182b81fa32415462151cd772c11e07",
-   "size": 71
+   "sha256": "43f6820f2dad6fc444665bf40875a90d31c0cec8ec12549e94707d1e7f5f8925",
+   "size": 75
   },
   {
    "path": "launchers/PLAY_IN_DOLPHIN_WORLD1.cmd",
-   "sha256": "32d070ddeb355f496a4838adf161a75e919c8ab1c678df07fcb964c47321694f",
-   "size": 71
+   "sha256": "e1a6e2b96f55d9e5482f0fb2cbccfd2fd3dcf346a3b0e9ed81ddf882d823179e",
+   "size": 75
   },
   {
    "path": "launchers/PLAY_PC.cmd",
-   "sha256": "ef47c1bb8141a7da0b1a540a2b04754911f79da3eae53cf9401604c789b15254",
-   "size": 2348
+   "sha256": "86fa977f6fa6a342ec8de7451638a05ec82edd87d65f97d5f2df065d341b8c9a",
+   "size": 2442
   },
   {
    "path": "meta.xml",
-   "sha256": "81b4a10c4675206078b2f9d9bfd75ff0f01f6e2eaf1e500685e3d154b345d29a",
-   "size": 1427
+   "sha256": "1553dbea54daab009e86d42d3477fed04b1c2d00711fd76e11f3d2bb76de3625",
+   "size": 1418
   },
   {
    "path": "packs/beta-base/README.txt",
@@ -1127,6 +1227,21 @@
    "size": 226579
   },
   {
+   "path": "packs/isabella-ii/gui/nether-background.md",
+   "sha256": "5e6172c26e5fa57e60f93eb20e9133fc337aef0f6f9c5eba41f03f6e1a951c13",
+   "size": 1119
+  },
+  {
+   "path": "packs/isabella-ii/gui/nether-background.png",
+   "sha256": "af81bc9a158bd405410abaf9f2da74cdfb382c77833c16735496f5c815958927",
+   "size": 256696
+  },
+  {
+   "path": "packs/isabella-ii/gui/nether-background.provenance.json",
+   "sha256": "1fb60fc74e78f4af0bf3e6d21538dc5c021e566624a7928d4f1416d36f800937",
+   "size": 895
+  },
+  {
    "path": "packs/isabella-ii/mob/char.png",
    "sha256": "ef44bb86f654c99111680dc72fa13582198c4e219d93268d1666eea81d337160",
    "size": 2033
@@ -1155,6 +1270,16 @@
    "path": "packs/isabella-ii/terrain/sun.png",
    "sha256": "992ac82bdfb53c1f83ffa664d24f30fb05aaef262f372cbedb601121d4b678c8",
    "size": 951
+  },
+  {
+   "path": "resources/cavex.ico",
+   "sha256": "af3c74c10ca470da4565e3c6fc2ca377d9a59ac3eca674c0b0eacbb00bce21a7",
+   "size": 18237
+  },
+  {
+   "path": "resources/cavex.rc",
+   "sha256": "62fdc72b884adc14db9a248b757aa5026a0aa957cd918712c25a0cacf66e6644",
+   "size": 959
   },
   {
    "path": "resources/fragment.shader",
@@ -1243,8 +1368,8 @@
   },
   {
    "path": "source/block/block_chest.c",
-   "sha256": "26c73fdb2ade3f5aa71dd6041298a8f26079250614d119bf5d6e58e0d8989fd6",
-   "size": 16925
+   "sha256": "86d135083de82a45810c882464739201f23fd7094f6a7df0fd32aa7fdd3fa76a",
+   "size": 17758
   },
   {
    "path": "source/block/block_clay.c",
@@ -1258,8 +1383,8 @@
   },
   {
    "path": "source/block/block_cobweb.c",
-   "sha256": "a971b620b4932e1f055fd9607a57683cf32c29f4bd21127f71b3e8824f82c9ef",
-   "size": 2550
+   "sha256": "28fafc476596218e1b6a1bb9d9c4f3e3c8e9edd7a21a7624b53eb65b4ccf601e",
+   "size": 2816
   },
   {
    "path": "source/block/block_crops.c",
@@ -1308,8 +1433,8 @@
   },
   {
    "path": "source/block/block_furnace.c",
-   "sha256": "467a23fac78a916fe804e9ef1d20e9130173ea69fb2b65a89c56ee2df8fc7019",
-   "size": 13116
+   "sha256": "e84863f7774b95d273aa426b1b83d185ed0feee7d78382a5cecb9cea930b3db8",
+   "size": 13369
   },
   {
    "path": "source/block/block_glass.c",
@@ -1463,8 +1588,8 @@
   },
   {
    "path": "source/block/block_repeater.c",
-   "sha256": "6a605fb33e4002a46128f884d90edb1d5f0101d7bc63b30a30e6419eedeef37c",
-   "size": 7320
+   "sha256": "4d96c2df07f65920040607bdd7ab1258836f50daded73a23589e51286dd74aba",
+   "size": 8937
   },
   {
    "path": "source/block/block_rose.c",
@@ -1748,8 +1873,8 @@
   },
   {
    "path": "source/block/redstone_power.c",
-   "sha256": "782f636caf695cbb347b4e886a6263dabceb23a33729e5c9ce18e3bf5bfc941e",
-   "size": 15898
+   "sha256": "82fb83a8e1837513bd5658c40959def454a23d043ad8ed04ca48a8c29bd6a151",
+   "size": 16401
   },
   {
    "path": "source/block/redstone_power.h",
@@ -2848,13 +2973,13 @@
   },
   {
    "path": "source/config.c",
-   "sha256": "0893c992c21d76f10aab5628d3801a6f648cd4def756d24b6c60b5e607e32386",
-   "size": 19239
+   "sha256": "22306ab181718ee7af86b7b8e8a890656e07450d78c5327d3415be90ecbe6842",
+   "size": 22262
   },
   {
    "path": "source/config.h",
-   "sha256": "e08a619f130f5c5ca08f74a2f0c9a16463d3c73ea8f38f10bf29f67b47069260",
-   "size": 8893
+   "sha256": "63cc81f9ca0a1b179753d3447d9856821acb7c0a609f8b16fc3f5589f51178b9",
+   "size": 9045
   },
   {
    "path": "source/daytime.c",
@@ -2893,8 +3018,8 @@
   },
   {
    "path": "source/entity/combat.h",
-   "sha256": "930bf869f116fe64c5969cc0d8d0443779282dc9d768cb39d3e642354a12f036",
-   "size": 131409
+   "sha256": "44a1e605f93cdd1241f2d4159235e98b9ef0d965b450df04470865597f696c28",
+   "size": 131725
   },
   {
    "path": "source/entity/entity.c",
@@ -2908,8 +3033,8 @@
   },
   {
    "path": "source/entity/entity_arrow.c",
-   "sha256": "db61d9668b715add7272cc440957fa712607d039a72160ecc5592cd204c75ae1",
-   "size": 51022
+   "sha256": "7b4ff3a499aab971410a10aee74a3621962516a7d65657580bf3585d2be0b864",
+   "size": 51866
   },
   {
    "path": "source/entity/entity_boat.c",
@@ -2958,13 +3083,13 @@
   },
   {
    "path": "source/entity/entity_local_player.c",
-   "sha256": "c444b27d73519d184c3f2acca24eb40b5964df2fa5f01bc6f01daf8cd601a973",
-   "size": 69209
+   "sha256": "61297bb58453b88e6446e052c78fde2ebea65dbd3ba7bcbb0b18f2aed165d2f0",
+   "size": 74565
   },
   {
    "path": "source/entity/entity_local_player.h",
-   "sha256": "2f43d97df1a38f5c0dc090b6d3e896ffa2f15066f9678fcc49ee420710668411",
-   "size": 3856
+   "sha256": "7ce185313bac804abd39036312eb766df58d8a86f047e95c49907c98b0805d04",
+   "size": 4520
   },
   {
    "path": "source/entity/entity_minecart.c",
@@ -2978,8 +3103,8 @@
   },
   {
    "path": "source/entity/entity_monster.c",
-   "sha256": "77fa148b2554276d17d9d89486c14eeb4e10c8d7f172c97627b674c510fcdb4a",
-   "size": 276541
+   "sha256": "43c5929c02c25bd7891e80e0313a5d5ae058e41ab0f17f8cc5232f2aed91ab78",
+   "size": 278307
   },
   {
    "path": "source/entity/entity_monster.h",
@@ -3253,13 +3378,13 @@
   },
   {
    "path": "source/game/game_state.h",
-   "sha256": "a81d1d8e129586997a5782c1658e134cd344479b77ec846a186e05b734aaa7f0",
-   "size": 17643
+   "sha256": "fbd64e2f5b3e094b9581900fc5289e1de986789bba5e78e3ddbea8570b3c1f1a",
+   "size": 17297
   },
   {
    "path": "source/game/gui/achievement_notice.c",
-   "sha256": "1432760f5f39aec23cd06365bb2db2d2ccde10eb22af135e14c3282e060c2cf1",
-   "size": 9617
+   "sha256": "a3395ebfd87e612b1a69e6138f5b988882f26f77ae8573a42f2b49abdeffb0c5",
+   "size": 10130
   },
   {
    "path": "source/game/gui/achievement_notice.h",
@@ -3268,13 +3393,13 @@
   },
   {
    "path": "source/game/gui/backdrop_bake.c",
-   "sha256": "a72498902f7461d4825b786acb716c678d99a9cc9f1c198efbeeebf5138a071d",
-   "size": 25258
+   "sha256": "9233a9ade198052267db8e08f06f5eeffe20126202853ff29d20fda04df04f44",
+   "size": 26337
   },
   {
    "path": "source/game/gui/backdrop_bake.h",
-   "sha256": "e66cad2b1716023b8d3121c2a6c6310eb44d487cb85b5932f23f21302333b5c7",
-   "size": 13275
+   "sha256": "f687da3f13e7fbb38b49af256e6c558f702421fbfee0f7cd2148ca935234b0f4",
+   "size": 13531
   },
   {
    "path": "source/game/gui/backdrop_settle.h",
@@ -3318,18 +3443,18 @@
   },
   {
    "path": "source/game/gui/container_compact.c",
-   "sha256": "3fe7f0dda2ced911cd7ff8a917b31113339e37a9b8a112846b0ddedc3ed6d162",
-   "size": 42133
+   "sha256": "0a1a494271416eced4778fb19a44cd09fed04fa3f7cebf6a8266ccab000ec7d1",
+   "size": 42544
   },
   {
    "path": "source/game/gui/container_compact.h",
-   "sha256": "526eaf8a9024b9c40ff0cc687e374202985eead5075eae21e7e338ad87f8a3d5",
-   "size": 5618
+   "sha256": "908c34cdcd74a04c5ebf5957c74f11a186511acabe67b7253616eceec8598cb9",
+   "size": 6118
   },
   {
    "path": "source/game/gui/container_menu.c",
-   "sha256": "682984c7c954baba3c5015c8d45741f15a916357dd1ad1404398a060be76cbff",
-   "size": 49922
+   "sha256": "12711f259a83fac261e551f928bde28f077831ebf4e2e27c0b3701067faa8b82",
+   "size": 50062
   },
   {
    "path": "source/game/gui/container_menu.h",
@@ -3403,13 +3528,13 @@
   },
   {
    "path": "source/game/gui/local_menu_host.c",
-   "sha256": "94687de211fd301a4a6320af909891afba5412d432cabe6cde48178a842458af",
-   "size": 21070
+   "sha256": "c322067b1e281d523933eb9f5ce25b2023b55a80bacd4008549e805f7db7e53a",
+   "size": 22358
   },
   {
    "path": "source/game/gui/local_menu_host.h",
-   "sha256": "a288dfccd780a9e502a91407520c038330f44c5f336e514bb63ae7214d7dee68",
-   "size": 2793
+   "sha256": "1a4c3ac6230c8f13383bfba3dd986c536683ae35bfa32f2c00296110745d0abd",
+   "size": 2978
   },
   {
    "path": "source/game/gui/local_pause.c",
@@ -3443,13 +3568,13 @@
   },
   {
    "path": "source/game/gui/recipe_browser.c",
-   "sha256": "2f1e6a90476aa8818124dba779dea1538cd80f5afdcd3518029ed4cc43878d8f",
-   "size": 44088
+   "sha256": "87b79a68c747490663706bcf539ec59903ec1c66e19bc7c212d6e3ab817984a7",
+   "size": 44384
   },
   {
    "path": "source/game/gui/recipe_browser.h",
-   "sha256": "fa27ad248ce7115ec884e4c47bf4e51f96d906ee8ef7fe3b8924137932e1a1c8",
-   "size": 9457
+   "sha256": "c45b6cb80ecebd5ee15c7c92eed2e36ba3e604ad1a1e1a427b4fe5c621b4b99d",
+   "size": 9498
   },
   {
    "path": "source/game/gui/screen.c",
@@ -3498,8 +3623,8 @@
   },
   {
    "path": "source/game/gui/screen_controller_settings.c",
-   "sha256": "42f36d9de46acffe669e8d88af74ecf4242495c563adccdf317020a3c946d437",
-   "size": 12764
+   "sha256": "ceb0384aab47a6849beab03f4eb6e23e1ff66c87c93693be9f15b2ea15b37e99",
+   "size": 13223
   },
   {
    "path": "source/game/gui/screen_convert_backup.c",
@@ -3518,8 +3643,13 @@
   },
   {
    "path": "source/game/gui/screen_creative_picker.c",
-   "sha256": "da0de808494c1cd662e225e4a8bf719750f0a764930f3740de0dc04e0da7ea8d",
-   "size": 13860
+   "sha256": "f83663ebb0b47126e0c12c46ed22101c662baa5d08644fea6d70f5e85a79ea21",
+   "size": 17611
+  },
+  {
+   "path": "source/game/gui/screen_creative_picker.h",
+   "sha256": "aa3e1fb71991991a6374e752278a6b10004864201e1a9c0c8789ab824a2325af",
+   "size": 1000
   },
   {
    "path": "source/game/gui/screen_death.c",
@@ -3543,8 +3673,8 @@
   },
   {
    "path": "source/game/gui/screen_ingame.c",
-   "sha256": "23afd74653ee78daa7996ec7b3f6552c6916e8798085e9e369f128d02ce9f63b",
-   "size": 140180
+   "sha256": "2420e8cc5e77c71da32193b86d45023e7307862b3cb43fa898c18ee8a82ce638",
+   "size": 140767
   },
   {
    "path": "source/game/gui/screen_inventory.c",
@@ -3558,13 +3688,13 @@
   },
   {
    "path": "source/game/gui/screen_load_world.c",
-   "sha256": "ea1e59b46339b9b24c3428ed4e6ea822fd23e165086002ccb59887e77bbbb7ec",
-   "size": 54412
+   "sha256": "55b986c50f5d83127d8a51efb67a9a56545bc845581f5d435f4b19e18c5e819b",
+   "size": 56775
   },
   {
    "path": "source/game/gui/screen_load_world.h",
-   "sha256": "e7349d743c8ba25fc97c89e6576e6c0d214e682e676facc9aa62e4b11c1508f9",
-   "size": 13951
+   "sha256": "a5942759f4d7bf0d33ffd332cefb14236ce6811f5ba684916a1a104e8ab9ceed",
+   "size": 14379
   },
   {
    "path": "source/game/gui/screen_multiplayer_connect.c",
@@ -3578,8 +3708,8 @@
   },
   {
    "path": "source/game/gui/screen_options.c",
-   "sha256": "d6b1a27f5e4605daf3f1838dc3916e0622606487a59ff330bcf705dfe65ac47f",
-   "size": 72971
+   "sha256": "8f428436779d89f260db08a65db404c0cb759edcdf032fdd57015ce0b4ccc2d8",
+   "size": 73394
   },
   {
    "path": "source/game/gui/screen_pause.c",
@@ -3593,8 +3723,8 @@
   },
   {
    "path": "source/game/gui/screen_select_world.c",
-   "sha256": "a01f5d84a51991fafc6933c91e113a0f6815d1c88839ac3ea2890af237ba3996",
-   "size": 121555
+   "sha256": "fcf958b2f4cd4404cc17e6e9e78ecf44a283cf66b8bf720dfd125158d1419836",
+   "size": 122238
   },
   {
    "path": "source/game/gui/screen_sign.c",
@@ -3613,18 +3743,18 @@
   },
   {
    "path": "source/game/gui/screen_texturepacks.c",
-   "sha256": "506bee5b6707587bb4b6e438d133f02f998923986396ccbfbecd30dfe6172905",
-   "size": 112247
+   "sha256": "88f926a101e37f65e2e8d6a2c819aca70a350ce08eda3a4a22c587bd67cb0c1c",
+   "size": 112725
   },
   {
    "path": "source/game/gui/screen_title.c",
-   "sha256": "884fdf56a4d761be20222c7bca041499d9d8acb58920d049cc5a72673e0ae178",
-   "size": 34737
+   "sha256": "b63f6824ada0f08da20a42b95f1713bb1415de5090a598473098f8a95bb701ce",
+   "size": 35342
   },
   {
    "path": "source/game/gui/screen_video_settings.c",
-   "sha256": "93c36925534f24afc37d08e1c6b061411b114378b2f0fc5f01f7014cd56f7a10",
-   "size": 10771
+   "sha256": "bd1dbc8322a4a60fffbbe7cb2cf85658629152a189cdec858d9a9cf5080262c3",
+   "size": 11128
   },
   {
    "path": "source/game/gui/sign_editor.h",
@@ -3937,6 +4067,11 @@
    "size": 667
   },
   {
+   "path": "source/graphics/beta_text_color.h",
+   "sha256": "32b5e30c1194dc6fd43e2972d547c1c86e49190671fdb05d99fe504d3d597bcb",
+   "size": 4324
+  },
+  {
    "path": "source/graphics/biome_color.c",
    "sha256": "0ebc5ed00b28393c761265053ccbb7b756a8f5cf90adb100f537a88c6c86ca65",
    "size": 3992
@@ -3988,13 +4123,13 @@
   },
   {
    "path": "source/graphics/gui_util.c",
-   "sha256": "e4f29c2408b4c28c10088b580c87e95ecfc5599912c9042cdcbd057141651a7c",
-   "size": 59827
+   "sha256": "5ffe405acc53aad0a9788f659412dcadcfc4d9a6829c9f9e602c86d19ac33f40",
+   "size": 63057
   },
   {
    "path": "source/graphics/gui_util.h",
-   "sha256": "37104c1762d42dc07e847b8670928f9522a83e9480c085c53a6c44e8d3aa61bb",
-   "size": 34832
+   "sha256": "7e11fb7dfc6eaa53f9127909e0c1f37922e290fdfbf598478ab005edc69b3eff",
+   "size": 35000
   },
   {
    "path": "source/graphics/lava_fx.c",
@@ -4038,8 +4173,8 @@
   },
   {
    "path": "source/graphics/render_entity.c",
-   "sha256": "27179438a7f457ce0aadd424d75efd02b8ebbbc0897ad1a284abc015ba387821",
-   "size": 117992
+   "sha256": "37c54b017f4093cba130dbfa67264424e575b2ac77b372dc5ee103a044de92bb",
+   "size": 120177
   },
   {
    "path": "source/graphics/render_entity.h",
@@ -4063,13 +4198,13 @@
   },
   {
    "path": "source/graphics/render_item.c",
-   "sha256": "dda9711ffdd67cec88b65d47697c42904df08aabbb90657346d20f85faa9b179",
-   "size": 24099
+   "sha256": "4c1cc7f787237cf160c39132061a87703136ddbbabfdcba9417816b4fc88379e",
+   "size": 30079
   },
   {
    "path": "source/graphics/render_item.h",
-   "sha256": "938c664defdfd14643a035bc483b34298e5df7ba950048edc0fb227707a12f48",
-   "size": 1673
+   "sha256": "c8d99105205fbf04a0f1e8b94b5770fbdcd2fc1ced5553c6b689d2a7b6f98dfd",
+   "size": 3258
   },
   {
    "path": "source/graphics/render_lightning.c",
@@ -4093,18 +4228,18 @@
   },
   {
    "path": "source/graphics/render_name_tag.c",
-   "sha256": "7d27c1ee6058a553ed68c509cc26d7b90528f70402cb27eacb827f98e3508dce",
-   "size": 6576
+   "sha256": "865ba03e819e638055c0245635800fc1f0c271daa3aca3828ed66e729621376d",
+   "size": 7556
   },
   {
    "path": "source/graphics/render_name_tag.h",
-   "sha256": "c1227731cffb3a18abfd578bf20342d704e1284e755e18290fcc41c21c4d4594",
-   "size": 8388
+   "sha256": "9acca6a5f763e6e55affe446de8ed72c7a08268eabb48128df43d7a3a23ca21d",
+   "size": 9072
   },
   {
    "path": "source/graphics/render_name_tag_draw.c",
-   "sha256": "cb965557c771d5b981e3671d610dd1a8177722ae5009d6d2194b7c77e6f3db99",
-   "size": 16805
+   "sha256": "9efcde8e94e527e74967a430a0b7338e72b4a40d6011225e71d7920c29e7be35",
+   "size": 16944
   },
   {
    "path": "source/graphics/render_name_tag_draw.h",
@@ -4123,18 +4258,18 @@
   },
   {
    "path": "source/graphics/render_sign_text.c",
-   "sha256": "a64da6d7d04a5885c1a8d354327ed7a67b6b765427c62f4a991acd5c234cf85d",
-   "size": 10219
+   "sha256": "505861d764d996fbf196634a5983b13c5203d133a013e46ae7ed3132b008c570",
+   "size": 10869
   },
   {
    "path": "source/graphics/render_sign_text.h",
-   "sha256": "3272fedaf51b253c96bed02c78b31c90beabd1eb19148331630016a9fce08002",
-   "size": 6503
+   "sha256": "42ccbb7b6bfc7d1237facbcc64a6f99ab37e06f1702c60aa084457daa9acc044",
+   "size": 6671
   },
   {
    "path": "source/graphics/render_sign_text_draw.c",
-   "sha256": "c5b82c25166d153089035b6ea9e71287afc9bbeda24ebbae15793047785a0f06",
-   "size": 6294
+   "sha256": "1b3d8c679f1cc5b8b988ec8b57655b83d541c4cbf6c44539c70c8e66f49013ae",
+   "size": 6374
   },
   {
    "path": "source/graphics/render_sign_text_draw.h",
@@ -4223,8 +4358,8 @@
   },
   {
    "path": "source/item/item_nbt.c",
-   "sha256": "58a7bd2aea0f03fbb38d7d6e9e914965eae4b8469f466d8cc43ee11c72e827fd",
-   "size": 17651
+   "sha256": "42bd950370b2c74bae3584d8491194e2cf521d69581ab7c690666967d76b18e3",
+   "size": 19618
   },
   {
    "path": "source/item/item_nbt.h",
@@ -4308,13 +4443,13 @@
   },
   {
    "path": "source/item/items/item_door_iron.c",
-   "sha256": "bdf4e309803ec2914ecb48af3ca01f24f8786f7ccd6fa94317cdfeb570a4911f",
-   "size": 5960
+   "sha256": "80632cbf5ded05df5be2b6ab1c7f4a1c96de1de5660069e6ead3710f537eecbf",
+   "size": 7217
   },
   {
    "path": "source/item/items/item_door_wood.c",
-   "sha256": "283d841b81ccf7a0c89725afd6287539883bfffa90b17f0c5b2d31c36bc38dec",
-   "size": 5962
+   "sha256": "f2a87a1f499580670e6e9dbd574ee8222a1d28db67d4bffae01200ba55093811",
+   "size": 7219
   },
   {
    "path": "source/item/items/item_dye.c",
@@ -4348,8 +4483,8 @@
   },
   {
    "path": "source/item/items/item_map.c",
-   "sha256": "5ec303dc65164f7611d4db5be778b837a7b116c117348d630770f088086ef04a",
-   "size": 48592
+   "sha256": "5d3d67d13682ef8a3abc959456ac65dd7b2acf35d9da9663c0c1bde6f61b2948",
+   "size": 49366
   },
   {
    "path": "source/item/items/item_map.h",
@@ -4418,8 +4553,8 @@
   },
   {
    "path": "source/item/items/item_shears.c",
-   "sha256": "ba8209fe83eb1897e8d3c605ca499ff2c2f27493e2271a8822fca7f7e9d08e2e",
-   "size": 1553
+   "sha256": "ce24e3cc13e22194368bbe7b8e91ccd7d4a2758d3519fe8edd3801df1ab708d3",
+   "size": 2123
   },
   {
    "path": "source/item/items/item_sugarcane.c",
@@ -4428,8 +4563,8 @@
   },
   {
    "path": "source/item/items_object.h",
-   "sha256": "5dc3af994db51ffeca2e12737893c79ad3f568c8a3adddef6d5e5738f5a96ec0",
-   "size": 41134
+   "sha256": "34ae48c410f4d07c8ab7fd2650829cdc3db5841f75c5b862a3e00ac65b10b509",
+   "size": 41017
   },
   {
    "path": "source/item/recipe.c",
@@ -4443,8 +4578,8 @@
   },
   {
    "path": "source/item/tool.c",
-   "sha256": "f02d59221f1b6bb0b136563756b570cd2da7f000036a753c0e1cea0004e84f9d",
-   "size": 6944
+   "sha256": "b127c5bf331ec2466e56339bf95685be3f3065946516dfc61b08d7c320f12ecc",
+   "size": 7965
   },
   {
    "path": "source/item/tool.h",
@@ -4503,8 +4638,8 @@
   },
   {
    "path": "source/main.c",
-   "sha256": "7f568e1a8606cb541646484dda1e774595c7285da753e95dc8a72fefedeaef85",
-   "size": 452921
+   "sha256": "39c4b4ac74be773d21a86e60edbf035f91ad3ebc625ddb8e6996f6abdc984262",
+   "size": 457130
   },
   {
    "path": "source/network/checkpoint_journal_guard.c",
@@ -4538,13 +4673,13 @@
   },
   {
    "path": "source/network/client_interface.c",
-   "sha256": "631987f1fd5d0dcd88ecb352d1fd1b13ec05c54c26abb3ccf1cf5b47d1943d6c",
-   "size": 359418
+   "sha256": "f76177eb80669c2a17cb307ccfdcfefac0f49d473f9032d66d7e80af67ebe342",
+   "size": 363616
   },
   {
    "path": "source/network/client_interface.h",
-   "sha256": "c10268390854f942a0fc38ac10c4918c9b71a12a5a5bfcab9fa590e3722d0c33",
-   "size": 84336
+   "sha256": "d7c7589f68204eb72b6365903e16803abc1b39103792676ee02c64a94489b5ee",
+   "size": 84549
   },
   {
    "path": "source/network/client_world_payload.h",
@@ -4573,8 +4708,8 @@
   },
   {
    "path": "source/network/death_drop_recovery.c",
-   "sha256": "d030d6f14471eb8bd5fbe1bd80d25cea0085cf39c44edc52a6450c669de74e50",
-   "size": 24747
+   "sha256": "b220051e5023e690b42d84b8b2c551bfe5ead3e6b2f40b47e7302c0a3f648a38",
+   "size": 25231
   },
   {
    "path": "source/network/death_drop_recovery.h",
@@ -4583,8 +4718,8 @@
   },
   {
    "path": "source/network/entity_archive.c",
-   "sha256": "00f447a597b3b7878fff6bfec38e20c50e357908083cbaacf8d8206e33fb73f9",
-   "size": 117463
+   "sha256": "c9859f34f2a91971645c66959cbb127cfcc5a1ee64a44f9fa1153a2d029bf548",
+   "size": 125413
   },
   {
    "path": "source/network/entity_archive.h",
@@ -4693,13 +4828,13 @@
   },
   {
    "path": "source/network/level_archive.c",
-   "sha256": "91322ba474c504f01de39170564efd07e29cd782d1b1a47c6ff0bda7a7394457",
-   "size": 71793
+   "sha256": "eba3527645dd32b200aeaaa3ef8f7aadb5c7f614252f081f787688e97b542103",
+   "size": 76598
   },
   {
    "path": "source/network/level_archive.h",
-   "sha256": "9701d145708c8ab31a86b30db14da33739f48844d0eadbc5ba80e27d63183e90",
-   "size": 26330
+   "sha256": "da5949825c84ac8e774e5b314bcd8b12757e0f1964c381b0a0dbf375261c20a4",
+   "size": 27539
   },
   {
    "path": "source/network/level_template.h",
@@ -4738,13 +4873,13 @@
   },
   {
    "path": "source/network/mp_codec.c",
-   "sha256": "56492a48f0bc2ea291da6129a7a34ea37825a4cb9a9132a982264fc16a187db0",
-   "size": 83010
+   "sha256": "7fef8fad174347d22d1b07d246227b0bfcdcb14c0769e500bfcdc85a9a3591b0",
+   "size": 83038
   },
   {
    "path": "source/network/mp_codec.h",
-   "sha256": "16f6757485bb6b44770ca1fff23f2b3aa128a11f178106cf588d34b9e44d07a1",
-   "size": 31696
+   "sha256": "f59100d7648a429c80163eeae2966db18d1945f051707b62bbf33186b218cc33",
+   "size": 31843
   },
   {
    "path": "source/network/mp_entity_flags.h",
@@ -4753,8 +4888,8 @@
   },
   {
    "path": "source/network/mp_session.c",
-   "sha256": "7dc59ba0d5ea99d5048bbc94a9e8da69630087b92774cb12b364c9bf0c891401",
-   "size": 4322
+   "sha256": "52ad828fc964e9de1980af5ba3e3b72145d1eceee1fbbc207338ac943386a698",
+   "size": 5086
   },
   {
    "path": "source/network/mp_session.h",
@@ -4788,13 +4923,13 @@
   },
   {
    "path": "source/network/region_archive.c",
-   "sha256": "53d7e62c53f0a43b5f9747a2520abe46978c4d0878390dbd78d84be18c174fc1",
-   "size": 362856
+   "sha256": "7f96a88d27c1b80f04ca3ca4eb60b6474d5883cdac0afc28a526bf9d08c6d2c6",
+   "size": 364467
   },
   {
    "path": "source/network/region_archive.h",
-   "sha256": "c27d9e83d827f34fdb3d477251fc4d42c4d6da6b3d33602831c952bd668f10f4",
-   "size": 56660
+   "sha256": "15d8d6ea55044ed4eb42116111ca75f1d7571dafd82cc49686566394745b84b4",
+   "size": 57101
   },
   {
    "path": "source/network/region_pool.c",
@@ -4838,13 +4973,13 @@
   },
   {
    "path": "source/network/server_creative.c",
-   "sha256": "9d59c42da70172428c105bdc5b3fc4f939265958915d1f66dc83393f241708af",
-   "size": 2250
+   "sha256": "e0180ebbe9854b0520e74fbbcfdc77458a845800e90bcab46fe9bceb035aee10",
+   "size": 2481
   },
   {
    "path": "source/network/server_creative.h",
-   "sha256": "ddcee1ea3f2b0b5413da5693d73b4d5946559215a5c1b2e4f0edf85a35cc8123",
-   "size": 1259
+   "sha256": "8f6878288baad4f5f85062ba5e00b3e631b500ae7da3899b64c8407ce79796fa",
+   "size": 1461
   },
   {
    "path": "source/network/server_dispenser.c",
@@ -4868,8 +5003,8 @@
   },
   {
    "path": "source/network/server_interface.c",
-   "sha256": "a377095bc4ec841922c6285c977b9d9bea71a7db04c506561c10922e8ca6e773",
-   "size": 63960
+   "sha256": "e7b489d35b2cdc4b586590e318690b8aef3ffee7e420c3e08eee0a285083c8cb",
+   "size": 64004
   },
   {
    "path": "source/network/server_interface.h",
@@ -4893,13 +5028,13 @@
   },
   {
    "path": "source/network/server_local.c",
-   "sha256": "075ac714384b3a4a14f5704aec7396977a343c8dad52a04cf90bda8aec97343a",
-   "size": 1519791
+   "sha256": "2f4230c41c7046408e6d7b015c9cb207e7c6337b96edc3c6db461905f2f122f4",
+   "size": 1544303
   },
   {
    "path": "source/network/server_local.h",
-   "sha256": "9483fc9a79fa26c196a27e0852bf98868f19d64c5e1dafa33a63ef4ddb124077",
-   "size": 120956
+   "sha256": "6250b0fa16d9346aef9544d41ca813c735591857b22924fafb44e0991d94153b",
+   "size": 121408
   },
   {
    "path": "source/network/server_local_guest.c",
@@ -4928,18 +5063,18 @@
   },
   {
    "path": "source/network/server_remote.c",
-   "sha256": "931114c905edb28887ccea2d5e7dfe103b9342a0fcafd75eb534f4559fb6c2c9",
-   "size": 44098
+   "sha256": "37a7d0a6a28774f3913877b1f8cbe616db5b6f34ef92d38747135f114b00fc8c",
+   "size": 44923
   },
   {
    "path": "source/network/server_remote.h",
-   "sha256": "ed2ddfb8b23729628c2c3b938aa793a654f2a48a3900f576444ff76abaedb007",
-   "size": 42129
+   "sha256": "f7b39b30fd49ca3e3420bf299cc5d12607f60df093bb4e952e371bddd6f7231a",
+   "size": 42849
   },
   {
    "path": "source/network/server_remote_chunks.c",
-   "sha256": "a436fd4552813909877d20b36f7ea3ce435da50ff9d1b685a6fef7ab919b7a0a",
-   "size": 167638
+   "sha256": "4befaf60c076cbe616d3f14d4f246056b9e560e15da52727e8f563dcf7623216",
+   "size": 169944
   },
   {
    "path": "source/network/server_remote_entities.c",
@@ -4948,13 +5083,13 @@
   },
   {
    "path": "source/network/server_remote_internal.h",
-   "sha256": "ef683ebf0430dddd3e7af46fca1f52111148e873901c5884b77c83c3d333d2bc",
-   "size": 84393
+   "sha256": "dd0e4b715648808e63b8501d61e9c1ca433e88d0ca01fa5d1ae59f08ee1d90e3",
+   "size": 84996
   },
   {
    "path": "source/network/server_remote_protocol.c",
-   "sha256": "a98d9d0da9d8145a374c79f4d1e3b2c3d6cab15e46c107a8c539b8044c943bce",
-   "size": 145710
+   "sha256": "51f6e6a24e6d13cdb9a6bdcf0fcb16228b7528e948e663e4aad74ee471722b25",
+   "size": 146031
   },
   {
    "path": "source/network/server_remote_transport.c",
@@ -5003,13 +5138,13 @@
   },
   {
    "path": "source/network/server_world.c",
-   "sha256": "ac15daabccf300d96c013b29a2d011753bb5b24acc27ff9f0ea3793383ed0053",
-   "size": 482513
+   "sha256": "3db51d50de0ed65d477786df2f29c9ce7d912a5e5b0da2ff3d7f863e640ab4ef",
+   "size": 486137
   },
   {
    "path": "source/network/server_world.h",
-   "sha256": "1e39f97db863e13234837085904cc0c731b796ec5ee48643198d6a5e250fc6ac",
-   "size": 104770
+   "sha256": "dd0f187c4d78506f977be5b0841a13d03c355f696d6149b4c3c94390afabd8df",
+   "size": 107156
   },
   {
    "path": "source/network/server_world_block_filter.c",
@@ -5018,18 +5153,18 @@
   },
   {
    "path": "source/network/server_world_tick_queue.c",
-   "sha256": "5308f0fe11c15f47f3fc525827e81a72e14f2df106d28dac4c88e82dabb26d38",
-   "size": 15351
+   "sha256": "2c17c475be8650162cfd5ed7300b6763f15fd483d133290566b4c48de828367a",
+   "size": 28792
   },
   {
    "path": "source/network/spawner.c",
-   "sha256": "283773835278251fa74df7b5e3fef8b88e993638aad31dcf5aa5cdd01b719034",
-   "size": 6421
+   "sha256": "4dae58c0e30c30f08e11dcee56c0b5322c9045861725077b34f9e0e6b0afca43",
+   "size": 7512
   },
   {
    "path": "source/network/spawner.h",
-   "sha256": "c3af831094694e596fff7d9be01af22b04b2f1aa2faef20b953aebd058d03de3",
-   "size": 7248
+   "sha256": "5d46b79c944b242a8577180b28567afe3951fc48fd48408cf782347d022a62bd",
+   "size": 7999
   },
   {
    "path": "source/network/spawner_mob_id.c",
@@ -5248,8 +5383,8 @@
   },
   {
    "path": "source/platform/beta_import_jar.c",
-   "sha256": "b0ee4bc5a4570da7cc21a2f8d6ca134c1a156b11c2d078ca37b510823b0abf1b",
-   "size": 21708
+   "sha256": "8da4ba30c9617a8d3d919cb36568b78890f3bc239447ecb9cfee966c1a6a9de5",
+   "size": 22028
   },
   {
    "path": "source/platform/beta_import_sound.c",
@@ -5378,23 +5513,23 @@
   },
   {
    "path": "source/platform/hw_telemetry.c",
-   "sha256": "31170e9adbe3dde5ffedb89be4e8983e05a34f4985aa164dac89e9198393cdda",
-   "size": 177863
+   "sha256": "9623a86f8dd7afe28f8f34c4e28fc8e56bb28088a0f1bc1305e47b5c44c0ca44",
+   "size": 178674
   },
   {
    "path": "source/platform/hw_telemetry.h",
-   "sha256": "a4f832444d70c96d73d0bcd11b6edee0cf58ffdef374beafc10574f8f1bbca55",
-   "size": 97512
+   "sha256": "28496b08c1b1fc884bad5312a5a67b53e6780482525adac43b8d345146e2fb30",
+   "size": 98760
   },
   {
    "path": "source/platform/input.c",
-   "sha256": "d9ed7048f61986158dc06a31d10bf445c6aa54c1ff1226b08fce0c78a4a9bb13",
-   "size": 125767
+   "sha256": "a2eb9edf31d99751e686cf16eeedc23458451f12a054d5c4d970edecb9ab2548",
+   "size": 125993
   },
   {
    "path": "source/platform/input.h",
-   "sha256": "4a8a8b0deed7a2f790132eefdefc99cc177876b4f1a97a66107c483f3cfb88d9",
-   "size": 19135
+   "sha256": "aa9105dac96d67c7710aaced1f7ddf708ca87fad822e443b60281363f25116d1",
+   "size": 19299
   },
   {
    "path": "source/platform/input_glyph.c",
@@ -5433,13 +5568,13 @@
   },
   {
    "path": "source/platform/mem2.c",
-   "sha256": "1009137aa5c5ae8d2124aa47b2bd555ccab8beee58ff29094fcddb6af97aa7e9",
-   "size": 89953
+   "sha256": "3d2224de50328999324bc1be41323142dd3fef397f9685c147a88746d2083a99",
+   "size": 96665
   },
   {
    "path": "source/platform/mem2.h",
-   "sha256": "648ddab7c99503a917790999fe5bfc6461057b161d6c37243a6843d8c134f868",
-   "size": 43448
+   "sha256": "b05ad09b11523dd485849779f492bff83418bc5a9653e809fe5db97de74e3da0",
+   "size": 46143
   },
   {
    "path": "source/platform/mem2_pool.h",
@@ -5508,8 +5643,8 @@
   },
   {
    "path": "source/platform/pc/gfx.c",
-   "sha256": "2f25a1e14f0ba86e865a1a5c59c15ad260e65bcd69f77fd012a719a4125d1345",
-   "size": 24501
+   "sha256": "ae70a3d6a8be60240de73e93dc87afcfe51cea33353c72a4f759913dcd5cef92",
+   "size": 24591
   },
   {
    "path": "source/platform/pc/heap_stats.h",
@@ -5523,8 +5658,8 @@
   },
   {
    "path": "source/platform/pc/texture.c",
-   "sha256": "aab776b6d6033524bb3d96ff5fc243254a896da63593117a9e32187dd175256d",
-   "size": 9785
+   "sha256": "f08f6e3d9f39f98b3d60aefac1784fa58e46b8cf2a7ab26ef1e6db0b71058167",
+   "size": 7790
   },
   {
    "path": "source/platform/remote_capture.c",
@@ -5568,28 +5703,28 @@
   },
   {
    "path": "source/platform/tex_gx_conv.c",
-   "sha256": "07ac9e9e56bcd16285da48b2a54f2dc4e2d70b79009faf035899a8f2711b7cd2",
-   "size": 6233
+   "sha256": "79db5663afa4ee06029d5b758e2144ab0be2712540b9fdb0b93eeae7c6402adc",
+   "size": 7050
   },
   {
    "path": "source/platform/tex_gx_conv.h",
-   "sha256": "1dc2a36051ac0f7be66758a3978176d4eb3ef53d4d25bec66ecbb8818dd6ba86",
-   "size": 2608
+   "sha256": "678185219218760b4a3cd5b13f5d363bdd05308daf87f56a134ee0dd89f1b1ac",
+   "size": 2755
   },
   {
    "path": "source/platform/texture.c",
-   "sha256": "f28a4983229649e3c80b2cadd376fd054594d86c7ba3972a6311b16717148793",
-   "size": 63801
+   "sha256": "a7fed4692483a8ec47d8177ebaac8e4a3d2da1678b50118ee13a8c668bb9cf73",
+   "size": 73456
   },
   {
    "path": "source/platform/texture.h",
-   "sha256": "d07be99635646e69edd5ae743be001317ce8f9d632fc8623274b6e1b79a15fa7",
-   "size": 16810
+   "sha256": "941765d8c42da747d8a0c67ae4edff8f7b14d0c0ebf1502527b45b2f7507721c",
+   "size": 19068
   },
   {
    "path": "source/platform/texture_cache.c",
-   "sha256": "5ef999db61a83c6b9f03853dcd9e322e370b5e9e9b87f09dc5af7b94736d2ac8",
-   "size": 25687
+   "sha256": "e413d37f24e3e44a8f0df4ba372f1fd0835fb6697052218b464ccdf99e6cb4b8",
+   "size": 26001
   },
   {
    "path": "source/platform/texture_cache.h",
@@ -5608,23 +5743,23 @@
   },
   {
    "path": "source/platform/texture_mip.c",
-   "sha256": "a1706e491a6ac79369ea1354e522331b1ff39119e1be6e5e54665f3f5db24fc0",
-   "size": 3164
+   "sha256": "29a84a80cb0034ece0b0b9b8695db8fe8d2512d27fc99fbccb76809d2afbc8d5",
+   "size": 3844
   },
   {
    "path": "source/platform/texture_mip.h",
-   "sha256": "93af950419e97944480165658f392a6dcf8b9a4ea2567df19c38df4c8011b754",
-   "size": 993
+   "sha256": "3eab8fe2436a7636cac625dc4547da5054e781c6799418f3855446a9b63148b1",
+   "size": 1527
   },
   {
    "path": "source/platform/thread.c",
-   "sha256": "336bc3de4937d308b87faac19c5ef3b252bc43cd870ce9a04b6b90d51481a0b5",
-   "size": 79609
+   "sha256": "b08c4ecea038283043870fb0163b3bf41931ba4e4f402d16dbfb0a9c0735b74b",
+   "size": 82417
   },
   {
    "path": "source/platform/thread.h",
-   "sha256": "11e078aee1cbba50cbcd329f5d8d851c84f1b242fcccbaa8c69c540ad1933b96",
-   "size": 20906
+   "sha256": "e4df0b11624d441f5dbf7ef4ad434c193176e0f562a7ee1286fe1756091b6c1b",
+   "size": 22939
   },
   {
    "path": "source/platform/time.c",
@@ -5693,8 +5828,8 @@
   },
   {
    "path": "source/platform/wii/texture.c",
-   "sha256": "6e160bc5e8e206f7b6567620e962998761e41d2a6a28ca0a041591ef46aff369",
-   "size": 14189
+   "sha256": "dd20166627e2376740a36fb3b7b8d98d9f68322fa7c6f0ab97101485cfa42afb",
+   "size": 14207
   },
   {
    "path": "source/platform/wii/watchdog.c",
@@ -5763,8 +5898,8 @@
   },
   {
    "path": "source/world.c",
-   "sha256": "cd7f971ed355afe7a3de6b7b07a99d39939fa9a6c3a4f76702702a806d398469",
-   "size": 146268
+   "sha256": "421e7d08256f572c0a639bcd8aa4f1f56a3f77f3d69ca4728cb395adae9a0eab",
+   "size": 146340
   },
   {
    "path": "source/world.h",
@@ -5943,8 +6078,8 @@
   },
   {
    "path": "tests/bench_g9_drain.c",
-   "sha256": "3c2efa050801b58ad3b2a74f4ca94845ad3eb4d7d97644c88a7a80baba6ca1f4",
-   "size": 29114
+   "sha256": "dfbdf31bc24c2981e3ca0772bac110f2a5da47383e62be45238d02b76fa86756",
+   "size": 30131
   },
   {
    "path": "tests/bench_lighting_budget.c",
@@ -5980,6 +6115,11 @@
    "path": "tests/beta_import_vorbis_pc.c",
    "sha256": "3641b526adbfb685c622b773b5c7fa28520c06de162e9876e5ecbfe37b2f3785",
    "size": 604
+  },
+  {
+   "path": "tests/build_pack_helper_resources.py",
+   "sha256": "107a8ba8b89f3b072737090c25b80e42d511fbfa29d0bbab08ccf2c71a66b12d",
+   "size": 1206
   },
   {
    "path": "tests/capture_beta_import_ui.c",
@@ -6178,8 +6318,8 @@
   },
   {
    "path": "tests/fixtures/mp_walk/run_capture.ps1",
-   "sha256": "da672cd91c38b2da9a3591070518e162e4bd4ce262a4fb1becffdad2e4139380",
-   "size": 3438
+   "sha256": "da0047b7342fcd41e8c1eaf6c17f705cfcbcf8a67dd3c009a97db666ed97db1d",
+   "size": 3512
   },
   {
    "path": "tests/fixtures/mp_walk/stream.bin",
@@ -6638,38 +6778,38 @@
   },
   {
    "path": "tests/golden/column_dedup/manifest.json",
-   "sha256": "911779701d9be166f68bbb93e472b482f48177be962d24c68ad4f8867452713e",
-   "size": 11147
+   "sha256": "0db4c29dfb2e31bb0198c0c1b3d80945ec9e3d31eb583fbff3b3015dbe5131b8",
+   "size": 24292
   },
   {
    "path": "tests/golden/column_dedup/ms2_12345_client.gz",
-   "sha256": "664c35f577003a81697080217391d7e9c30db5749f76eb722f277c440467ea6c",
-   "size": 722750
+   "sha256": "65997e7f227d046ebce80b94664887cadd83a8350525e0bcd647694cb2bdb59e",
+   "size": 500579
   },
   {
    "path": "tests/golden/column_dedup/ms2_12345_render.gz",
-   "sha256": "90ed95c15ec4389741ae38d33f2bc1fbb14a5b606db6380d790731a6911f3752",
-   "size": 4587620
+   "sha256": "1ec6964bacb71288a01281d24a7566d0a0c5c9d1fe35d0ebbe880b3e70d4eecb",
+   "size": 4586921
   },
   {
    "path": "tests/golden/column_dedup/ms2_12345_server.gz",
-   "sha256": "aeefbfc6bf42bd3e750a558c2581940ce3bc81dba8d595a4a1ae9c023edd069c",
-   "size": 28357
+   "sha256": "a7e67d5a1a1c8f764bdd01277052c46bfd8ace381ac9bf569fdb265c7f5e0108",
+   "size": 28909
   },
   {
    "path": "tests/golden/column_dedup/ms2_42_client.gz",
-   "sha256": "9ab89273df80881bd85c52bc574c29817ab3b0308f33c543a26974e0c3c12194",
-   "size": 423691
+   "sha256": "5d01df19eb7b4fa1cc4e35ff29c601a0072bcef97f1d99196fc3b451546e7d9f",
+   "size": 321907
   },
   {
    "path": "tests/golden/column_dedup/ms2_42_render.gz",
-   "sha256": "0ed22a6c7c81a28d7c07ea764c0dd260bac56c9ff42a9303a9dee376cbb5603b",
-   "size": 5983137
+   "sha256": "acf3f8efcb1e26ec3cd8b07e4db52b7fdb1c228309f93e7db31e72b668c909d3",
+   "size": 5393398
   },
   {
    "path": "tests/golden/column_dedup/ms2_42_server.gz",
-   "sha256": "6d6857046bfa3418358b4f381cc453b01d04fb47a61733aebb314dc16a38a956",
-   "size": 26044
+   "sha256": "19b5956b5a35c79a623a3ad4e672479ad4eba959e40105592c4fb2afb7f608f8",
+   "size": 26217
   },
   {
    "path": "tests/golden/column_dedup/slice2_scene_manifest.json",
@@ -6718,18 +6858,18 @@
   },
   {
    "path": "tests/golden/sort_container/compact-gamecube-blocked.txt",
-   "sha256": "e118b4ada7f5ab5ca7a7e6d23d1a026a002e7c260a938e20fee5a95744bbe4b9",
-   "size": 18806
+   "sha256": "c477475ce89ca826c4e3e90e959a7ab47f9e522fbad12ae62ba7f1605ee2d38c",
+   "size": 18810
   },
   {
    "path": "tests/golden/sort_container/compact-gamecube-header.txt",
-   "sha256": "960fc92375f8fd1df4a9f4e4669547f2785238da5ae124339d9558e0d090882c",
-   "size": 19587
+   "sha256": "8ce65599d51a7e11cac23dace19197449b1f9ef9159998d57b2e71daf529265d",
+   "size": 19591
   },
   {
    "path": "tests/golden/sort_container/compact-gamecube-menu.txt",
-   "sha256": "960fc92375f8fd1df4a9f4e4669547f2785238da5ae124339d9558e0d090882c",
-   "size": 19587
+   "sha256": "8ce65599d51a7e11cac23dace19197449b1f9ef9159998d57b2e71daf529265d",
+   "size": 19591
   },
   {
    "path": "tests/golden/sort_container/compact-wiimote-blocked.txt",
@@ -6763,18 +6903,18 @@
   },
   {
    "path": "tests/golden/sort_container/large-gamecube-blocked.txt",
-   "sha256": "43a295c8e917dd0ffcc71114dd732eaf182137177eed3bf19a5b9e5f9a287fd7",
-   "size": 30010
+   "sha256": "45414c371defa34df097e9ae29cbd486474c2a43618b2716c6e88824945fea80",
+   "size": 30014
   },
   {
    "path": "tests/golden/sort_container/large-gamecube-header.txt",
-   "sha256": "8a35cbe0a4c412b56ec1ab4a8afea154a273265a212dae40f13a53e7b0dfbfad",
-   "size": 27715
+   "sha256": "215a5e79464f44f8990852275cf6289ba451ec58b5119eb7bd8b9734048ddbde",
+   "size": 27719
   },
   {
    "path": "tests/golden/sort_container/large-gamecube-menu.txt",
-   "sha256": "8a35cbe0a4c412b56ec1ab4a8afea154a273265a212dae40f13a53e7b0dfbfad",
-   "size": 27715
+   "sha256": "215a5e79464f44f8990852275cf6289ba451ec58b5119eb7bd8b9734048ddbde",
+   "size": 27719
   },
   {
    "path": "tests/golden/sort_container/large-wiimote-blocked.txt",
@@ -6808,18 +6948,18 @@
   },
   {
    "path": "tests/golden/sort_container/single-gamecube-blocked.txt",
-   "sha256": "badc784b7e4728a56ee549feba62c600290aa415f27184ecfc304a44ee9a66bc",
-   "size": 29418
+   "sha256": "b7a629cc14ae61c9c73b8c3b3cfd9e7cbb990e2bcbc508aedf01f80d9fa8ca71",
+   "size": 29422
   },
   {
    "path": "tests/golden/sort_container/single-gamecube-header.txt",
-   "sha256": "149cecd412d7d8eefba4f03dcd36e2548a734630efc72ece4cf367eb25fa99bb",
-   "size": 29163
+   "sha256": "8e6768343053d7ae76f317c7591882c2950f8200ec1f7a156b3e386bb6fdad1b",
+   "size": 29167
   },
   {
    "path": "tests/golden/sort_container/single-gamecube-menu.txt",
-   "sha256": "149cecd412d7d8eefba4f03dcd36e2548a734630efc72ece4cf367eb25fa99bb",
-   "size": 29163
+   "sha256": "8e6768343053d7ae76f317c7591882c2950f8200ec1f7a156b3e386bb6fdad1b",
+   "size": 29167
   },
   {
    "path": "tests/golden/sort_container/single-wiimote-blocked.txt",
@@ -6838,13 +6978,13 @@
   },
   {
    "path": "tests/remote_capture_recreate_harness.c",
-   "sha256": "87e90cb3314b29309feeb101c9121685993597f23a07a345944a9620ba35525a",
-   "size": 12648
+   "sha256": "66a5e03a39e14c259b95d5c762216e0d79223c22213983f2568df2cebc8bb11b",
+   "size": 12667
   },
   {
    "path": "tests/remote_capture_service_harness.c",
-   "sha256": "244c483849581902bdf9e06990d1a6c248fb9327b9b8cc6f90cd81ff510cfb3f",
-   "size": 23878
+   "sha256": "97bf0249f2ee23c41c7276c2282193c4b8d9760384fb149225ddefc425d85ecf",
+   "size": 24546
   },
   {
    "path": "tests/seed_corpus.tsv",
@@ -7092,6 +7232,11 @@
    "size": 3146
   },
   {
+   "path": "tests/support/remote_capture_host.h",
+   "sha256": "26f3697e873e9f4dbbc06884ec0d0b6a86f8d0a17b0802c123e1be26b311ed12",
+   "size": 2483
+  },
+  {
    "path": "tests/support/rng_site_decode.py",
    "sha256": "ca531c4d1156f7143eec3da31ebba848665704dd37df7a7dea0c4617c6fb7d2e",
    "size": 1927
@@ -7133,13 +7278,13 @@
   },
   {
    "path": "tests/support/split_residency_fixture.h",
-   "sha256": "3f9e34383a7d3bd6fe62f6f9f6b0db6e5b3f13afecde5f211c41f9bfd1f2c772",
-   "size": 2694
+   "sha256": "0fae2720dbc08baa490bb7c7178cb920b24fb28176e76fdc1f982e6ad179fba0",
+   "size": 3025
   },
   {
    "path": "tests/support/test_engine_marker.c",
-   "sha256": "1e2993470b090f6732f15da1ad3b08192cfe051d4dfee0b2443a54d70a1b98ae",
-   "size": 1006
+   "sha256": "4380b9a9f6c48dfcf5764d691575d6799fc33c001bbaefc4c2bdc60bce765624",
+   "size": 1011
   },
   {
    "path": "tests/support/test_fixture_dir.h",
@@ -7178,8 +7323,8 @@
   },
   {
    "path": "tests/support/windup_render_baseline.c",
-   "sha256": "7c4aa990d2ef4b849a8d4f15a97b65fc940f7fc5cc93d73d9e85a86c6f437058",
-   "size": 116427
+   "sha256": "ddaf3e6b2bdf55ddd9c3c82de134d1ab163e8ac6ed8a747d50c16f26a26b98a6",
+   "size": 118274
   },
   {
    "path": "tests/test_a1b_spawner_tracker_reload.c",
@@ -7258,8 +7403,8 @@
   },
   {
    "path": "tests/test_a2_transfer_transaction.c",
-   "sha256": "e3936577dc7f6163994d874fc19145855b32ac348bf35836162e631fc933f82f",
-   "size": 178386
+   "sha256": "af9fd480cf17d8c922d96c48c702625f0b2ec7ec5ca290f0e754ce2b0744507f",
+   "size": 180207
   },
   {
    "path": "tests/test_a2e_entity_generation.c",
@@ -7313,8 +7458,8 @@
   },
   {
    "path": "tests/test_achievements_notice.c",
-   "sha256": "a2299ecb95fdcc57d928507ecf0da8cf6ca7aece608ad92f2eff677a947ca815",
-   "size": 22707
+   "sha256": "75ac69251572631f971ceebd01d1cde8c5b40c35d74dd37b16caa58e9df0f225",
+   "size": 26419
   },
   {
    "path": "tests/test_achievements_owner.c",
@@ -7333,8 +7478,8 @@
   },
   {
    "path": "tests/test_achievements_screen.c",
-   "sha256": "7a8942c511524ca1dfb6636bbe60c9af367e3af45433d76d46c764d5358cc910",
-   "size": 27082
+   "sha256": "934fb40b3e84df9c92dfa827a5521f6d62cdb078c09530f03bfc991b8311df19",
+   "size": 27239
   },
   {
    "path": "tests/test_achievements_seam.c",
@@ -7363,8 +7508,8 @@
   },
   {
    "path": "tests/test_anchor_measurement_clock.py",
-   "sha256": "328d682d18f7a74fafc88e43faac7571ff3a1bc5eeed930b7779687db3be20ff",
-   "size": 19471
+   "sha256": "660c502a8facaa5e0a27d44c23219edd43786d6b07f8b1cda0a86f7889db0d4b",
+   "size": 19440
   },
   {
    "path": "tests/test_anchor_pool_collector.py",
@@ -7413,8 +7558,8 @@
   },
   {
    "path": "tests/test_arrow_env.c",
-   "sha256": "e9ffd40a1f93e75b318a24dfb62175d988bc1d30f79f22d3ecf3acfc60882fab",
-   "size": 61870
+   "sha256": "7240b33f6774c2c5f9ea44997b5af63c7e4770663b15abd6c737e96b3af3f076",
+   "size": 64091
   },
   {
    "path": "tests/test_arrow_pickup_actors.c",
@@ -7430,6 +7575,11 @@
    "path": "tests/test_arrow_spread.c",
    "sha256": "caa4d44fa6357482d62bf8476fee35d09ccb49ca4a9ed9f7af0a05531744adb4",
    "size": 1792
+  },
+  {
+   "path": "tests/test_atlas_mip_isolation.c",
+   "sha256": "509b3bd5f70fea389fb5bf4af7121df59f75ccd3cf38947123a3fde65d8487c2",
+   "size": 4523
   },
   {
    "path": "tests/test_attack_assist.c",
@@ -7598,13 +7748,13 @@
   },
   {
    "path": "tests/test_backdrop_bake.c",
-   "sha256": "f2ff50eb99f3dc1d1a18761b643954c352300d382981a066b580a6364c9df7eb",
-   "size": 17790
+   "sha256": "c799902e66506b245f6d2c1ba7dd5459fec764708f0fda262fe4e5e4c5c87269",
+   "size": 18693
   },
   {
    "path": "tests/test_backdrop_cache.c",
-   "sha256": "e2ec51938982f9be6613fe9a60b8bd119a4cf03d8db3f75836d3f24a25d0c4a0",
-   "size": 9936
+   "sha256": "3c3bd4960c7db94034c7fd64440a639a30fddc0dded78650d424bced296a620f",
+   "size": 10876
   },
   {
    "path": "tests/test_backdrop_settle_equiv.c",
@@ -7633,8 +7783,8 @@
   },
   {
    "path": "tests/test_beta_import.py",
-   "sha256": "4eec4b13a46d79de0742918c951c08f5607bfa3b967a7eee1ab58f78251c3133",
-   "size": 16529
+   "sha256": "b180f4f8193ba7fdbc9551826b05ca7d0f323fe8292b834baf39ad1a71049c89",
+   "size": 18099
   },
   {
    "path": "tests/test_beta_import_lighting.c",
@@ -7752,6 +7902,11 @@
    "size": 9074
   },
   {
+   "path": "tests/test_bundled_asset_fallback.c",
+   "sha256": "534986b566aa45242f749a097bbcb587599d4cacea59d37d1b09d122e94e30a4",
+   "size": 3173
+  },
+  {
    "path": "tests/test_c1_guest_window_bind.c",
    "sha256": "4330b4916de30160b285efd8b9f2ead07b872e2c2a69e42600326a786e105507",
    "size": 11465
@@ -7852,6 +8007,16 @@
    "size": 8205
   },
   {
+   "path": "tests/test_chest_break_scatter.c",
+   "sha256": "f37e9924cd0ece30dd192caf35c614134f38176b899f34ea3b7896b7d6a3e2a2",
+   "size": 9159
+  },
+  {
+   "path": "tests/test_chest_break_two_dims.c",
+   "sha256": "f2fb6b5d3a20547f0d42ab70ec68a51216ecfb1e4055fa30178e4d7c478097af",
+   "size": 23128
+  },
+  {
    "path": "tests/test_chest_item_sound_commit.c",
    "sha256": "35da5913921d9a5432c5d7e7e977da69d1dff1c4eb404f5c93a1ede90edb8b1e",
    "size": 16045
@@ -7948,8 +8113,8 @@
   },
   {
    "path": "tests/test_client_sky_matches_server.c",
-   "sha256": "c03563ed622de3631733053d3fbd270f68936ef4cf09fd003e19139fb29e0d60",
-   "size": 13749
+   "sha256": "2c9e2ed075e63dcac13d9d034c0657574bc1e1ba9cc9bc0c0c7f53543c4f8775",
+   "size": 14755
   },
   {
    "path": "tests/test_clouds_gx_state.c",
@@ -8003,8 +8168,8 @@
   },
   {
    "path": "tests/test_column_dedup_render_equiv.c",
-   "sha256": "9a1e34a27d69f5ef56058beacced66426ce2067ef154e14d46e85d28c6890880",
-   "size": 1979
+   "sha256": "a14b2934d00423b1cd24c8bef9cd3965ad8a2d56b8cbf3eb781dd2aa31c14f3c",
+   "size": 3894
   },
   {
    "path": "tests/test_column_dedup_scene_equiv.c",
@@ -8018,8 +8183,8 @@
   },
   {
    "path": "tests/test_column_dedup_state_equiv.c",
-   "sha256": "01af544f8a51c389c91276e5460f972e888b0a1a432ce85291983d9c87ad1af9",
-   "size": 4733
+   "sha256": "3ab99a50f9423664d0878558fef680ac3fe947e71ebfa665c4937371f54d93dd",
+   "size": 6285
   },
   {
    "path": "tests/test_compass_clock_recipe.c",
@@ -8033,8 +8198,8 @@
   },
   {
    "path": "tests/test_config_fallback.c",
-   "sha256": "90655c82e35e9e6a710ca0df1dff2b2a59ec426ae917c07be1c80f49d14f7415",
-   "size": 22229
+   "sha256": "d0c0cdf2cec60ef13a669c8c414b04640938b1e5c12d107dda36c8e76b23a2e7",
+   "size": 24179
   },
   {
    "path": "tests/test_container_menu.c",
@@ -8058,8 +8223,8 @@
   },
   {
    "path": "tests/test_controller_glyph_pack_proof.c",
-   "sha256": "b40705611bedd6903cda2c59689d485b76195a6ee52ab3f5506ed775aac785ac",
-   "size": 23772
+   "sha256": "d41e0fa663c4e12ed4f858293e0ca19078c0679421d62c1449d5eb3232f5f7d2",
+   "size": 24017
   },
   {
    "path": "tests/test_controls_sheet.py",
@@ -8092,14 +8257,24 @@
    "size": 17376
   },
   {
+   "path": "tests/test_creative_flight.c",
+   "sha256": "15cc037670eff421711d460be6f11bfc6fc4b7fd1c6a34acd2fd5a419384a956",
+   "size": 16847
+  },
+  {
    "path": "tests/test_creative_mode_env.c",
    "sha256": "4f0b023148b13dfbbeb139716fb1144cee3ce46e50b717a6cff0c441dbb98099",
    "size": 7220
   },
   {
+   "path": "tests/test_creative_no_drops.c",
+   "sha256": "22f78c4fd4353647a73c9528f804afd7025f8f2cc782f7f4d2f392f1dac0066b",
+   "size": 8838
+  },
+  {
    "path": "tests/test_creative_picker.c",
-   "sha256": "32b5fc9d38d92cf090760d5dda351dadc324d59e067f8c918a7e1af2378159d0",
-   "size": 4799
+   "sha256": "d4054a2de340f2d527ab54c159b78b6906ab4d6a0d10d0605f6f1c0c415ced94",
+   "size": 17265
   },
   {
    "path": "tests/test_creeper_charged_explosion.c",
@@ -8258,8 +8433,8 @@
   },
   {
    "path": "tests/test_door_placement.c",
-   "sha256": "ae4b5d815920fbe4e5b0cc1a6b56733b375867b899467e375b0eb96cca7478da",
-   "size": 10000
+   "sha256": "b9e8760166632f94d3a78149c2e19839685a69fa97c0b67554b709291975f9c8",
+   "size": 12086
   },
   {
    "path": "tests/test_double_chest.c",
@@ -8320,6 +8495,11 @@
    "path": "tests/test_entities_client_tick_erase_safe.c",
    "sha256": "d155fb2945b56013ac78287d0d4bed328fc579f528b03999b3f5cad3a70752dc",
    "size": 7389
+  },
+  {
+   "path": "tests/test_entity_box_uv.c",
+   "sha256": "c6d5db1ad9fa13517113d0a1618664f1d37991db5e00b41db7d96ac776991b0d",
+   "size": 12507
   },
   {
    "path": "tests/test_entity_direct_colour_bracket.c",
@@ -8568,8 +8748,8 @@
   },
   {
    "path": "tests/test_fluid_lifecycle_env.c",
-   "sha256": "71cc056a793ccd42b1460016b78669d6d96ff3f9aaf31bc3de5a963a77ee14e2",
-   "size": 101450
+   "sha256": "2d3fee4f6f766436129f32fced95761b9f5998a7986aa3cd280fb5eaa4ead3a5",
+   "size": 101857
   },
   {
    "path": "tests/test_fluid_plate_world_routing.c",
@@ -8588,8 +8768,8 @@
   },
   {
    "path": "tests/test_frontend_no_pointer.c",
-   "sha256": "e8b205150ba34d6698b63b6760937d342e526118fc67b216b9758481a0ba867b",
-   "size": 255375
+   "sha256": "c41999cf68ceafdbc4f75f3f1185243d82183166fc5217b668eeb84b8b6c774b",
+   "size": 256607
   },
   {
    "path": "tests/test_frontend_play_flow.c",
@@ -8658,8 +8838,8 @@
   },
   {
    "path": "tests/test_g9_main_handoff.c",
-   "sha256": "7c460171a33c894d2b2a72c500c74066d990ffa80d445aaac87cc8e79160abb2",
-   "size": 26887
+   "sha256": "f2dd99a47522779094c70d80584a71b2635d26bf6be677e51d5babe77d341532",
+   "size": 28482
   },
   {
    "path": "tests/test_g9_priority_lease.c",
@@ -8678,13 +8858,13 @@
   },
   {
    "path": "tests/test_g9_save_io_durability.c",
-   "sha256": "24b4cf2c13731a29cd5b5410551d0847a3a0ccc1fbe5d30c95337093e22a1361",
-   "size": 70721
+   "sha256": "50537b5fbdeb2a630568c8251bdee5317e412e35fea12fa30702df21c79769bd",
+   "size": 82211
   },
   {
    "path": "tests/test_g9_save_io_equiv.c",
-   "sha256": "d43489c696b7e5e248df5b8a5511242538d9dc29700169825536fbfd20d238d8",
-   "size": 26008
+   "sha256": "9e5516adb1ef8499b0f134ca66f9ebce518dbf0b0a7ad4a8f492b8c59af7a469",
+   "size": 26602
   },
   {
    "path": "tests/test_g9_save_zlib.c",
@@ -8748,8 +8928,8 @@
   },
   {
    "path": "tests/test_grass_filter.c",
-   "sha256": "2ef5c3b340a3de47410eab1a8aeb21e6110e764566d5752e78d9bee718c382a6",
-   "size": 7939
+   "sha256": "20c255fde1c4ec57519f0548e95d4a1dc7821f374f36c6feee1a776297c22d46",
+   "size": 9497
   },
   {
    "path": "tests/test_grass_render.c",
@@ -8790,6 +8970,11 @@
    "path": "tests/test_heartbeat_fps_window.py",
    "sha256": "21eaba004b2a3196876c08af55c7847903cdd320ebbf52d0b5b68f7d1965ebee",
    "size": 3822
+  },
+  {
+   "path": "tests/test_held_map_transform.c",
+   "sha256": "81154e31dd8c09aa8dcfe0c35c95c6b7d4e44d4d79c397052f3d20ea7e767a04",
+   "size": 3959
   },
   {
    "path": "tests/test_hoe.c",
@@ -8843,8 +9028,8 @@
   },
   {
    "path": "tests/test_hw_telemetry.c",
-   "sha256": "c1b6f697ac92cd22b197c706a9b809ee33d77f0e82cc8bc0a594669e90338c83",
-   "size": 322905
+   "sha256": "6c33b05ac3b888de178e1084423ba9883874182293b025f3bd490eb3945199a8",
+   "size": 324314
   },
   {
    "path": "tests/test_ice_dig.c",
@@ -8863,8 +9048,8 @@
   },
   {
    "path": "tests/test_import_owned_beta_assets.py",
-   "sha256": "3f4f153e3efcda088909efbcbdb5de013900a790a189b34ab72d4b850f4fc3f0",
-   "size": 42474
+   "sha256": "da8516642e9799ecd4bf6aabc5596901345382660c627b08ab9d167013ba6b87",
+   "size": 43354
   },
   {
    "path": "tests/test_import_te_dense.c",
@@ -8883,8 +9068,8 @@
   },
   {
    "path": "tests/test_input_glyphs.c",
-   "sha256": "1fa66518670e51b166379588fcc32f5c3d9b858575bf14410b2c14b2afbbdf2c",
-   "size": 21054
+   "sha256": "e0f15586a114977c32e8eb6a43943c2f74d85aadafbec5cc77f42fa0104cc9b7",
+   "size": 25135
   },
   {
    "path": "tests/test_input_notices.c",
@@ -8893,8 +9078,8 @@
   },
   {
    "path": "tests/test_input_wii_adapter.c",
-   "sha256": "1b5f16e7e56bce6e78f2602dd28e11025f0dc12c2dc557c1a18650f982d6a352",
-   "size": 193252
+   "sha256": "252e8ff532de7ee6a9b352b89690e8bde3655ebb2f30f88cc580f88a405f468f",
+   "size": 193413
   },
   {
    "path": "tests/test_inventory_drop.c",
@@ -8903,8 +9088,8 @@
   },
   {
    "path": "tests/test_inventory_load_transactional.c",
-   "sha256": "5f0f7eb6af6c8cca6ec2431a189f078b9e6d3ef47910ea88d60626084810a4ee",
-   "size": 8301
+   "sha256": "0d079a45a111623da6d8e9a422f1284429fb5cf2361957c232fab5e5e8fb4dea",
+   "size": 15384
   },
   {
    "path": "tests/test_inventory_ownership.c",
@@ -8947,6 +9132,11 @@
    "size": 10944
   },
   {
+   "path": "tests/test_item_needle_default.c",
+   "sha256": "5814369061901bcdf6893100778685e4d13e8e42101cdcd24604b7e48876c898",
+   "size": 1937
+  },
+  {
    "path": "tests/test_item_pickup.c",
    "sha256": "6b3c7a2178a615f993c019bab70af6c5e4f7638e2fc72e6865c7c3343e2ebb92",
    "size": 5541
@@ -8983,8 +9173,8 @@
   },
   {
    "path": "tests/test_l211_portal_split.c",
-   "sha256": "5dd082ad8be19658362a75f424dec9fe24e38d7d7eb500da6f718a3ce091ca31",
-   "size": 27694
+   "sha256": "688cd9ebf76928ceb3ac3e169c084052232c1e7a402bed1dc1e6f8d672225baf",
+   "size": 27948
   },
   {
    "path": "tests/test_ladder_pop.c",
@@ -9028,8 +9218,8 @@
   },
   {
    "path": "tests/test_level_archive_player_health.c",
-   "sha256": "52548add0320b0e0820a2d1824bfa8ad2b8b43f10cb2612d2a745996dec7ed45",
-   "size": 5129
+   "sha256": "735c67ad281e0d12b3b721335e48a66cd491f3f2cba69c770cec4440bc264492",
+   "size": 6132
   },
   {
    "path": "tests/test_level_archive_recovery.c",
@@ -9063,8 +9253,8 @@
   },
   {
    "path": "tests/test_light_queue_equiv.c",
-   "sha256": "2a37b65feaeebce454fb1b811c04153ad0c35b7a54a0e60f8e45cf0a478ea7bd",
-   "size": 469473
+   "sha256": "4722553ec14f15116c907bf1462e998d10dff30279cec8cfb302b3be2bda0923",
+   "size": 469769
   },
   {
    "path": "tests/test_lighting_client_budget_equiv.c",
@@ -9197,6 +9387,11 @@
    "size": 8928
   },
   {
+   "path": "tests/test_lqd_wait_collector.py",
+   "sha256": "4bcf6cbd68ddeb271c0446ffbfe64f05405cd5d4588ac863000b444db3b7eb61",
+   "size": 4414
+  },
+  {
    "path": "tests/test_main_tick_pacing.c",
    "sha256": "a3375b9b21b0b8e9a65fd91c504cb7e2bcabb28f269234c5a35f0cf9d99af5ec",
    "size": 22477
@@ -9208,18 +9403,43 @@
   },
   {
    "path": "tests/test_make_release.py",
-   "sha256": "a234d51254067802496b64571a3abace487a9065a597597ca92b901edbda28b4",
-   "size": 76118
+   "sha256": "a0e365d2d83e192ca95dd1f51c98ad7ea5aa04acec6f47806ff26092141af9be",
+   "size": 77344
+  },
+  {
+   "path": "tests/test_map_demo_option.c",
+   "sha256": "3f17ec5819f758cd872f1e39e9960ee044c8b7b5089a169eda9555490c38e477",
+   "size": 3689
   },
   {
    "path": "tests/test_map_item.c",
-   "sha256": "e4d500d81fc656645e226ada2e81fa0dba2179f710736f3c4915c64e81b57c45",
-   "size": 53953
+   "sha256": "a8b3bd9dc97cc120eb4763a68c114ad8e6b0b940df2107efb004ad825f3e90f0",
+   "size": 54271
+  },
+  {
+   "path": "tests/test_map_live_per_viewport.c",
+   "sha256": "47cc1a1aa03ff5ea22b4f04f71a306c3354e953a84af3b8fcd4c7ce78a5bd85b",
+   "size": 4845
+  },
+  {
+   "path": "tests/test_map_marker_backpressure.c",
+   "sha256": "c8a5b9b809d8b696385f42e8604f2e2e97734c7a863a0e36097ce9a0027be376",
+   "size": 4101
+  },
+  {
+   "path": "tests/test_map_mirror.c",
+   "sha256": "aa7ed7d05c4d8a985121c04b4619f9d0ab9ed1597bef9b2df4a13626e6e15278",
+   "size": 4775
   },
   {
    "path": "tests/test_map_painting_world_routing.c",
    "sha256": "5db53e5e56a604ade792c55d0c4804e7aba7def371eb8dddedaf112229f4fc08",
    "size": 23753
+  },
+  {
+   "path": "tests/test_map_scan_unloaded_history.c",
+   "sha256": "b8baff8eba0db30a18101c1d29748857f54be03260b010cf698b5451255aadad",
+   "size": 2320
   },
   {
    "path": "tests/test_map_transport.c",
@@ -9413,8 +9633,8 @@
   },
   {
    "path": "tests/test_mob_knockback_sites.c",
-   "sha256": "e8af3ea269054bcb2ecc809fde21d30d81e28cea4b37d619f413525565091a3c",
-   "size": 10642
+   "sha256": "de3d3268d6357b5110dd666028a8dd550fd5371695063a7036bd8302a89aa870",
+   "size": 11731
   },
   {
    "path": "tests/test_mob_lava_aabb_golden.c",
@@ -9473,8 +9693,8 @@
   },
   {
    "path": "tests/test_mob_spawn_clearance.c",
-   "sha256": "744d9a51ea2d36d33eafdd8b9962e59eaac39ae00d8841d79e5e12e338d4e19e",
-   "size": 19780
+   "sha256": "4c598b8ff43e09f56e72e74a55af12086d1ab01230341c1bbf76c0510293a305",
+   "size": 20762
   },
   {
    "path": "tests/test_mob_spawn_light.c",
@@ -9538,8 +9758,8 @@
   },
   {
    "path": "tests/test_mp_admission.c",
-   "sha256": "0e3391c0a178ce66c35fe47e39a4e9c29c5525e140353fdedf051a3feeb2d87f",
-   "size": 154734
+   "sha256": "738066503c44ae74ee946614beff50d95393a76898b3b5c3ffe61c6a13a91f2e",
+   "size": 170336
   },
   {
    "path": "tests/test_mp_animation_parity_wire.c",
@@ -9552,9 +9772,14 @@
    "size": 31613
   },
   {
+   "path": "tests/test_mp_chunk_burst.c",
+   "sha256": "331cc21ed17512cad96ebe558f0058fbe5045099a79e069c2bf8c758c67da757",
+   "size": 7781
+  },
+  {
    "path": "tests/test_mp_chunk_order.c",
-   "sha256": "eb0e22c0bf1d99be887963fdf2c23fa9f93eab3a51ba419872ce306ea878422f",
-   "size": 34999
+   "sha256": "33eed32956f54844372874d25cc0ab3bf7fc0732d1fef4e9a88f140ba8eec6fc",
+   "size": 35531
   },
   {
    "path": "tests/test_mp_effects.c",
@@ -9603,8 +9828,8 @@
   },
   {
    "path": "tests/test_mp_play_evidence.py",
-   "sha256": "210965de6858a7f3acc70a6c9089b02ac4d88909b16b86905a2cdba233d31619",
-   "size": 113726
+   "sha256": "8a53bf244e4218896aa82ed9763237d2cc48c75321d2b893bfd92993b9733a98",
+   "size": 114162
   },
   {
    "path": "tests/test_mp_play_map.c",
@@ -9623,8 +9848,8 @@
   },
   {
    "path": "tests/test_mp_s0_env.c",
-   "sha256": "51974e7f50d4e9a4eb01901dc8812a390c780b2c6603c22501b2078a0b3ecdd9",
-   "size": 566030
+   "sha256": "01b173b8bb0a2fd8b99539c8ff82e2b39993dbb4146beb1667cba6bf533f587a",
+   "size": 568926
   },
   {
    "path": "tests/test_mp_session_gate_collector.py",
@@ -9668,8 +9893,8 @@
   },
   {
    "path": "tests/test_name_tag_quads.c",
-   "sha256": "6516d2d1ccf1dc5d5066393930d0efcaede66245af6be50489cb52ac3f7a2082",
-   "size": 11049
+   "sha256": "1e1736640044eea9de14259dcda600c99d0b3fd6a75cebdccda07c7f10fbf61f",
+   "size": 13336
   },
   {
    "path": "tests/test_nbt_buffer_size_hint.c",
@@ -9680,6 +9905,11 @@
    "path": "tests/test_near_evict_defer.c",
    "sha256": "8f6bda6bc8586c7a63290e9b96969ae3a20418d88e065a33e895bec419b6fb2f",
    "size": 16270
+  },
+  {
+   "path": "tests/test_needle_per_viewport.c",
+   "sha256": "bb13f25f1c23d92e21aa4e871ddd3cdf1eda5cde9a2d04d7327161f1ef8b1d7a",
+   "size": 9193
   },
   {
    "path": "tests/test_nether_lava_schedule_env.c",
@@ -9728,8 +9958,8 @@
   },
   {
    "path": "tests/test_options_env.c",
-   "sha256": "2e4e446d22be77d32b9979eaaff8f05f6d2ca0e7e98fe582db1d228d8e006894",
-   "size": 39729
+   "sha256": "3d00a71ac75cfbc4480021f1b1c15c0fcca731742061896aa06e2ed5bb27bc94",
+   "size": 40728
   },
   {
    "path": "tests/test_ores.c",
@@ -9738,8 +9968,8 @@
   },
   {
    "path": "tests/test_osk_env.c",
-   "sha256": "8ddd2cec85455a7dbd258dc497190cf86c4dd1f0dba140b0df33968479a63fc7",
-   "size": 15231
+   "sha256": "81a8e94ceea8d61e5d0789568a5ad1464fa162931e66489773d65abd624259fb",
+   "size": 18168
   },
   {
    "path": "tests/test_osk_frontend.c",
@@ -9818,13 +10048,13 @@
   },
   {
    "path": "tests/test_pack_helper_conversion.py",
-   "sha256": "f16972a46cead4e00bc6c7e38c21d245eba742abadc0de6b523a25113bc4adf7",
+   "sha256": "f26d8908f2675b5ce4d6ff410c270b323d9878bd4d9498bad18468b75009c7eb",
    "size": 22516
   },
   {
    "path": "tests/test_pack_helper_core.py",
-   "sha256": "094a9250571b6ae75b8b75e81261d2f68fa7736ec31f67c96c13c2c599fc7b10",
-   "size": 61771
+   "sha256": "b13d700dd0ca6edf5b7ca7ee3ead3e60d97fb1af1114b81b109304319ab5717b",
+   "size": 68701
   },
   {
    "path": "tests/test_pack_helper_desktop.py",
@@ -9838,8 +10068,8 @@
   },
   {
    "path": "tests/test_pack_helper_gui_integration.py",
-   "sha256": "0e390b5fec2986a3bc0b7474685d747e6233606b0cdc44a70384b6cd47114771",
-   "size": 10231
+   "sha256": "71e2e2387ebed8a883042f8ed7d2dc7e74cbaa7fe4c8db7b519a5dd090c326fe",
+   "size": 10241
   },
   {
    "path": "tests/test_pack_path_spaces.c",
@@ -9888,8 +10118,8 @@
   },
   {
    "path": "tests/test_perf_stress_survival_guard.c",
-   "sha256": "aca8f67b87f8e5d5c4b3238e33c6873a5f20f083cb77f2b141b81d3dd2d3d42c",
-   "size": 29269
+   "sha256": "1a5dd4fc0237bee638589376df09aebab881467e9e659a180b82841a901b84dd",
+   "size": 29715
   },
   {
    "path": "tests/test_pig_saddle_env.c",
@@ -9982,6 +10212,11 @@
    "size": 13022
   },
   {
+   "path": "tests/test_player_entity_nbt_parity.c",
+   "sha256": "5f507accfd8f315ca12a22ebed6ebe039457da8b4e2623dfb1a763759d8a82cc",
+   "size": 9545
+  },
+  {
    "path": "tests/test_player_env.c",
    "sha256": "feddc77e13cb03a77dbc95aeaff36d17cd11fe8a9f0c85b51eb028830aa359a5",
    "size": 3638
@@ -10043,8 +10278,8 @@
   },
   {
    "path": "tests/test_pool_selftest.c",
-   "sha256": "dd3083e53348464d4247187cdc06e77fa3db06f29837b934ae5e17b6bc8d1696",
-   "size": 11053
+   "sha256": "aa146378a2205e5f49d8c4c11e629c0c7806754c6a33849e1c5658c64788ca58",
+   "size": 14807
   },
   {
    "path": "tests/test_pool_selftest_collector.py",
@@ -10062,9 +10297,14 @@
    "size": 3328
   },
   {
+   "path": "tests/test_portal_loading_screen.c",
+   "sha256": "717593cdefd9a6ca5ee1f9b0e295b9ba80bd7eed7399c8f73b4ea32508b4a6f0",
+   "size": 3289
+  },
+  {
    "path": "tests/test_portal_travel.c",
-   "sha256": "011e7899cff0312ac8da5758ae17a2cd9addbacfa2129a8e8389a43e15a65c16",
-   "size": 266342
+   "sha256": "5af4a28c42049cb676ced3f4546e4541537235f5b245bc2a4e08156e55cd2616",
+   "size": 266530
   },
   {
    "path": "tests/test_powered_rail_power.c",
@@ -10098,8 +10338,8 @@
   },
   {
    "path": "tests/test_put_wii_stage_file_sha_mismatch.py",
-   "sha256": "c95083bacaa29f4af3104b0526915f7ec311ddb8895b5073cd1ae4d14ca85375",
-   "size": 16102
+   "sha256": "eaff3c6e3b4bac921f9dcb4d6a2e8325625c9c8db5d9e330a4db39f6a9379d2e",
+   "size": 16334
   },
   {
    "path": "tests/test_quit_unsavable_env.c",
@@ -10232,6 +10472,16 @@
    "size": 4678
   },
   {
+   "path": "tests/test_redstone_repeater_direct_target_golden.c",
+   "sha256": "5fd290f6fd2253ce116c78734ca7d3f3344d32b23dc4c6e00344a9901632e449",
+   "size": 10981
+  },
+  {
+   "path": "tests/test_redstone_repeater_relay_golden.c",
+   "sha256": "ca8fbc836a0e57bf8bde8f301ea1a1b11f10ca95cf5584248455c4644adcd280",
+   "size": 8293
+  },
+  {
    "path": "tests/test_redstone_repeater_reload_env.c",
    "sha256": "08797121594ea91a1fd8cc3cc5cb9bae596e4ab2e878c6458750a3265c48b740",
    "size": 12797
@@ -10333,8 +10583,8 @@
   },
   {
    "path": "tests/test_region_entities.c",
-   "sha256": "0d2973122f57e4b2bfec355ca005ab28526902e4ee5485e01286bb2f2787a922",
-   "size": 58181
+   "sha256": "a7976921bc14cae009f94d2a98c3b658dcaa1a18f81a4331d63165d462257837",
+   "size": 64077
   },
   {
    "path": "tests/test_region_evict_failure.c",
@@ -10348,8 +10598,8 @@
   },
   {
    "path": "tests/test_region_evict_retain.c",
-   "sha256": "7450d2339b9e85a1bddd2c32bbc4b2d616f62ff43d3ee3211e2a8270b364df65",
-   "size": 19124
+   "sha256": "e86219a8eca736a8e0721cf6401f2bb3f2e69c39ca7e79bd6cd75aa329e1a57d",
+   "size": 19219
   },
   {
    "path": "tests/test_region_index_journal_equiv.c",
@@ -10398,8 +10648,8 @@
   },
   {
    "path": "tests/test_remote_capture.py",
-   "sha256": "36baf65cbb383007a63fec2cb827f01a0d52d8f62354afea62712386bc47ca21",
-   "size": 7295
+   "sha256": "e3711bc9ab95b4443b82ec1865d49e6cda6d10a8b07a8f93b497b8bded84f453",
+   "size": 7443
   },
   {
    "path": "tests/test_remote_capture_handoff.py",
@@ -10408,8 +10658,8 @@
   },
   {
    "path": "tests/test_remote_capture_service.py",
-   "sha256": "3754655589dccaeaeea0fe2b6efffcf2fd12f730d9652432290ddeb62e66e215",
-   "size": 15266
+   "sha256": "2e383ae65ff646a72c979828acf82a84ee669ceff6e283263145fd25e694b2c7",
+   "size": 15537
   },
   {
    "path": "tests/test_remote_mob_fire.c",
@@ -10433,8 +10683,8 @@
   },
   {
    "path": "tests/test_residency_runners.py",
-   "sha256": "ce59906515be59f5293dabe41995efd7409fc7096aca061eeacfcb1ecb8a3290",
-   "size": 6648
+   "sha256": "25c796721c5604713715745e71f50b2c8740fbd00c3264725af0351ad1c0cd5e",
+   "size": 6813
   },
   {
    "path": "tests/test_respawn_movement_handoff.py",
@@ -10463,8 +10713,8 @@
   },
   {
    "path": "tests/test_rpc_pending_output.c",
-   "sha256": "8e97bc5509d9b87f557e30fca3d80e25d0762de205fdcda0fe1fb9958e6248aa",
-   "size": 51036
+   "sha256": "f45c818f9078549cdc618c1a9132fbc9b530af6e5dc6c033fef0361af3c4d73b",
+   "size": 53544
   },
   {
    "path": "tests/test_rpc_pool_burst.c",
@@ -10493,18 +10743,18 @@
   },
   {
    "path": "tests/test_run_wii_hardware_failure_paths.py",
-   "sha256": "9c19fac1ed7345de38065db470ef0e20fa804350715693962219e90d909570b2",
-   "size": 8715
+   "sha256": "75e8607a1216333f2724955246b6b4ae141ea9c06c44462b892cd19490602ddd",
+   "size": 9335
   },
   {
    "path": "tests/test_run_wii_hardware_verdict.ps1",
-   "sha256": "88b564f51e91bfc8b02e3ba0c5c96c5f0e90b80183f63535960c51de11843088",
-   "size": 4965
+   "sha256": "2039a83a481e603db626f11f17a88768117cf46aca0039640c5685d1e1701bc9",
+   "size": 5327
   },
   {
    "path": "tests/test_run_wii_power_cycle.py",
-   "sha256": "073cc6ce7adb8b46769f0cb27f9d70a21e25826870a27bc86e7b9024d7286601",
-   "size": 7196
+   "sha256": "7086319c1d0a152015915d89a82b64c2f1360e38c23eb197462096f73ed0e8bc",
+   "size": 7899
   },
   {
    "path": "tests/test_sapling_canblockstay.c",
@@ -10553,8 +10803,13 @@
   },
   {
    "path": "tests/test_scheduled_tick_dedup_golden.c",
-   "sha256": "2b5fde273b59a70d12fea29d50d5ae79567f993b4fc1dd0311e913aecedf610e",
-   "size": 6186
+   "sha256": "3cad7971c8bd6919725dc3d4b9ccb3d0a8a0d07d54e3552930bfff16b2571a6b",
+   "size": 6291
+  },
+  {
+   "path": "tests/test_scheduled_tick_order_golden.c",
+   "sha256": "e27f712f63b20b23217c1f9eeccfee6206e7fb4560384a9ce4bc35f224e519bf",
+   "size": 8909
   },
   {
    "path": "tests/test_scheduled_tick_parity.c",
@@ -10563,8 +10818,8 @@
   },
   {
    "path": "tests/test_scheduled_tick_queue.c",
-   "sha256": "44d7ca5838ee5bd905b5d17086e1f263dc46e773697d24287ac99977c7256aa9",
-   "size": 1739
+   "sha256": "711dd1a719b69df057ff968c2c1ee6279526f82d6bccb53f790763a1cd2665e7",
+   "size": 13704
   },
   {
    "path": "tests/test_server_replay_record.c",
@@ -10622,6 +10877,11 @@
    "size": 2722
   },
   {
+   "path": "tests/test_shears_parity.c",
+   "sha256": "b796db1f31745874a200c91457634546eafe16e9154a6d61a11b588b5e73bec5",
+   "size": 10699
+  },
+  {
    "path": "tests/test_sign_approved_flow.c",
    "sha256": "94953210fe13af08353a98c8387b56e5a770a0cd6408592705e01b3f5f6a882b",
    "size": 10088
@@ -10658,8 +10918,8 @@
   },
   {
    "path": "tests/test_sign_text_quads.c",
-   "sha256": "5f0dbfad71874fc00a8bbae895063a9547dd7aac6e0789a829c8688afbb90955",
-   "size": 14250
+   "sha256": "823f2da1ee26c3e69f70cfed456e862d9c12fa886aaa28cabab695fd1fd7f784",
+   "size": 16833
   },
   {
    "path": "tests/test_sign_text_store.c",
@@ -10678,13 +10938,13 @@
   },
   {
    "path": "tests/test_singleplayer_loading.c",
-   "sha256": "b09d8ef47aa3b1d23b19b71b9d49cde66359c9f07ae6590fa798cc41fde4be45",
-   "size": 13349
+   "sha256": "20ed91f67157a66c6e2360d3f380bc36a97172ac5b228e01eb2e4790d24aba49",
+   "size": 19522
   },
   {
    "path": "tests/test_skeleton_arrow.c",
-   "sha256": "3a58b8bdf6f381c9d24fb942947167445b551cce0f58fd00bcd7e1c506ca5890",
-   "size": 5530
+   "sha256": "ed6d8add5d3b179e7ac452279924304fbb4204627fc1ea9de859280ca01d2c7e",
+   "size": 5779
   },
   {
    "path": "tests/test_skeleton_strafe.c",
@@ -10763,8 +11023,8 @@
   },
   {
    "path": "tests/test_sort_presentation.c",
-   "sha256": "571b009d98cd7a9e0781aa21514e8b8d52f2cd88d6fa30ea3186a030b8dff166",
-   "size": 19282
+   "sha256": "b0f89a831125bdfb46ed82212e546e2663d828c04ee1409b40e02b364430daf7",
+   "size": 19443
   },
   {
    "path": "tests/test_sort_session.c",
@@ -10817,9 +11077,19 @@
    "size": 3397
   },
   {
+   "path": "tests/test_spawner_delay_retry.c",
+   "sha256": "c6590beb4593ac349ad44d35d6613efc3d6008da2326fb4cbd97c8b37303294d",
+   "size": 8104
+  },
+  {
    "path": "tests/test_spawner_opacity.c",
    "sha256": "070f3578cb1cce23978f6e9e3eb3611d20af1ffee2b013c04ef05e40cf90d04b",
    "size": 3952
+  },
+  {
+   "path": "tests/test_spawner_placement_parity.c",
+   "sha256": "eba94b0f65bf42d6e030dc0d643694a87d058322615f6c15caf9e14f62145054",
+   "size": 12552
   },
   {
    "path": "tests/test_spider_box.c",
@@ -10883,8 +11153,8 @@
   },
   {
    "path": "tests/test_split_live_seam.py",
-   "sha256": "d65364442dddb2de0f3135b8464f850dc918432eed0503bf58d8e26213466a9f",
-   "size": 57956
+   "sha256": "173b6755c0f75e1124595a04ddf95e05191d632d38e5fc9759a635b2a1f9587a",
+   "size": 59900
   },
   {
    "path": "tests/test_split_live_toggle.c",
@@ -10928,8 +11198,8 @@
   },
   {
    "path": "tests/test_split_residency_single_equiv.c",
-   "sha256": "1516ec1eb9d54a93bc87f9f46018652b6f5f8c55f1314832a0b139afac613170",
-   "size": 21406
+   "sha256": "49647b276d1220a4281def6f14c6e23805cf803a377095011bd540ae2be6d3d5",
+   "size": 22208
   },
   {
    "path": "tests/test_split_stale_reports.c",
@@ -10968,8 +11238,8 @@
   },
   {
    "path": "tests/test_stage_line_reader.ps1",
-   "sha256": "16d95101174bd68cfadbe8fa01d58fbc2e2a6ec6227e6127c42efa2db31d476a",
-   "size": 4169
+   "sha256": "e3dbc53cb582c28f4fd123edb5bdfdbf23ef79ec1f5a840013f33644615e52e5",
+   "size": 4257
   },
   {
    "path": "tests/test_stage_manifest_paths.c",
@@ -10988,8 +11258,8 @@
   },
   {
    "path": "tests/test_stage_saves_tools.py",
-   "sha256": "1f0a101b39349ccd45fe05173ae6aca4aba8bee1c6fe7e47f877cab13f2ed6db",
-   "size": 150755
+   "sha256": "04044751bf65fea10c08e243243211c050d797de4e84f622dd2684c53d087193",
+   "size": 151699
   },
   {
    "path": "tests/test_stage_saves_validator.c",
@@ -11008,8 +11278,8 @@
   },
   {
    "path": "tests/test_staged_service_diagnostic.py",
-   "sha256": "dac022c21e44263122ff3dc71e9929e90d04a46056ae2b1792100eae591969d3",
-   "size": 5552
+   "sha256": "4ec1d0851baf5d9f944112f406d528a716d3e407837e5aa14becb433bffbf201",
+   "size": 6865
   },
   {
    "path": "tests/test_startup_credits.c",
@@ -11083,13 +11353,18 @@
   },
   {
    "path": "tests/test_tex_gx_conv_equiv.c",
-   "sha256": "1c158844de2beaee34ddd724103d7d571cbe963d601dbe03602296c203bf7fc0",
-   "size": 12011
+   "sha256": "75742e426b11ab89602479a91f11a1705a990609c6dcb7cdc6a9e83b61f9641c",
+   "size": 13352
   },
   {
    "path": "tests/test_tex_pack_cache.c",
-   "sha256": "e0ef5d2564da431e375b2cc659f83b042df1ff2f7668d3feba1a83e4aebba1ff",
-   "size": 18847
+   "sha256": "b3e06717ebbc0b2aaa5916ae20043de0541605bff9620ab45bf1091b914de492",
+   "size": 22345
+  },
+  {
+   "path": "tests/test_text_color_codes.c",
+   "sha256": "52853efe3677be191bf03568974f9305a4587db51c45d46acba2e4a87326099a",
+   "size": 12485
   },
   {
    "path": "tests/test_texture_atlas_failure.c",
@@ -11113,8 +11388,8 @@
   },
   {
    "path": "tests/test_texturepacks_screen.c",
-   "sha256": "da5e760f6ffa13f9f415cf2faa945284b4baf56ef64cdbdfa177aa9da0f61d5d",
-   "size": 18294
+   "sha256": "0d7a0788e49779812a3b9896426b4e2fcaa8b31239a6049602b72bd84b504f97",
+   "size": 19807
   },
   {
    "path": "tests/test_thrown_billboard.py",
@@ -11133,8 +11408,13 @@
   },
   {
    "path": "tests/test_title_logo.py",
-   "sha256": "fb38378b9e2c7c0817b60a2e8dc02f046e2cbc6190d374973ca08bc9e2fdbc8e",
-   "size": 15313
+   "sha256": "22f0f0e63fea18eb00f551d6224779672a17bc320604bb6ce9aa7cc218a89a2b",
+   "size": 15795
+  },
+  {
+   "path": "tests/test_title_splash_absent.c",
+   "sha256": "25c4c8dd40269715019ae2ac598c45d3de096ccc23b73282690acf9cf51c535e",
+   "size": 3087
   },
   {
    "path": "tests/test_title_tutorial.c",
@@ -11223,8 +11503,8 @@
   },
   {
    "path": "tests/test_ui_geometry.c",
-   "sha256": "4e321774aa6e7683fcecda523f7df1abbefe646f129e8bfae9532c0b62f12efc",
-   "size": 191424
+   "sha256": "46ab4e44b9b18c01e12ccee41c94a2b1fed1fdc5438fae29599971b6d0399974",
+   "size": 197596
   },
   {
    "path": "tests/test_underwater_overlay_tint.c",
@@ -11337,6 +11617,11 @@
    "size": 20058
   },
   {
+   "path": "tests/test_web_piston.c",
+   "sha256": "9c4cff418539775c85b12ff63095e4066c2d6b96b9fa80e28d7cd0783144ef2f",
+   "size": 6444
+  },
+  {
    "path": "tests/test_wii_anchor_gap.py",
    "sha256": "3dd15c35a29c5acf5f4a5c0277bcb90607d1e3c62bf382848de9375aef007cb4",
    "size": 4729
@@ -11447,6 +11732,11 @@
    "size": 3268
   },
   {
+   "path": "tests/test_wolf_teleport_path.c",
+   "sha256": "c50ea555eddac60bf3487f53eef2c5fcc5f4384d88282eb69774971b5ed77c03",
+   "size": 8478
+  },
+  {
    "path": "tests/test_world_alias_gate.c",
    "sha256": "7cc7bfb271d178694824037b5789449004632a8a8796f89a06de95ceed7710f3",
    "size": 28826
@@ -11483,8 +11773,8 @@
   },
   {
    "path": "tests/test_world_list_incremental.c",
-   "sha256": "ae4de610d5743552e412dd8d6f2e32f73fe1db9079963718886ea56cf19ca6e2",
-   "size": 26869
+   "sha256": "6cbee8ed63ac8c3f335d41e95cb9a1d98ad978eaabf14caa8b9b384f6a4fb57f",
+   "size": 29366
   },
   {
    "path": "tests/test_world_manage_env.c",
@@ -11548,8 +11838,8 @@
   },
   {
    "path": "tests/world_alias_baseline.txt",
-   "sha256": "833fc8200c253525a1611095908fa024d4990ba3a84e84890606deecf2248e3e",
-   "size": 6737
+   "sha256": "507ca36d27bbc8f000910220f28b960c070490baf7d091b1f6c1404806bb4e1e",
+   "size": 6860
   },
   {
    "path": "texturepacks/README.md",
@@ -11818,8 +12108,8 @@
   },
   {
    "path": "tools/archive_wii_saves.ps1",
-   "sha256": "f17907d0e26766efd0a31fc415d5a113c012c39cba34c60e7fde62260f8c5f6d",
-   "size": 66040
+   "sha256": "16e43af2fc25d76fc0a887c3bbbf52eb9b8fdea4c9b145235edd810bd6856ecc",
+   "size": 67676
   },
   {
    "path": "tools/asan_soak.sh",
@@ -11893,8 +12183,8 @@
   },
   {
    "path": "tools/ci.sh",
-   "sha256": "b0a276ae76c2f20f01daa4abb2c25482ceb40a1f0322419c8519276bc424fe94",
-   "size": 5043
+   "sha256": "1d74e71f79563d6a286c40e5a2d1f10840e2f90f5d1c4fd8c00031a59ffb775a",
+   "size": 5455
   },
   {
    "path": "tools/clean_export.py",
@@ -11903,8 +12193,8 @@
   },
   {
    "path": "tools/collect_staged_wii.ps1",
-   "sha256": "76f3a4502ba1d664f31426e9289b5fccc857def4e9245523bb4880b3d5796db6",
-   "size": 7601
+   "sha256": "6f4504a82260caa37ac51a12bc31b88f688e9b6555a507490d93f5942e919353",
+   "size": 7868
   },
   {
    "path": "tools/compass_capture_scratch.c",
@@ -11913,38 +12203,38 @@
   },
   {
    "path": "tools/cw_saves_common.ps1",
-   "sha256": "3ac2bcd3adff62c19527dce186a0b301a966e2f145160ab92b0faf2502d2d16b",
-   "size": 148944
+   "sha256": "256efcd545755e2e32de904d61da4b86b187c50c8ac6c89e11192c2f6e9193d1",
+   "size": 151777
   },
   {
    "path": "tools/cwbuild.ps1",
-   "sha256": "3e2043afae76a2c1a9bc77f32873e6495b1127eca4b8497916b84ade9e4fdd68",
-   "size": 9253
+   "sha256": "069db26a4fad30a9e4cf9100890dd2641db0752bb57b7794d0c6ed093649238e",
+   "size": 9456
   },
   {
    "path": "tools/delete_wii_stage_path.ps1",
-   "sha256": "05bc2979eeb3143ed033acd663b6be4084800bc1fb4d8e85ce250763f71c850a",
-   "size": 3969
+   "sha256": "af438e1adf3c93e8252abea75198f1f1572a6e4dfd61c15f0a824ab77a785dff",
+   "size": 4069
   },
   {
    "path": "tools/dolphin_capture.ps1",
-   "sha256": "29ff045a2bb5726dcd35606b61100f933b727a17a3f867a14c1c4bac0c92d538",
-   "size": 4646
+   "sha256": "4d2484283de87ac76b67abbdceddee67cffe9aae894e24f9474d03425215cdf1",
+   "size": 4756
   },
   {
    "path": "tools/dolphin_drive.ps1",
-   "sha256": "37aff07517eb75ea78c99bde07ee5e107e52325af1cd20fa014369b5c4c62611",
-   "size": 9558
+   "sha256": "4c542bf1fcafeb151f0aca203c151dbdf45d474f479b75a147e349c91062e9dd",
+   "size": 9766
   },
   {
    "path": "tools/dolphin_prove.ps1",
-   "sha256": "76231180b9d2dd8e1a621eef9e32addd3851fa0ba2a85909c300e39b868ad5b6",
-   "size": 10710
+   "sha256": "c9eb58406737e271f9c4ccfdd9bcb008f4625848faf939d13aed92e6be113f70",
+   "size": 10946
   },
   {
    "path": "tools/dolphin_smoke_test.ps1",
-   "sha256": "26a7f6e6285aaa6819195f12a5e096b6c6d200563adbafd703072e118702fb35",
-   "size": 41205
+   "sha256": "71cea6b4671a3aa17da34348d29b88c4d1faec23f3e9dc7ac6526c62151fcce8",
+   "size": 42376
   },
   {
    "path": "tools/dolphin_synthetic_input.md",
@@ -11973,8 +12263,8 @@
   },
   {
    "path": "tools/fetch_wii_stage_file.ps1",
-   "sha256": "5ecc17723bc7ddd6e55feb672b565fbb6bcb83ae607290c0f30936a922396338",
-   "size": 8741
+   "sha256": "368fc8d2b28b0ff74e325a2f59911829ddf579cf0040b6832e8876d0d59a2e57",
+   "size": 8983
   },
   {
    "path": "tools/find_lake.c",
@@ -12058,8 +12348,8 @@
   },
   {
    "path": "tools/get_wii_stage_manifest.ps1",
-   "sha256": "65cb7eb6418c03bb140b030d93fa5d8a691b08decd6fa98250fc5a1da4f9daaf",
-   "size": 6238
+   "sha256": "3347d00e639b738929d0c2fed1c02d927f5ba45267c702b1068dd0a771f8c6e9",
+   "size": 6420
   },
   {
    "path": "tools/header_hygiene_baseline.txt",
@@ -12128,43 +12418,43 @@
   },
   {
    "path": "tools/install_wii_proof_launcher.ps1",
-   "sha256": "0e6cc7d1d73d1a588107a756a3585c19cd912bff0a82e037c265240ee67975f6",
-   "size": 11789
+   "sha256": "7dcea047b51eca5645dd50212ad9404dc7f7cd7216dccabc5ef53ab8672dec65",
+   "size": 12072
   },
   {
    "path": "tools/invoke_wii_power_cycle.ps1",
-   "sha256": "d608eb316f384574a25949ea42a9be07e4de268db5cabf088ea4da4460ce4678",
-   "size": 4328
+   "sha256": "f246260fecd29bf0e80f33921aac58e4abf6bf71fb1623b6ffedba2e1b33812f",
+   "size": 4536
   },
   {
    "path": "tools/launch/dolphin_wheel_hotbar.ps1",
-   "sha256": "163ac911e84480b3805dd705b548487183edcec02e0b3d13f86f67b402d26e68",
-   "size": 5822
+   "sha256": "1f508a115ca90235a3d8ef97179b065023bfbe3f82f399aff38d677f853a6aaa",
+   "size": 6015
   },
   {
    "path": "tools/launch/run_dolphin_dev.cmd",
-   "sha256": "a28a3c086efa7000aebad23aa76e63488f280ee80baf8bbf9ca0fdedf501624f",
-   "size": 1488
+   "sha256": "6d1c1464cc9e89668a51c7107279c0c82fabf4c5df61cddc2b7833b5a38b42ce",
+   "size": 1529
   },
   {
    "path": "tools/launch/run_dolphin_fresh.cmd",
-   "sha256": "190f424bb280d3da948dea8bea8471c2d73df6b35236620d1cc587d37f2be625",
-   "size": 743
+   "sha256": "a46488c382d21b635c3f02fb245b387071ed42d7823fb67f25ab3ff3bcefcae7",
+   "size": 768
   },
   {
    "path": "tools/launch/run_dolphin_stable.cmd",
-   "sha256": "56cad74eb6ad07c122da643cf1d67f655cd59317925dbba6a824d63d4b3257e1",
-   "size": 1017
+   "sha256": "dee48b6956b3536ac3f584b8f26ccc0a9f847cb093f43e7176db97f1d3d1e28e",
+   "size": 1052
   },
   {
    "path": "tools/launch/run_dolphin_world1.cmd",
-   "sha256": "a22b472d0e793b672ffd89cbd195e90cb526fa98adbec61b5e07f452d4cf0524",
-   "size": 745
+   "sha256": "2cc295c6ad0b3c7a74984f1c3d781a0ff675da1a42d2ff4e6fac9ce85677cf14",
+   "size": 770
   },
   {
    "path": "tools/list_wii_saves.ps1",
-   "sha256": "b9e18e8a960cf7fb910cab38e08d46420569decd0d96543b5a94cfe8eba685dc",
-   "size": 11155
+   "sha256": "7b4282c141f3b63a42eb8ca985b387449dd4e86a5517e7d015024231a2b6ddd1",
+   "size": 11391
   },
   {
    "path": "tools/local_ci.sh",
@@ -12173,8 +12463,8 @@
   },
   {
    "path": "tools/make_beta_pack.ps1",
-   "sha256": "260a1dd68e12c550129ab5184b2c3c61f071395351f12d54c717f0d9060416c8",
-   "size": 35545
+   "sha256": "8fbd4dc00f177b9c7de4ece30a904271051da354530bc92b9972b211b8189002",
+   "size": 36142
   },
   {
    "path": "tools/make_crops_drop_evidence.py",
@@ -12193,8 +12483,8 @@
   },
   {
    "path": "tools/make_nether_world.ps1",
-   "sha256": "f878c8ad33ffa73f29bedff5000ea0d5a1f6305b7ad6cc8a2d82e15cd0b6e0e0",
-   "size": 5163
+   "sha256": "6fdbb666d13d9e82e6bd572b5f3fa9d90bea99ad5b85a821af0c77b9710204d9",
+   "size": 5258
   },
   {
    "path": "tools/make_noteblock_sounds.py",
@@ -12203,8 +12493,8 @@
   },
   {
    "path": "tools/make_release.sh",
-   "sha256": "1b51970299d631b2185222404b209c1c805b90fcd515d8a4bb265cb53befc7b5",
-   "size": 67755
+   "sha256": "1fc04f1de68f41d5df6d271e457724aee35167ad8dc0664ac016522966c6843a",
+   "size": 68566
   },
   {
    "path": "tools/make_title_logo.py",
@@ -12213,13 +12503,13 @@
   },
   {
    "path": "tools/meta.xml.dev.in",
-   "sha256": "aa078c8be4b62cc4f7c8e925d86e26f5f2389b44c2b96aec0040ec897d9c6f4a",
-   "size": 1697
+   "sha256": "b5c88a0dc214e0aa8c77c7d7fe80ef81e63f088757131d78c8d4c0fec4d5c28e",
+   "size": 1688
   },
   {
    "path": "tools/meta.xml.in",
-   "sha256": "bbbcaa9349f2ac469880c55e5cc0bdd3ed6dce52e3a55d5f4b91b2a8f7dab1e4",
-   "size": 1437
+   "sha256": "4696f339e35ac12ed58c692713fc69b8c51a7648485879d55404b6593e0d954c",
+   "size": 1428
   },
   {
    "path": "tools/mp_fixture/server.properties",
@@ -12268,8 +12558,13 @@
   },
   {
    "path": "tools/pack_helper/build_resources.py",
-   "sha256": "92acc1f0ae5d48cd6c0885ef42a2cc1c3b60cb4cff7cd9eea406a10e3b8cd337",
-   "size": 9683
+   "sha256": "ef71d45d799ce941b33bb3163b5e83c68eb37abbf174d92be2e152003d65b360",
+   "size": 9990
+  },
+  {
+   "path": "tools/pack_helper/capture_nether_map.py",
+   "sha256": "d6418c3648e751350ddc3585d68d4c7663579e9d5241bb7cd1a287f483178d38",
+   "size": 7829
   },
   {
    "path": "tools/pack_helper/conversion.py",
@@ -12278,18 +12573,23 @@
   },
   {
    "path": "tools/pack_helper/conversion_map.json",
-   "sha256": "0d7fdbd22bc8425fc2563253286ff23b5868ae9d3f32226fb639ce418bbabdf1",
+   "sha256": "6bd34e91c92a942017e7336036924549cab6c90bc09d3caec6232a9b28cde66b",
    "size": 14579
   },
   {
    "path": "tools/pack_helper/core.py",
-   "sha256": "13bff373abebbcc930fcd7d0b2f66515af3c0ce30300b1df884f1b1b7df3677f",
-   "size": 71057
+   "sha256": "226da43886ee17949919078e93bf5dc806ae438d05741d2a09b45b5fbd4a0718",
+   "size": 73301
   },
   {
    "path": "tools/pack_helper/discovery.py",
    "sha256": "6883a7386270719b76befc653aa65c63cac24738c76e6f6ea8db6930dc6a2dee",
    "size": 4191
+  },
+  {
+   "path": "tools/pack_helper/encode_nether_map.py",
+   "sha256": "3aa611778cb6c5ff4841e5b5f09a63586a65b537f8046ffc1ef549498d3f618a",
+   "size": 3365
   },
   {
    "path": "tools/pack_helper/gui.py",
@@ -12302,9 +12602,14 @@
    "size": 572
   },
   {
+   "path": "tools/pack_helper/nether_scene.py",
+   "sha256": "1372947f6e71b859996fb647f6c403c3abca26e7b1efc32c600bfb33cc618358",
+   "size": 5599
+  },
+  {
    "path": "tools/pack_helper/owned_importer.py",
-   "sha256": "d082a52e54468fc2c9485d24374269853a74049b7dafe5d4e9e95199b2d76518",
-   "size": 67082
+   "sha256": "2c2dcc8814b6892bdfc3834904464bf62ec88abf836526059ec48f6fb7eff6fc",
+   "size": 68177
   },
   {
    "path": "tools/pack_helper/package_app.py",
@@ -12327,9 +12632,24 @@
    "size": 142
   },
   {
+   "path": "tools/pack_helper/scene_data/README.md",
+   "sha256": "70895db42e5927988b499f443490562abcda6115bfd1b02caeb1d685da530945",
+   "size": 4954
+  },
+  {
+   "path": "tools/pack_helper/scene_data/nether_scene_map.bin",
+   "sha256": "fc66c89946b9ffe38a330793d8688670dddea556b3a92ae36a183b603a2fbc11",
+   "size": 682679
+  },
+  {
+   "path": "tools/pack_helper/scene_data/nether_scene_map.json",
+   "sha256": "23c6ce5d5877de67a0778de8add098f49d5ec997fd48b414ffa0239ee98c05a8",
+   "size": 2246
+  },
+  {
    "path": "tools/pack_helper/selftest.py",
-   "sha256": "965c2d15646fed911a82dce262b6ac58445a06c83a69f7a2e52ef38e9aabd154",
-   "size": 6010
+   "sha256": "8b98de29ef93eeccc8aa645b612a8b7aba8a85e1bb147fb82293fedae0be9595",
+   "size": 6456
   },
   {
    "path": "tools/pack_helper/smoke_packaged.py",
@@ -12343,8 +12663,8 @@
   },
   {
    "path": "tools/presets/config_wii_developer.json",
-   "sha256": "d620ec2d74c3731fba41ad3d8ed6787e608192c7f4840a8a974d26c227194f9c",
-   "size": 1896
+   "sha256": "9175197dc0d904215e2b0a0d2d2c06a8a18fed9223a45f580d3c968e86f58860",
+   "size": 1932
   },
   {
    "path": "tools/presets/config_wii_pointer_look.json",
@@ -12353,13 +12673,13 @@
   },
   {
    "path": "tools/provision_wii_sd.ps1",
-   "sha256": "075766e190839ba70aec42ed46e3636f6faf25473dc213c328b0cc1ac3c97204",
-   "size": 13642
+   "sha256": "9626f71328e297744608dbaad7c6b3cb957d2ba9391dfb9440c9af13ffae17c3",
+   "size": 13953
   },
   {
    "path": "tools/put_wii_stage_file.ps1",
-   "sha256": "a0d7e0568a026e4d69acea5eff5f409065c73a5c408411e5a38f5b98942af399",
-   "size": 15999
+   "sha256": "e8ae813613352eac781202255e765a36616dcc373491b2c5f26e77eda5edf9de",
+   "size": 16406
   },
   {
    "path": "tools/region_chunk_hash.py",
@@ -12373,8 +12693,8 @@
   },
   {
    "path": "tools/release-assets.json",
-   "sha256": "3450ddf1dfede56239f6c07d5a7086fb1a6ef5b9b61cabf45c04cdd8e89b41ac",
-   "size": 121361
+   "sha256": "5ba139e9fd86b95a6c6dbd443e18fa4753f84ade9bbd35e76324fc2d7cd87e35",
+   "size": 123122
   },
   {
    "path": "tools/release-dependencies.json",
@@ -12413,33 +12733,33 @@
   },
   {
    "path": "tools/restore_wii_saves.ps1",
-   "sha256": "2301537096a849e0b7e15f71941c6a14962451674db0ee54dec60b15e8f6186e",
-   "size": 25717
+   "sha256": "81f2b518cf6114b36ad5cad8d1fccdaebd971d6b76f248407df93ce69192142a",
+   "size": 26216
   },
   {
    "path": "tools/run_split_anchor_pc.ps1",
-   "sha256": "9b5f9efc61b5c92c868b1523b03e0b63897006fa66d3f21eb9059eb6c15fc1dc",
-   "size": 9129
+   "sha256": "bcb0b4c047491569b4c76c33838e3dfae4abc229a83f15aadf1ee5f883a8cb70",
+   "size": 9289
   },
   {
    "path": "tools/run_staged_wii_hardware.ps1",
-   "sha256": "04f988411c10c8899b08185ba20551a5bd78bd953f7c836f6732b5b284641bcb",
-   "size": 31281
+   "sha256": "3e3be6d6d562809bc874c48c6d8bfac430fd3765f10a0a5a2b279bdc462dc525",
+   "size": 32387
   },
   {
    "path": "tools/run_wii_hardware.ps1",
-   "sha256": "f90d52896b14f6cbb82f52a78bc2b5e918272ec389fa1c9800ee072224ba5783",
-   "size": 29634
+   "sha256": "11d2de396c408ff359809a5550a3fa8f802b5caa85a56cfbb2037ac53fd1a031",
+   "size": 31094
   },
   {
    "path": "tools/run_wii_lighting_bench.ps1",
-   "sha256": "b9d2f617d6ccb82f7c14b9d65fd30ba41cd641411afb12523e072cbbc24ecb9a",
-   "size": 10395
+   "sha256": "283f48d429934babb5fa9f7c9921caadb36f70264300766c7082e0032071db3b",
+   "size": 10913
   },
   {
    "path": "tools/run_wii_profile_matrix.ps1",
-   "sha256": "1e98f2be48852e818056d7af7b82e563b95169abf58a3ece28fbdf381db19d7b",
-   "size": 21385
+   "sha256": "11332a24b2f6cefc06b4101e2e6f73913e6544b63cfa006e41fe13e7459f486f",
+   "size": 22153
   },
   {
    "path": "tools/save_reload_evidence.py",
@@ -12453,13 +12773,13 @@
   },
   {
    "path": "tools/service_diagnostic_config.ps1",
-   "sha256": "b08b031b5655e27c66ea9378e4230cd2a5aa94b83a2111660eaac922f1b4e83a",
-   "size": 3366
+   "sha256": "b8086b140334dfe8d08b794b95554d2908b200f50083caae87d3ddcea903e3f9",
+   "size": 4761
   },
   {
    "path": "tools/setup_dolphin_ab_test.ps1",
-   "sha256": "a391422f49f989d5bcf1a148b3f7539782817b5358d04d68590a1aee113359db",
-   "size": 3500
+   "sha256": "09714778d970e7420d36a82c2ddaea5fe4a080e09f5e6e426100cbb74c4292f8",
+   "size": 3607
   },
   {
    "path": "tools/soak_stream.c",
@@ -12483,18 +12803,18 @@
   },
   {
    "path": "tools/stage_dolphin_app.ps1",
-   "sha256": "c3706062b8487c4f4d311463632d330d321eaeb8185e73d4a7e82c8eb6f1087c",
-   "size": 5377
+   "sha256": "ae09b02b3e5f125f40959657412b90532a6c3e94cf1483e1fb3265ec66b61ed7",
+   "size": 5532
   },
   {
    "path": "tools/stage_wii_dol.ps1",
-   "sha256": "f04315bf054ad9cbebdae2a525d56e6d73c8a15718da4e62432b56bc0eafc5a0",
-   "size": 54971
+   "sha256": "bbb54beff1d2357995386ef9a4c8fbfa01ec4cc1d2823e67646a6fe868821128",
+   "size": 57353
   },
   {
    "path": "tools/sync_dolphin_controls.ps1",
-   "sha256": "02b61a818a4e5644d29fa7904d84ca67db6547c22deb67e26041f125db7e7730",
-   "size": 8077
+   "sha256": "aa2b1ab9c6cecaad1ef2933637de6362fd4f587fbbe7ecf5750b030c7b3488c3",
+   "size": 8327
   },
   {
    "path": "tools/test_seed_matrix.py",
@@ -12538,8 +12858,8 @@
   },
   {
    "path": "tools/validate_wii_pass.ps1",
-   "sha256": "0701ed5158c8cad74861aa4e7921dd4301cb8d616675f19d376212b990607932",
-   "size": 27797
+   "sha256": "7cc4243b445abacd1726200d18e9f8232e6590a5ace5160b5a6e2c3828cc15cc",
+   "size": 28362
   },
   {
    "path": "tools/vehicle_smoke/make_vehicle_manifest.py",
@@ -12553,8 +12873,8 @@
   },
   {
    "path": "tools/vehicle_smoke/run_vehicle_pc.ps1",
-   "sha256": "9f99e7eaff30f138f4c353b3026edcd0b4510e43a23befcacd18053f4daf85cc",
-   "size": 10164
+   "sha256": "5826389ee9695b555d4e47e1aba1732fef422e4373d6a1900ffbede61b26d662",
+   "size": 10355
   },
   {
    "path": "tools/vehicle_smoke/vsdiag2.py",
@@ -12573,13 +12893,13 @@
   },
   {
    "path": "tools/wait_and_run_wii_hardware.ps1",
-   "sha256": "fb0c649d3342a1ad5b0fb0bf6bc576bd02032cb71c09cd662e558c1bbe3ca2b7",
-   "size": 9877
+   "sha256": "9594e58998097e986ea605bac649ea93d4a28aaccc6d9a38f72f7b88947848b3",
+   "size": 10127
   },
   {
    "path": "tools/wii_batch_loop.ps1",
-   "sha256": "0bca98efde3509246de4c4e15af2e50ec96a511bf544197dd35e29efcb2a5a6b",
-   "size": 7332
+   "sha256": "30de1bfb67b574daf2c8f0d84657ba1b0b06050a5a47e734019b4340f46cba19",
+   "size": 7529
   },
   {
    "path": "tools/wii_build_commit.sh",
@@ -12598,8 +12918,8 @@
   },
   {
    "path": "tools/wii_power.ps1",
-   "sha256": "443bdb4677fcc2bb51457940a2f1700d91317e15eef4a1fb959aaf8a65c52745",
-   "size": 845
+   "sha256": "1ba5a802d06de72eef24155cb209dc8b3ce48e4fb38d6d541090a398561063c3",
+   "size": 866
   },
   {
    "path": "tools/wii_power_ble.py",
@@ -12617,9 +12937,84 @@
    "size": 650
   },
   {
+   "path": "tools/wii_stage_server/source/dol_launch.c",
+   "sha256": "296f7fdd71d5a55052ad735a4b4cd2d4504beb9106ffb8bd80ffeacbcd76572e",
+   "size": 5413
+  },
+  {
+   "path": "tools/wii_stage_server/source/dol_launch.h",
+   "sha256": "be13e04c2b5c87426e2f163865d99b968126c2492f65e1902cd2949ee42364b5",
+   "size": 2363
+  },
+  {
+   "path": "tools/wii_stage_server/source/dol_runprep.c",
+   "sha256": "7bd43bcc40c10244f981a8a03bd4287bfb72b14c8a75d4770b4f9d191046f522",
+   "size": 13631
+  },
+  {
+   "path": "tools/wii_stage_server/source/dol_runprep.h",
+   "sha256": "43b7f7f669b335c4381fe1e3424fc04ade3397212a8e3e01285de7d7724a1a54",
+   "size": 2138
+  },
+  {
+   "path": "tools/wii_stage_server/source/sha256.c",
+   "sha256": "3f4f2f4d1b298491fea6b7472a765ffa32eee5ce49065fdc105936c1e9b85814",
+   "size": 4377
+  },
+  {
+   "path": "tools/wii_stage_server/source/sha256.h",
+   "sha256": "e5c3484e2c15cee7f049bdf59b96a96c299611d5e08dd1645b2f5d9789c57808",
+   "size": 601
+  },
+  {
+   "path": "tools/wii_stage_server/source/stage_auth.h",
+   "sha256": "839f6b7746acb6c5b46999a0f761fd339a65c9eac3e518e972a9ac804ba64eef",
+   "size": 9793
+  },
+  {
+   "path": "tools/wii_stage_server/source/stage_delete.h",
+   "sha256": "6b974024f0deba799808f9606c8c0a2cd0b710a2e0031b88e0ce402c44f53f00",
+   "size": 8819
+  },
+  {
+   "path": "tools/wii_stage_server/source/stage_fetch_path.h",
+   "sha256": "da7bfea5932c5e2dcca8840db57669207e82202146a95407668d08ba8b462840",
+   "size": 7000
+  },
+  {
+   "path": "tools/wii_stage_server/source/stage_line.h",
+   "sha256": "edcc6971e6ab52912ed00d4ee6b87fbc1965ac168f63a2e3c6045be4c8babdc2",
+   "size": 2228
+  },
+  {
+   "path": "tools/wii_stage_server/source/stage_manifest_paths.h",
+   "sha256": "4320a6ce189ea4b7d6b493b96778ed8c326068bfe7cb049aba26c4a3206e07d9",
+   "size": 4749
+  },
+  {
+   "path": "tools/wii_stage_server/source/stage_netinit.h",
+   "sha256": "3ee11d0b29ab4dfbb54ebb5f82de4b3602cc21e77c1641bc764ec15aefcbed53",
+   "size": 8604
+  },
+  {
+   "path": "tools/wii_stage_server/source/stage_saves.h",
+   "sha256": "5171b0ac24a091f753357bb52a9a8d3b51227a2293b90e7075ec91aee05b5b29",
+   "size": 61302
+  },
+  {
+   "path": "tools/wii_stage_server/source/stage_send.h",
+   "sha256": "65e675fcd2637c27d27a74eada11b256557c6c600b3515776d637fd3a8bbe240",
+   "size": 9346
+  },
+  {
+   "path": "tools/wii_stage_server/source/stage_token_bootstrap.h",
+   "sha256": "15337854b594e3bed921980b521e0803f3d2ebf56ecab994fb098f54a31e661a",
+   "size": 2363
+  },
+  {
    "path": "tools/wii_telemetry_server.py",
-   "sha256": "a49f6bc4d7a219c5bba34ebe2e1eb8b2bd8da1d36fea4bb4e9571dc24cbf4348",
-   "size": 914235
+   "sha256": "8f5f1419e9d79edd608ea3ddf6ea67a917e399c8efd76c530cd4f6cfc47f080d",
+   "size": 916728
   },
   {
    "path": "tools/worktree-stamp.sh",
@@ -12627,8 +13022,11 @@
    "size": 1397
   }
  ],
+ "inventory_representation": "git archive file bytes, including committed export/EOL attributes",
+ "public_base_commit": "b038674eef16e9df4ba11a77378b7a7c3e49f688",
  "schema": 1,
- "source_commit": "8f926adfcfa1dad22e1e064548348d34122f5b73",
- "source_tree": "6d530f47def46066b9149bd1563a8b23577f4d25",
- "status": "candidate-not-final-not-legally-cleared"
+ "source_commit": "32722e55545a7ee5c8e36666528456e5237df680",
+ "source_tree": "99682c784396079a8672b9b3885655531cb527da",
+ "status": "final-source-snapshot-hardware-unconfirmed-scan-not-legal-clearance",
+ "superseded_unpushed_commit": "a0ce3cdc284184a8e34aac645187d99760640e98"
 }

@@ -62,7 +62,7 @@
  *
  * What is Beta and what is not [740c583 GuiMainMenu]:
  *   KEPT: the splash DATA SOURCE (title/splashes.txt of the active pack,
- *     reservoir-sampled on a private LCG, "missingno" fallback, the four
+ *     reservoir-sampled on a private LCG, NO splash without a list, the four
  *     fixed-date overrides, re-rolled per entry), keyTyped {} (D-pad + pointer
  *     is the carve-out), Options -> GuiOptions, Quit -> shutdown, Mods and
  *     Texture Packs -> GuiTexturePacks, and the click-before-action sound.
@@ -216,7 +216,12 @@ static void title_load_splash(void) {
 	 * streams are never touched from the client. Re-rolled per screen entry,
 	 * like Beta's per-construction roll. */
 	splash_rng ^= (uint32_t)CLOCK_SEED_TIME() ^ 0x9E3779B9u;
-	strcpy(splash_text, "missingno");
+	/* ci-1101/18: no list, no splash. Beta's "missingno" is only ever seen
+	 * when its jar's list is unreadable; CavEX ships NO title/splashes.txt
+	 * (Beta's is Mojang content), so the default install showed that
+	 * fixture-looking word on every boot. title_draw_splash skips an empty
+	 * string; the fixed-date greetings below still land, as in initGui. */
+	splash_text[0] = 0;
 
 	const char* pack = config_read_path(&gstate.config_user,
 										"paths.texturepack", "assets");
@@ -744,16 +749,19 @@ static void title_draw_splash(const struct title_canvas* c) {
 	{
 		bool logo = texture_title_logo.data != NULL;
 		int font = tt_d(c, TT_SPLASH_FONT);
-		char fitted[sizeof(splash_text)];
-		fep_text_fit(fitted, sizeof(fitted), splash_text, font,
-					 tt_d(c, logo ? TT_LOGO_SPLASH_MAX_W : TT_SPLASH_MAX_W));
-		if(fitted[0]) {
-			int w = gutil_font_width(fitted, font);
+		/* Like Beta GuiMainMenu, a long splash is scaled down to fit, never
+		 * cut with an ellipsis. */
+		if(splash_text[0]) {
+			int max_w = tt_d(c, logo ? TT_LOGO_SPLASH_MAX_W : TT_SPLASH_MAX_W);
+			int w = gutil_font_width(splash_text, font);
+			float fit = w > max_w ? (float)max_w / (float)w : 1.0F;
 			int right = tt_x(c, 640 - TT_SPLASH_RIGHT);
-			int x = logo ? tt_x(c, TT_LOGO_SPLASH_X) : right - w / 2;
+			int x = logo ? tt_x(c, TT_LOGO_SPLASH_X)
+						 : right - (int)(w * fit) / 2;
 			int y = tt_d(c, logo ? TT_LOGO_SPLASH_Y : TT_SPLASH_Y) + font;
-			gutil_text_rot_zoom(x, y, fitted, font, TT_SPLASH_ANGLE,
-				1.0F - 0.05F * fabsf(sinf(menu_motion_time * 3.141592654F)),
+			gutil_text_rot_zoom(x, y, splash_text, font, TT_SPLASH_ANGLE,
+				fit * (1.0F - 0.05F
+					   * fabsf(sinf(menu_motion_time * 3.141592654F))),
 				true, 0xFF, 0xFF, 0xA0);
 		}
 	}
@@ -842,6 +850,10 @@ static void screen_title_render2D(struct screen* s, int width, int height) {
  * without calling render2D. */
 int screen_title_test_highlight(void) {
 	return selected;
+}
+/* The splash text the last reset rolled ("" = none drawn). */
+const char* screen_title_test_splash(void) {
+	return splash_text;
 }
 #endif
 

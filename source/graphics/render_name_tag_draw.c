@@ -276,30 +276,25 @@ static void draw_batch(size_t text_count, size_t players, bool sneaking) {
 		// the SAME dim alpha (32/255, 0x20FFFFFF) the standing path's
 		// through-walls pass uses -- literally reused, not opaque -1. Byte-
 		// faithful, not a bug this port is "fixing".
-		for(size_t i = 0; i < text_count; i++) {
-			col[i * 4 + 0] = 255;
-			col[i * 4 + 1] = 255;
-			col[i * 4 + 2] = 255;
-			col[i * 4 + 3] = 32;
-		}
+		// A colour-coded glyph stays opaque (name_tag_text_color).
+		for(size_t i = 0; i < text_count; i++)
+			name_tag_text_color(&s_text_verts[i], 32, col + i * 4);
 		gfx_write_buffers(true, true, true);
 		gfx_draw_quads_flt(text_count, pos, col, uv);
 		return;
 	}
 
 	// --- Standing: text pass 1, through walls, dim white (alpha 32/255). ---
-	for(size_t i = 0; i < text_count; i++) {
-		col[i * 4 + 0] = 255;
-		col[i * 4 + 1] = 255;
-		col[i * 4 + 2] = 255;
-		col[i * 4 + 3] = 32;
-	}
+	// Colour-coded glyphs are opaque in this pass too: Beta's colour list is
+	// glColor3f (alpha 1.0) [FontRenderer.java:109,155].
+	for(size_t i = 0; i < text_count; i++)
+		name_tag_text_color(&s_text_verts[i], 32, col + i * 4);
 	gfx_write_buffers(true, false, false); // still through walls
 	gfx_draw_quads_flt(text_count, pos, col, uv);
 
 	// --- Standing: text pass 2, normal depth test, opaque, depth write on. ---
 	for(size_t i = 0; i < text_count; i++)
-		col[i * 4 + 3] = 255;
+		name_tag_text_color(&s_text_verts[i], 255, col + i * 4);
 	gfx_write_buffers(true, true, true);
 	gfx_draw_quads_flt(text_count, pos, col, uv);
 }

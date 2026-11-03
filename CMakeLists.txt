@@ -569,6 +569,11 @@ foreach(_cw_pool cavex_prod_core cavex_prod_input cavex_prod_input_agent)
 endforeach()
 
 add_executable(cavex ${CAVEX_APP_ONLY_SOURCES})
+# Windows exe + window/taskbar icon (resources/cavex.rc names it GLFW_ICON).
+if(WIN32)
+	enable_language(RC)
+	target_sources(cavex PRIVATE resources/cavex.rc)
+endif()
 
 # CAVEWII_AGENT_BRIDGE gates the agent input/look hooks compiled INTO the shared
 # engine sources (input.c, camera.c, main.c). Defined on the GAME target ONLY (not on
@@ -583,7 +588,7 @@ target_include_directories(cavex PRIVATE
 set_target_properties(
 	cavex PROPERTIES
 	C_STANDARD 99
-	OUTPUT_NAME cavewii_v2
+	OUTPUT_NAME CavEX-ReCrafted
 )
 
 # IPO/LTO on the main app helps release perf, but it hides linker errors,
@@ -1973,6 +1978,30 @@ add_test(NAME test_shared_controller_textures COMMAND test_shared_controller_tex
 set_tests_properties(test_shared_controller_textures PROPERTIES
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
+# ci-1101/18: bundled-only art root fallback (Wii: sd:/assets, then the app
+# folder's assets/) on the REAL resolver, same link shape as above.
+add_executable(test_bundled_asset_fallback
+    tests/test_bundled_asset_fallback.c
+    source/platform/texture.c
+    source/platform/tex_beta_compose.c
+    source/platform/texture_decode.c
+    source/platform/texture_mip.c
+    source/config.c
+    source/parson/parson.c
+    source/lodepng/lodepng.c
+    source/util.c
+)
+target_compile_definitions(test_bundled_asset_fallback PRIVATE PLATFORM_PC CGLM_ALL_UNALIGNED)
+target_include_directories(test_bundled_asset_fallback PRIVATE source third_party tests)
+target_compile_options(test_bundled_asset_fallback PRIVATE -O2 -ffunction-sections -fdata-sections)
+target_link_options(test_bundled_asset_fallback PRIVATE -Wl,--gc-sections)
+target_link_libraries(test_bundled_asset_fallback m)
+set_target_properties(test_bundled_asset_fallback PROPERTIES
+    C_STANDARD 99 INTERPROCEDURAL_OPTIMIZATION TRUE)
+add_test(NAME test_bundled_asset_fallback COMMAND test_bundled_asset_fallback)
+set_tests_properties(test_bundled_asset_fallback PROPERTIES
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+
 # BG-BAKE-1028 task 3: the generated menu-backdrop cache. The REAL resolver/
 # publisher (texture.c, the test_shared_controller_textures link shape: LTO +
 # gc-sections drop the renderer paths) over private pack folders: author art
@@ -2040,6 +2069,16 @@ target_include_directories(test_texture_mip PRIVATE
 )
 set_target_properties(test_texture_mip PROPERTIES C_STANDARD 99)
 add_test(NAME test_texture_mip COMMAND test_texture_mip)
+
+add_executable(test_atlas_mip_isolation
+	source/graphics/texture_atlas.c
+	source/platform/texture_mip.c
+	tests/test_atlas_mip_isolation.c)
+target_include_directories(test_atlas_mip_isolation PRIVATE source third_party)
+target_compile_definitions(test_atlas_mip_isolation PRIVATE PLATFORM_PC CGLM_ALL_UNALIGNED)
+target_link_libraries(test_atlas_mip_isolation m)
+set_target_properties(test_atlas_mip_isolation PROPERTIES C_STANDARD 99)
+add_test(NAME test_atlas_mip_isolation COMMAND test_atlas_mip_isolation)
 
 add_executable(test_texture_atlas_failure
 	source/graphics/texture_atlas.c
@@ -4857,6 +4896,15 @@ add_test(NAME test_mapdata_golden COMMAND test_mapdata_golden)
 # dither), the block->MapColor table, and idcounts.dat persistence. Full
 # engine harness (world+player+inventory), so links ${_cavex_srcs} like
 # test_region_boundary/test_sign_placement. See item_map.h/.c.
+# ci-1101/15: faithful default, held-map transform and live identity regression.
+foreach(_map_case item_needle_default held_map_transform map_mirror)
+    add_executable(test_${_map_case} tests/test_${_map_case}.c)
+    target_link_libraries(test_${_map_case} cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+    target_include_directories(test_${_map_case} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+    set_target_properties(test_${_map_case} PROPERTIES C_STANDARD 99)
+    add_test(NAME test_${_map_case} COMMAND test_${_map_case})
+    set_tests_properties(test_${_map_case} PROPERTIES WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+endforeach()
 add_executable(test_map_item tests/test_map_item.c)
 target_link_libraries(test_map_item cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input)
 target_include_directories(test_map_item PRIVATE
@@ -4866,6 +4914,19 @@ target_include_directories(test_map_item PRIVATE
 set_target_properties(test_map_item PROPERTIES C_STANDARD 99)
 target_link_libraries(test_map_item ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
 add_test(NAME test_map_item COMMAND test_map_item)
+foreach(_map_case map_demo_option map_scan_unloaded_history)
+    add_executable(test_${_map_case} tests/test_${_map_case}.c)
+    target_link_libraries(test_${_map_case} cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+    target_include_directories(test_${_map_case} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+    set_target_properties(test_${_map_case} PROPERTIES C_STANDARD 99)
+    add_test(NAME test_${_map_case} COMMAND test_${_map_case})
+endforeach()
+add_executable(test_map_marker_backpressure tests/test_map_marker_backpressure.c)
+target_link_libraries(test_map_marker_backpressure cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input
+	${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+target_include_directories(test_map_marker_backpressure PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source ${CMAKE_CURRENT_SOURCE_DIR}/third_party ${CMAKE_CURRENT_SOURCE_DIR}/tests)
+set_target_properties(test_map_marker_backpressure PROPERTIES C_STANDARD 99)
+add_test(NAME test_map_marker_backpressure COMMAND test_map_marker_backpressure)
 add_executable(test_map_painting_world_routing tests/test_map_painting_world_routing.c)
 target_link_libraries(test_map_painting_world_routing cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input
 	${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
@@ -4897,6 +4958,39 @@ target_include_directories(test_item_map_render_convert PRIVATE
 set_target_properties(test_item_map_render_convert PROPERTIES C_STANDARD 99)
 target_link_libraries(test_item_map_render_convert ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
 add_test(NAME test_item_map_render_convert COMMAND test_item_map_render_convert)
+
+# ci-1101/23: split-screen held maps -- one live map texture and one upload
+# change gate per viewport (render_item_map_upload_viewport). Needs a GL
+# context for the PC tex_gfx CPU mirror it inspects.
+add_executable(test_map_live_per_viewport tests/test_map_live_per_viewport.c)
+target_link_libraries(test_map_live_per_viewport cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input)
+target_include_directories(test_map_live_per_viewport PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}/source
+	${CMAKE_CURRENT_SOURCE_DIR}/third_party
+)
+set_target_properties(test_map_live_per_viewport PROPERTIES C_STANDARD 99)
+target_link_libraries(test_map_live_per_viewport ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+if(WIN32)
+	target_link_libraries(test_map_live_per_viewport ws2_32)
+endif()
+add_test(NAME test_map_live_per_viewport COMMAND test_map_live_per_viewport)
+
+# ci-1101/31: split-screen compass/clock follow their own player. Viewport 0
+# keeps the atlas cell byte-identical; viewport 1 gets a private 16x16 pair
+# (item_needle_fx_split_texture) the item draw path binds instead. Needs a GL
+# context for the PC tex_gfx CPU mirror it inspects.
+add_executable(test_needle_per_viewport tests/test_needle_per_viewport.c)
+target_link_libraries(test_needle_per_viewport cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input)
+target_include_directories(test_needle_per_viewport PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}/source
+	${CMAKE_CURRENT_SOURCE_DIR}/third_party
+)
+set_target_properties(test_needle_per_viewport PROPERTIES C_STANDARD 99)
+target_link_libraries(test_needle_per_viewport ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+if(WIN32)
+	target_link_libraries(test_needle_per_viewport ws2_32)
+endif()
+add_test(NAME test_needle_per_viewport COMMAND test_needle_per_viewport)
 
 # Batch-0 save-integrity fixture (2026-08-07 hardware-video "circular track
 # disappeared" caveat): a player-built rail ring spanning the x=0 region
@@ -5003,6 +5097,48 @@ target_include_directories(test_spawn_candidate_rng PRIVATE
 set_target_properties(test_spawn_candidate_rng PROPERTIES C_STANDARD 99)
 target_link_libraries(test_spawn_candidate_rng ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
 add_test(NAME test_spawn_candidate_rng COMMAND test_spawn_candidate_rng)
+
+# ci-1101/43 item 2 (HUNT-14 #2a): the dungeon spawner re-rolls its refire
+# delay ONLY on a member success or the >=6 crowd exit, like Beta's updateDelay
+# [740c583: TileEntityMobSpawner.java:48-91]; an all-refused burst retries next
+# tick instead of idling a fresh 200..800 ticks.
+add_executable(test_spawner_delay_retry tests/test_spawner_delay_retry.c)
+target_link_libraries(test_spawner_delay_retry cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input)
+target_include_directories(test_spawner_delay_retry PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}/source
+	${CMAKE_CURRENT_SOURCE_DIR}/third_party
+)
+set_target_properties(test_spawner_delay_retry PROPERTIES C_STANDARD 99)
+target_link_libraries(test_spawner_delay_retry ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+add_test(NAME test_spawner_delay_retry COMMAND test_spawner_delay_retry)
+# ci-1101/45 (HUNT-14 #2b): dungeon spawner members use Beta EntityLiving.getCanSpawnHere
+# (member AABB clear of block boxes/entities/liquid, no floor test) [740c583: EntityLiving.java:781-783,
+# TileEntityMobSpawner.java:72-76].
+add_executable(test_spawner_placement_parity tests/test_spawner_placement_parity.c)
+target_link_libraries(test_spawner_placement_parity cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input)
+target_include_directories(test_spawner_placement_parity PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}/source
+	${CMAKE_CURRENT_SOURCE_DIR}/third_party
+)
+set_target_properties(test_spawner_placement_parity PROPERTIES C_STANDARD 99)
+target_link_libraries(test_spawner_placement_parity ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+add_test(NAME test_spawner_placement_parity COMMAND test_spawner_placement_parity)
+
+# ci-1101/45: a piston destroys + drops a cobweb (Material.web setNoPushMobility, Material.java:30),
+# never pushes or pulls it [BlockPistonBase.java:211-213, 272-292]. Pure piston core + real mobility table.
+add_executable(test_web_piston
+	source/block/redstone_piston.c
+	source/block/piston_moving.c
+	source/block/piston_mobility.c
+	tests/test_web_piston.c
+)
+target_link_libraries(test_web_piston m)
+target_compile_definitions(test_web_piston PRIVATE PLATFORM_PC)
+target_include_directories(test_web_piston PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}/source
+	${CMAKE_CURRENT_SOURCE_DIR}/third_party
+)
+add_test(NAME test_web_piston COMMAND test_web_piston)
 
 # 2026-08-08 hardware-video caveat: the spider frozen on snow. Pins the pair of
 # fixes -- the Beta EntityLiving.getCanSpawnHere box clearance on every natural
@@ -5159,6 +5295,30 @@ target_include_directories(test_redstone_repeater_circuit_env PRIVATE
 set_target_properties(test_redstone_repeater_circuit_env PROPERTIES C_STANDARD 99)
 target_link_libraries(test_redstone_repeater_circuit_env ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
 add_test(NAME test_redstone_repeater_circuit_env COMMAND test_redstone_repeater_circuit_env)
+
+# HUNT-14 item 1 (Bucket A): BlockRedstoneRepeater.onBlockAdded notifies the neighbours of all six
+# neighbours on every id swap, so a repeater -> solid block -> wire/torch relay updates.
+add_executable(test_redstone_repeater_relay_golden tests/test_redstone_repeater_relay_golden.c)
+target_link_libraries(test_redstone_repeater_relay_golden cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input)
+target_include_directories(test_redstone_repeater_relay_golden PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}/source
+	${CMAKE_CURRENT_SOURCE_DIR}/third_party
+)
+set_target_properties(test_redstone_repeater_relay_golden PROPERTIES C_STANDARD 99)
+target_link_libraries(test_redstone_repeater_relay_golden ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+add_test(NAME test_redstone_repeater_relay_golden COMMAND test_redstone_repeater_relay_golden)
+
+# HUNT-14 item 3 (Bucket A): BlockRedstoneRepeater.canProvidePower is false, so the var5-gated
+# door/trapdoor/TNT/dispenser/noteblock never re-read power on a repeater-origin notify.
+add_executable(test_redstone_repeater_direct_target_golden tests/test_redstone_repeater_direct_target_golden.c)
+target_link_libraries(test_redstone_repeater_direct_target_golden cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input)
+target_include_directories(test_redstone_repeater_direct_target_golden PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}/source
+	${CMAKE_CURRENT_SOURCE_DIR}/third_party
+)
+set_target_properties(test_redstone_repeater_direct_target_golden PROPERTIES C_STANDARD 99)
+target_link_libraries(test_redstone_repeater_direct_target_golden ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+add_test(NAME test_redstone_repeater_direct_target_golden COMMAND test_redstone_repeater_direct_target_golden)
 
 # Faithfulness golden: the redstone-torch inverter across three wire topologies (A continuous->OFF,
 # B repeater+wire->LIT [verified faithful vs the 740c583 decompile + the mc173 oracle, 2026-06-19],
@@ -5579,6 +5739,19 @@ target_include_directories(test_dig_tier_gates PRIVATE
 set_target_properties(test_dig_tier_gates PROPERTIES C_STANDARD 99)
 target_link_libraries(test_dig_tier_gates ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
 add_test(NAME test_dig_tier_gates COMMAND test_dig_tier_gates
+	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+
+# ci-1101/44 (HUNT-14 item 5): Beta 1.7.3 ItemShears parity -- web/leaves/wool
+# dig speed (15x/15x/5x), web harvest with shears (string drop), shears wear.
+add_executable(test_shears_parity tests/test_shears_parity.c)
+target_link_libraries(test_shears_parity cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input)
+target_include_directories(test_shears_parity PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}/source
+	${CMAKE_CURRENT_SOURCE_DIR}/third_party
+)
+set_target_properties(test_shears_parity PROPERTIES C_STANDARD 99)
+target_link_libraries(test_shears_parity ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+add_test(NAME test_shears_parity COMMAND test_shears_parity
 	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 
 # Door placement faithfulness (item_door_wood.c/item_door_iron.c fix, lane/items):
@@ -6227,6 +6400,23 @@ set_target_properties(test_creative_mode_env PROPERTIES C_STANDARD 99)
 target_link_libraries(test_creative_mode_env ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
 add_test(NAME test_creative_mode_env COMMAND test_creative_mode_env)
 
+add_executable(test_creative_no_drops tests/test_creative_no_drops.c)
+target_link_libraries(test_creative_no_drops cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input)
+target_include_directories(test_creative_no_drops PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/source ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+set_target_properties(test_creative_no_drops PROPERTIES C_STANDARD 99)
+target_link_libraries(test_creative_no_drops ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+add_test(NAME test_creative_no_drops COMMAND test_creative_no_drops)
+
+add_executable(test_creative_flight tests/test_creative_flight.c)
+target_link_libraries(test_creative_flight cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input)
+target_include_directories(test_creative_flight PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/source ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+set_target_properties(test_creative_flight PROPERTIES C_STANDARD 99)
+target_link_libraries(test_creative_flight ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+add_test(NAME test_creative_flight COMMAND test_creative_flight)
+
+
 # View bobbing (Beta 1.7.3 parity, render/feel layer): pins the ported
 # constants of EntityRenderer.setupViewBobbing + the per-tick sway inputs
 # against the decompile citations (pure header, no client link).
@@ -6644,6 +6834,12 @@ add_test(NAME test_g9_window_max_collector COMMAND ${Python3_EXECUTABLE}
 	${CMAKE_CURRENT_SOURCE_DIR}/tests/test_g9_window_max_collector.py)
 set_tests_properties(test_g9_window_max_collector PROPERTIES SKIP_RETURN_CODE 77) # R18: private G9 tape absent in the public export
 
+# ci-1101/37: the drain long-wait "lqd_w" heartbeat attribution is parsed by the
+# real collector without breaking older tapes (a missing key is simply no
+# attribution; a malformed one never raises and never fails a run).
+add_test(NAME test_lqd_wait_collector COMMAND ${Python3_EXECUTABLE}
+	${CMAKE_CURRENT_SOURCE_DIR}/tests/test_lqd_wait_collector.py)
+
 # REL-MP-GATE: mp_lan_walk_10m/mp_connect_smoke FAIL mp_session_ended when the session ends or the
 # world unloads after the login window, proven on the retained hw1018 (RED)
 # and hw1014_e5 (GREEN) mp_lan_walk_10m tape excerpts.
@@ -6740,7 +6936,7 @@ target_include_directories(test_rpc_pending_output PRIVATE
 )
 set_target_properties(test_rpc_pending_output PROPERTIES C_STANDARD 99)
 target_link_libraries(test_rpc_pending_output ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
-foreach(_rpc_c stalled saturation mixed generation exhaustion shutdown ownership simulation fifo_bypass terminal_kept cancel oom_recovery deadline chunk_busy telemetry_race burst pack_barrier pack_exhaustion)
+foreach(_rpc_c stalled saturation mixed generation exhaustion shutdown ownership simulation fifo_bypass terminal_kept cancel oom_recovery deadline stall_recovers chunk_busy telemetry_race burst pack_barrier pack_exhaustion)
 	add_test(NAME test_rpc_pending_output__${_rpc_c} COMMAND test_rpc_pending_output ${_rpc_c})
 endforeach()
 
@@ -7162,11 +7358,14 @@ add_test(NAME test_grass_render COMMAND test_grass_render)
 # recorder defined in the test -- no OpenGL link -- so it reads the actual
 # filter/level state requested on load, cache restore and pack reload.
 add_executable(test_grass_filter
+	source/config.c
+	source/parson/parson.c
 	source/platform/texture_mip.c
 	tests/test_grass_filter.c
 )
 target_link_libraries(test_grass_filter m)
 target_include_directories(test_grass_filter PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}/third_party
 	${CMAKE_CURRENT_SOURCE_DIR}/source
 	$<TARGET_PROPERTY:GLEW::GLEW,INTERFACE_INCLUDE_DIRECTORIES>
 )
@@ -7325,6 +7524,15 @@ target_include_directories(test_furnace_break_scatter PRIVATE
 set_target_properties(test_furnace_break_scatter PROPERTIES C_STANDARD 99)
 target_link_libraries(test_furnace_break_scatter ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
 add_test(NAME test_furnace_break_scatter COMMAND test_furnace_break_scatter)
+
+add_executable(test_chest_break_scatter tests/test_chest_break_scatter.c)
+target_link_libraries(test_chest_break_scatter cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input)
+target_include_directories(test_chest_break_scatter PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}/source ${CMAKE_CURRENT_SOURCE_DIR}/tests
+	${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+set_target_properties(test_chest_break_scatter PROPERTIES C_STANDARD 99)
+target_link_libraries(test_chest_break_scatter ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+add_test(NAME test_chest_break_scatter COMMAND test_chest_break_scatter)
 
 # Beta 1.7.3 tree decorate step (worldgen_trees) -- oak/birch/taiga/taiga-alt
 # placement + per-species wood/leaf metadata + byte-exact RNG consumption.
@@ -7511,6 +7719,23 @@ target_compile_definitions(test_scheduled_tick_dedup_golden PRIVATE
 	PLATFORM_PC CGLM_ALL_UNALIGNED
 )
 add_test(NAME test_scheduled_tick_dedup_golden COMMAND test_scheduled_tick_dedup_golden)
+
+# HUNT-14 item 10 (Bucket A): World.scheduleBlockUpdate dedups (x,y,z,id) at every depth and
+# TickUpdates fires same-tick entries in insertion order (NextTickListEntry.comparer).
+add_executable(test_scheduled_tick_order_golden
+	source/network/server_world_tick_queue.c
+	source/platform/mem2.c
+	tests/test_scheduled_tick_order_golden.c
+)
+target_link_libraries(test_scheduled_tick_order_golden m)
+target_include_directories(test_scheduled_tick_order_golden PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}/source
+	${CMAKE_CURRENT_SOURCE_DIR}/third_party
+)
+target_compile_definitions(test_scheduled_tick_order_golden PRIVATE
+	PLATFORM_PC CGLM_ALL_UNALIGNED
+)
+add_test(NAME test_scheduled_tick_order_golden COMMAND test_scheduled_tick_order_golden)
 
 add_executable(test_profile_random_ticks_default
 	tests/test_profile_random_ticks.c
@@ -7953,6 +8178,27 @@ target_include_directories(test_mob_windup_cue PRIVATE
 set_target_properties(test_mob_windup_cue PROPERTIES C_STANDARD 99)
 target_link_libraries(test_mob_windup_cue ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
 add_test(NAME test_mob_windup_cue COMMAND test_mob_windup_cue)
+
+# ci-1101/02: every face of the wolf/biped/creeper/pig/spider head boxes samples the
+# Beta 1.7.3 ModelRenderer.addBox UV rect with Beta's orientation (recording
+# displaylist doubles over the intact model code, same rig as test_mob_windup_render).
+add_executable(test_entity_box_uv
+	tests/test_entity_box_uv.c
+	source/graphics/render_entity.c
+	source/entity/monsters_object.c
+	source/config.c
+	source/parson/parson.c
+	source/block/aabb.c
+)
+target_compile_definitions(test_entity_box_uv PRIVATE PLATFORM_PC)
+target_compile_options(test_entity_box_uv PRIVATE -UNDEBUG -ffp-contract=off)
+target_include_directories(test_entity_box_uv PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}/source
+	${CMAKE_CURRENT_SOURCE_DIR}/source/graphics
+	${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+set_target_properties(test_entity_box_uv PROPERTIES C_STANDARD 99)
+target_link_libraries(test_entity_box_uv m)
+add_test(NAME test_entity_box_uv COMMAND test_entity_box_uv)
 
 # entities_client_tick erase-safety stress test (entity.c) -- see the test
 # file header for the full m-dict.h citation/coverage.
@@ -9767,6 +10013,17 @@ target_compile_definitions(test_sign_text_quads PRIVATE PLATFORM_PC CGLM_ALL_UNA
 target_link_libraries(test_sign_text_quads m)
 add_test(NAME test_sign_text_quads COMMAND test_sign_text_quads)
 
+# ci-1101/30: Beta colour codes in screen text (chat, disconnect reason,
+# server list) through the REAL gutil_text_rgba/gutil_font_width; only the
+# graphics boundary is wrapped.
+add_executable(test_text_color_codes tests/test_text_color_codes.c)
+target_link_libraries(test_text_color_codes cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input
+	${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+target_include_directories(test_text_color_codes PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+set_target_properties(test_text_color_codes PROPERTIES C_STANDARD 99)
+target_link_options(test_text_color_codes PRIVATE -Wl,--wrap=gfx_bind_texture -Wl,--wrap=gfx_draw_quads)
+add_test(NAME test_text_color_codes COMMAND test_text_color_codes)
+
 # MP name-tag geometry golden. Links the pure builder ALONE -- no GL/GX, no
 # entity dict -- mirroring test_sign_text_quads's own rig for exactly the
 # same reason (render_name_tag.c is its own TU precisely so this can happen).
@@ -10114,6 +10371,7 @@ target_include_directories(test_g9_worst_tick PRIVATE
 set_target_properties(test_g9_worst_tick PROPERTIES C_STANDARD 99)
 add_test(NAME test_g9_worst_tick COMMAND test_g9_worst_tick)
 add_executable(test_g9_main_handoff tests/test_g9_main_handoff.c)
+target_link_options(test_g9_main_handoff PRIVATE "-Wl,--wrap=time_get")
 target_link_libraries(test_g9_main_handoff cavex_test_core cavex_test_world
 	cavex_test_tickq cavex_test_input
 	${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
@@ -10243,7 +10501,8 @@ foreach(_wolf_test IN ITEMS
 	test_wolf_persistence
 	test_wolf_spawn_biome
 	test_wolf_tail_sound
-	test_wolf_interest_hold)
+	test_wolf_interest_hold
+	test_wolf_teleport_path)
 	add_executable(${_wolf_test} tests/${_wolf_test}.c)
 	target_link_libraries(${_wolf_test} cavex_test_core cavex_test_world
 		cavex_test_tickq cavex_test_input)
@@ -10788,6 +11047,31 @@ if(WIN32)
 	target_link_libraries(test_mp_admission ws2_32)
 endif()
 add_test(NAME test_mp_admission COMMAND test_mp_admission)
+
+# ci-1101/04: real-server login/teleport/respawn column bursts.
+add_executable(test_mp_chunk_burst source/network/mp_codec.c
+	source/network/mp_session.c
+	source/network/server_remote.c
+	source/network/server_remote_transport.c
+	source/network/server_remote_protocol.c
+	source/network/server_remote_entities.c
+	source/network/server_remote_chunks.c
+	source/platform/net_socket.c
+	tests/test_mp_chunk_burst.c
+)
+target_link_libraries(test_mp_chunk_burst cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input)
+target_include_directories(test_mp_chunk_burst PRIVATE
+	${CMAKE_CURRENT_SOURCE_DIR}/source
+	${CMAKE_CURRENT_SOURCE_DIR}/third_party
+)
+set_target_properties(test_mp_chunk_burst PROPERTIES C_STANDARD 99)
+target_link_libraries(test_mp_chunk_burst ${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+if(WIN32)
+	target_link_libraries(test_mp_chunk_burst ws2_32)
+endif()
+add_test(NAME test_mp_chunk_burst COMMAND test_mp_chunk_burst)
+add_test(NAME test_mp_chunk_burst__double_teleport COMMAND test_mp_chunk_burst double-teleport)
+add_test(NAME test_mp_chunk_burst__recovery_teleport COMMAND test_mp_chunk_burst recovery-teleport)
 
 # IN-009b: byte-exact fold witnesses for retained remote columns -- every
 # Packet51 region applies to a held column in arrival order (client CFR
@@ -11468,6 +11752,32 @@ add_test(NAME test_title_tutorial COMMAND test_title_tutorial)
 set_tests_properties(test_title_tutorial PROPERTIES
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
 
+# ci-1101/18: the title splash with NO title/splashes.txt (the default
+# install) draws nothing instead of "missingno". Same rig + TU set as
+# test_title_tutorial, own scratch run directory.
+add_executable(test_title_splash_absent
+    tests/test_title_splash_absent.c
+    source/game/menu_autopilot_script.c
+    source/game/gui/screen_texturepacks.c
+    source/game/gui/screen_creative_picker.c
+    source/game/gui/screen_multiplayer_setup.c
+    source/game/gui/screen_multiplayer_connect.c
+    source/network/mp_codec.c
+    source/texturepacks.c
+    source/game/gui/screen_beta_import.c
+    tests/support/fake_beta_import.c)
+target_link_libraries(test_title_splash_absent cavex_frontend_input_pool)
+target_compile_definitions(test_title_splash_absent PRIVATE
+    PLATFORM_WII CGLM_ALL_UNALIGNED CAVEWII_CLIENT_INTERFACE_TEST)
+target_include_directories(test_title_splash_absent PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/tests/support/wii_input
+    ${CMAKE_CURRENT_SOURCE_DIR}/source ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+set_target_properties(test_title_splash_absent PROPERTIES C_STANDARD 99)
+target_link_libraries(test_title_splash_absent m)
+add_test(NAME test_title_splash_absent COMMAND test_title_splash_absent)
+set_tests_properties(test_title_splash_absent PROPERTIES
+    WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}")
+
 # push-0921/A5: the ONE menu activation rule (Astra ruling 2) as a pure truth
 # table. gutil_menu_activate_decide takes no statics, no clock and no input, so
 # the only thing this target needs is gui_util.c itself -- the draw-side
@@ -11725,6 +12035,16 @@ target_include_directories(test_a1b_spawner_tracker_reload PRIVATE ${CMAKE_CURRE
 set_target_properties(test_a1b_spawner_tracker_reload PROPERTIES C_STANDARD 99)
 add_test(NAME test_a1b_spawner_tracker_reload COMMAND test_a1b_spawner_tracker_reload)
 set_tests_properties(test_a1b_spawner_tracker_reload PROPERTIES TIMEOUT 240)
+
+# ci-1101/41 item 11: host checkpoint writes Beta Motion/Fire/Air/OnGround/
+# Sleeping/SleepTimer; load restores fire/air; old saves load unchanged.
+add_executable(test_player_entity_nbt_parity tests/test_player_entity_nbt_parity.c)
+target_link_libraries(test_player_entity_nbt_parity cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input
+	${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+target_include_directories(test_player_entity_nbt_parity PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+set_target_properties(test_player_entity_nbt_parity PROPERTIES C_STANDARD 99)
+add_test(NAME test_player_entity_nbt_parity COMMAND test_player_entity_nbt_parity)
+set_tests_properties(test_player_entity_nbt_parity PROPERTIES TIMEOUT 240)
 
 # A1c split-dimensions-plan-0924 (Astra "A2: A1c"): world operations callable
 # per struct server_world* -- slot-0 adapter equivalence + same-coordinate
@@ -12763,6 +13083,24 @@ foreach(_cw_c2case furnace_open dispenser_open chest_break furnace_break
 			WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" TIMEOUT 300)
 	endif()
 endforeach()
+
+# ci-1101/25: a chest/furnace broken in the second dimension with a window open
+# (guest Nether window, host Overworld window at the same cell) spills its own
+# world's contents once, into that world at the block -- no loss, no dupe.
+add_executable(test_chest_break_two_dims tests/test_chest_break_two_dims.c)
+target_link_libraries(test_chest_break_two_dims cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input
+	${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+target_include_directories(test_chest_break_two_dims PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+set_target_properties(test_chest_break_two_dims PROPERTIES C_STANDARD 99)
+foreach(_cw_c25case guest_nether_open host_overworld_open both_open furnace_two_dims
+		double_explosion nether_retry nether_close_retry furnace_cursor_close
+		own_inventory_after_tile own_inventory_nether_rpc
+		own_inventory_nether_direct)
+	add_test(NAME test_chest_break_two_dims_${_cw_c25case}
+		COMMAND test_chest_break_two_dims ${_cw_c25case})
+	set_tests_properties(test_chest_break_two_dims_${_cw_c25case} PROPERTIES
+		WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" TIMEOUT 300)
+endforeach()
 # lane C #19: the nearest eligible actor of the mob's own world governs
 # monster despawn (EntityLiving.func_27021_X :667-685, World.getClosestPlayer
 # :2166-2180). One executable, argv[1] selects the case.
@@ -12859,6 +13197,14 @@ add_test(NAME test_play_session COMMAND test_play_session)
 # against the PC platform pool.
 add_test(NAME test_pc_scissor_coordinates COMMAND ${Python3_EXECUTABLE}
 	${CMAKE_CURRENT_SOURCE_DIR}/tests/test_pc_scissor_coordinates.py)
+
+# ci-1101/56: production portal loading reason / owner routing.
+add_executable(test_portal_loading_screen tests/test_portal_loading_screen.c)
+target_link_libraries(test_portal_loading_screen cavex_test_core cavex_test_world cavex_test_tickq cavex_test_input
+	${CMAKE_THREAD_LIBS_INIT} ZLIB::ZLIB glfw GLEW::GLEW OpenGL::GL m)
+target_include_directories(test_portal_loading_screen PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/source ${CMAKE_CURRENT_SOURCE_DIR}/third_party)
+set_target_properties(test_portal_loading_screen PROPERTIES C_STANDARD 99)
+add_test(NAME test_portal_loading_screen COMMAND test_portal_loading_screen)
 
 # ui-wiring-1010 TIPS-1: pure loading policy/layout, real font PNG metrics.
 add_executable(test_loading_tips tests/test_loading_tips.c
@@ -13762,6 +14108,7 @@ math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # KANBAN 09-
 	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 2") # G9 R21 block-update packing: pack_barrier, pack_exhaustion
 	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # G9 R21 test_rpc_block_pack_equiv
 	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # BUG-TICK hw1030a test_rpc_pool_burst
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101/61 test_rpc_pending_output__stall_recovers
 	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 41") # R22 opt-in zlib decoded/codec keys and unchanged durability suites at levels 1..5
 	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # g9-trial-1009 test_g9_trial_kernel_equiv
 	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 6") # g9-savemiss-1009 test_g9_readback_memo_equiv (+ zlib 1..5)
@@ -13781,6 +14128,7 @@ math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # KANBAN 09-
 	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ui-wiring-1010 slice TIPS-1: test_loading_tips
 	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # design-crit-1010 LT-001: test_loading_indicator
 	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # T04 singleplayer loading
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101/56 portal loading
 	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # design-crit-1010 DC-GRASS G1: test_grass_render
 	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # design-crit-1010 DC-GRASS G2: test_mesher_nongrass_equiv
 	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # spruce-leaf-1030: test_leaves_graphics_level (Beta fast/fancy leaves follow render.fancy_graphics)
@@ -13852,6 +14200,7 @@ math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # KANBAN 09-
 	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ui-build-1026/T15c: test_menu_autopilot_input_level (walker held/release edge; hardware unchanged when inactive)
 	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ui-build-1026/T16a: test_world_copy_profile (world_copy_convert route: fixture-only activates, variants, markers)
 	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # BOOT-CREDITS-1028: test_startup_credits (boot credit cards: timing, A, footer, marker)
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101/06: atlas sampled-UV mip isolation
 	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # BG-BAKE-1028/3: test_backdrop_cache (generated backdrop cache: author untouched, identity, crash-safe publish, failures)
 	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # BOOT-CREDITS-1028 T5: test_backdrop_settle_equiv (fast settle == legacy settle, real light)
 	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # BG-BAKE-1028/2: test_backdrop_bake (storage-free scene bake: lifecycle, alloc failure, cancel, readiness gate, byte-identical pixels)
@@ -13885,6 +14234,30 @@ math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # KANBAN 09-
 	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ingame-import-1030 A: test_beta_import (zip reader, sha256, swap/power-cut)
 	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ingame-import-1030 A: test_pack_path_spaces (spaced pack folder loads; manifest display name)
 	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # hw1030n: test_spawn_search_wait (heartbeat + probe count through a long spawn search)
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101/03 creative flight
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101/02: test_entity_box_uv (Beta addBox UV per face)
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101/04: test_mp_chunk_burst
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101/23: test_map_live_per_viewport
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 2") # ci-1101/09: no-pump double teleport + stream-recovery teleport
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101/08 creative harvest drops
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101/11: test_chest_break_scatter (BlockChest.onBlockRemoval 10-30 piles)
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 3") # ci-1101/15: default + transform + mirror
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101/18: test_bundled_asset_fallback (bundled roots: sd:/assets, then app-folder assets/)
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101/18: test_title_splash_absent (no splashes.txt -> no splash)
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 11") # ci-1101/25: test_chest_break_two_dims x11 cases (R5 +3, R5c +1, R5d +1, R9 +2)
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101/30: test_text_color_codes (Beta colour codes in screen text)
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101/31: test_needle_per_viewport (P2 compass/clock follow P2)
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101/39 item 1: test_redstone_repeater_relay_golden (onBlockAdded 2-hop notify)
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101/39 item 3: test_redstone_repeater_direct_target_golden (canProvidePower false)
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101/39 item 10: test_scheduled_tick_order_golden (always-dedup + insertion order)
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101/41 item 11: test_player_entity_nbt_parity (player Entity/EntityPlayer NBT tags)
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101/43 item 2a: test_spawner_delay_retry (added by the lead; DeepSeek: do not add another)
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 2") # ci-1101/45: test_spawner_placement_parity + test_web_piston
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101/43 item 9: test_wolf_teleport_path (Beta getPathToEntity(16)==null && dist>12 gate)
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101/44: test_shears_parity (Beta ItemShears speed/harvest/wear)
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101/37: test_lqd_wait_collector (drain long-wait "lqd_w" parser, old tapes intact)
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 1") # ci-1101/64: held-map marker under inbox backpressure
+	math(EXPR _cw_expected_test_count "${_cw_expected_test_count} + 2") # ci-1101/65: map demo + unloaded height history
 	if(NOT _cw_test_count EQUAL _cw_expected_test_count)
 		message(FATAL_ERROR
 			"CaveWii test inventory mismatch: ${_cw_test_count} registered, expected exactly ${_cw_expected_test_count}")
@@ -13955,6 +14328,7 @@ if(BUILD_TESTING)
 		test_split_offer_piston_collector test_save_reload_collector test_service_observer_collector
 		test_residency_gate_tape test_residency_gate test_mob_motion_evidence
 		test_gc_glyph_style_c test_g9_window_max_collector test_g9_cpu_evidence
+		test_lqd_wait_collector
 		test_mp_session_gate_collector test_soak_idle_play_collector test_clean_export test_release_scan test_release_allowlist
 		test_analyze_tps_walk test_analyze_settle)
 	foreach(_cw_t IN LISTS _cw_tools_tests)
@@ -14030,7 +14404,7 @@ foreach(_cw_t ${_cw_all_targets})
 	get_target_property(_cw_interface_links ${_cw_t} INTERFACE_LINK_LIBRARIES)
     set(_cw_frontend_edges "${_cw_srcs};${_cw_links};${_cw_interface_links}")
     if(_cw_frontend_edges MATCHES "cavex_frontend_input_pool" )
-        if(NOT _cw_t MATCHES "^(test_frontend_(no_pointer|play_flow)|test_menus_dwell_create_flow|test_menu_one_click_rows|test_title_tutorial|test_texturepacks_screen|test_create_world_ui|test_create_world_osk|test_beta_import_ui)$")
+        if(NOT _cw_t MATCHES "^(test_frontend_(no_pointer|play_flow)|test_menus_dwell_create_flow|test_menu_one_click_rows|test_title_tutorial|test_title_splash_absent|test_texturepacks_screen|test_create_world_ui|test_create_world_osk|test_beta_import_ui)$")
             message(FATAL_ERROR "build-graph: frontend input test pool may only serve its five registered test drivers")
         endif()
         foreach(_cw_s IN LISTS _cw_srcs)

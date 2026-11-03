@@ -432,15 +432,33 @@ static void test_controller_settings(void) {
 	screen_set(&screen_controller_settings);
 	menu_press(' ');
 	menu_press('B');
+	/* First Back: stays on the screen and shows the failure. */
+	assert(gstate.players[0].current_screen == &screen_controller_settings);
 	assert(screen_controller_settings_test_save_failed());
 	assert(!input_primary_look_inverted() && input_primary_look_sensitivity() == 3);
 	char* after = json_serialize_to_string(gstate.config_user.root);
 	assert(after && !strcmp(before, after));
+	json_free_serialized_string(after);
+	/* A value edit re-arms the save: the next Back tries (and fails) again
+	 * instead of discarding, so a retry after fixing the card still works. */
+	menu_press(' ');
+	assert(!screen_controller_settings_test_save_failed());
+	menu_press('B');
+	assert(gstate.players[0].current_screen == &screen_controller_settings);
+	assert(screen_controller_settings_test_save_failed());
+	menu_press(' '); /* draft Invert back On, re-armed once more */
+	assert(screen_controller_settings_test_inverted());
+	menu_press('B');
+	assert(screen_controller_settings_test_save_failed());
+	/* Second Back with the failure still shown: leave WITHOUT saving or
+	 * applying the draft (no softlock while the card keeps refusing writes). */
+	menu_press('B');
+	assert(gstate.players[0].current_screen == &screen_options);
+	assert(!input_primary_look_inverted() && input_primary_look_sensitivity() == 3);
+	after = json_serialize_to_string(gstate.config_user.root);
+	assert(after && !strcmp(before, after));
 	json_free_serialized_string(before); json_free_serialized_string(after);
 	assert(rmdir("config.json") == 0);
-	menu_press('B');
-	assert(gstate.players[0].current_screen == &screen_options && input_primary_look_inverted());
-	assert(remove("config.json") == 0);
 	window = NULL;
 	screen_options_set_return(NULL);
 	config_destroy(&gstate.config_user);

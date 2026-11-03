@@ -68,6 +68,25 @@ static bool server_settled(struct server_local* s) {
 	return true;
 }
 
+/* The whole current near view square is published: every column around the
+ * player is server-sent and client-resident. Residency stability alone is not
+ * completion -- a deferred near UNLOAD gates the near stream
+ * (server_local.c near_unloads_flushed) while resident-but-unsent columns
+ * leave the resident count unchanged. */
+static bool view_square_published(struct server_local* s) {
+	const w_coord_t px = WCOORD_CHUNK_OFFSET((w_coord_t)floor(s->player.x));
+	const w_coord_t pz = WCOORD_CHUNK_OFFSET((w_coord_t)floor(s->player.z));
+	for(w_coord_t z = pz - MAX_VIEW_DISTANCE; z <= pz + MAX_VIEW_DISTANCE; z++)
+		for(w_coord_t x = px - MAX_VIEW_DISTANCE; x <= px + MAX_VIEW_DISTANCE; x++) {
+			const struct server_chunk* c
+				= dict_server_chunks_get(s->worlds[0].chunks, S_CHUNK_ID(x, z));
+			if(!c || !c->sent
+			   || !world_find_chunk(&gstate.world, x * CHUNK_SIZE, 0, z * CHUNK_SIZE))
+				return false;
+		}
+	return true;
+}
+
 /* Setup failures are distinct from a successfully reproduced light mismatch. */
 static void require(bool ok, const char* name, const char* reason) {
 	if(!ok) {
@@ -137,6 +156,7 @@ static void settle(struct server_local* s, const char* name) {
 		client_pump();
 		size_t now = dict_server_chunks_size(s->worlds[0].chunks);
 		quiet = server_settled(s) && !s->anchor_near_owed[0]
+			&& s->pending_near_unload_count == 0 && view_square_published(s)
 			&& now == resident ? quiet + 1 : 0;
 		resident = now;
 		if(quiet == 8)

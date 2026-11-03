@@ -110,7 +110,10 @@ def run(report):
                 raise ValueError(str(prepared["errors"]))
             output = Path(prepared["path"])
             expected = {"terrain.png", "gui/gui.png", "gui/icons.png", "gui/items.png",
-                        "gui_2.png", "anim.png", "sound/step/grass1.wav"}
+                        "gui_2.png", "anim.png", "sound/step/grass1.wav",
+                        # The packaged smoke must prove the optional composer
+                        # works, rather than silently taking its warning path.
+                        "gui/nether-background.png", "gui/nether-background.md"}
             written = {row["path"] for row in prepared["manifest"]["files"]}
             if not expected.issubset(written):
                 raise ValueError("Synthetic prepare omitted: " + ", ".join(sorted(expected - written)))
@@ -118,11 +121,14 @@ def run(report):
                 with Image.open(output / relative) as image:
                     if image.size != (256, 256):
                         raise ValueError("Wrong prepared sheet size: " + relative)
+            with Image.open(output / "gui/nether-background.png") as image:
+                if image.size != (1024, 576):
+                    raise ValueError("Wrong Nether loading scene size")
             with wave.open(str(output / "sound/step/grass1.wav"), "rb") as stream:
                 if (stream.getnchannels(), stream.getsampwidth(), stream.getframerate()) != (1, 2, 11025):
                     raise ValueError("Native converter emitted an unexpected WAV format")
             result["checks"].append(
-                "prepare without source checkout (terrain, GUI, animation, native WAV)")
+                "prepare without source checkout (terrain, GUI, animation, Nether scene, native WAV)")
             result["checks"].append(
                 "record names verified in mapping (media playback not exercised)")
         result["ok"] = True

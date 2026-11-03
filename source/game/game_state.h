@@ -82,14 +82,9 @@ struct game_state {
 		/* Beta GameSettings.viewBobbing, default true ("bobView")
 		 * [740c583 GameSettings:21,331]; ours = "render.view_bobbing". */
 		bool view_bobbing;
-		/* T2 (CLAUDE.md "Performance is a first-class goal"): opt-in
-		 * TextureCompassFX/TextureWatchFX item-needle animation
-		 * (platform/texture.c's item_needle_fx_tick). Faithful behaviour is
-		 * "on" (the needle moves); the T2 deviation is running it AT ALL on
-		 * Wii before a real-hardware bytes/frame + DCFlush measurement exists
-		 * -- so the default is ON for PC (cheap, unmeasured cost is moot) and
-		 * OFF for Wii (unmeasured -> stays off by default) until that
-		 * measurement lands. "gfx.item_needle_anim" overrides either way. */
+		/* TextureCompassFX/TextureWatchFX item-needle animation
+		 * (platform/texture.c's item_needle_fx_tick). Default ON on PC and
+		 * Wii for faithful animation; opt out with gfx.item_needle_anim=0. */
 		bool item_needle_anim;
 	} config;
 	struct client_session players[CLIENT_LOCAL_PLAYERS];

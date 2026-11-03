@@ -20,6 +20,7 @@
 #include <assert.h>
 
 #include "../cglm/cglm.h"
+#include "beta_text_color.h"
 #include "render_sign_text.h"
 
 /*
@@ -184,10 +185,10 @@ size_t sign_text_build_quads(const char grid[64], uint8_t block_meta,
 		// [FontRenderer.getStringWidth]: sum of per-char charWidth, where
 		// charWidth[ch] == glyph_width[ch]+1 in this engine's split
 		// representation (see gui_util.c's `(font_char_width[ch]+1)` at
-		// every draw call site).
-		int total_width = 0;
-		for(int i = 0; i < trimmed_len; i++)
-			total_width += (int)glyph_width[(unsigned char)row[i]] + 1;
+		// every draw call site); a colour code (0xA7 + selector) adds 0
+		// [FontRenderer.java:190-191].
+		int total_width
+			= beta_text_width(row, (size_t)trimmed_len, glyph_width);
 
 		// [TileEntitySignRenderer]: `-var17.getStringWidth(var15) / 2` --
 		// Java int division truncates toward zero, matched by C's `/` on
@@ -197,8 +198,20 @@ size_t sign_text_build_quads(const char grid[64], uint8_t block_meta,
 		// signText.length is always 4 == SIGN_TEXT_QUAD_LINES.
 		int pen_y = line * 10 - SIGN_TEXT_QUAD_LINES * 5;
 
+		// [TileEntitySignRenderer.java:56-58] drawString colour 0 = black;
+		// [FontRenderer.java:147-161] each 0xA7 + selector switches colour
+		// for the rest of the line and draws neither char.
+		uint8_t rgb[3] = {0, 0, 0};
 		for(int i = 0; i < trimmed_len; i++) {
+			if(beta_text_is_code(row, (size_t)i, (size_t)trimmed_len)) {
+				beta_text_code_rgb(beta_text_code_index(row[i + 1]), false,
+								   rgb);
+				i++;
+				continue;
+			}
 			unsigned char ch = (unsigned char)row[i];
+			if(ch == (unsigned char)BETA_TEXT_SECTION)
+				continue; // lone trailing 167: not in font.txt, draws nothing
 			uint8_t w = glyph_width[ch];
 
 			// Space glyphs are definitionally ink-free: skip the quad
@@ -245,6 +258,9 @@ size_t sign_text_build_quads(const char grid[64], uint8_t block_meta,
 					out[count].z = world[2];
 					out[count].u = uv[k][0];
 					out[count].v = uv[k][1];
+					out[count].r = rgb[0];
+					out[count].g = rgb[1];
+					out[count].b = rgb[2];
 					count++;
 				}
 			}

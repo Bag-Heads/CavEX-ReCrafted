@@ -72,6 +72,8 @@ bool config_read_int_array(struct config* c, const char* key, int* dest,
 // Read a scalar integer config value (dot-path key); returns `fallback` when the
 // key is absent or not a number.
 int config_read_int(struct config* c, const char* key, int fallback);
+/* Boolean or numeric nonzero flag; missing/other types use fallback. */
+bool config_read_flag(const struct config* c, const char* key, bool fallback);
 /* G9 T2 experiment: one startup preset, invalid/absent values are OFF. */
 struct config_g9_pacing { int preset, slice_us, sleep_ms, cap_ms; };
 struct config_g9_pacing config_read_g9_pacing(struct config* c);

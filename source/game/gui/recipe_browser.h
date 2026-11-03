@@ -93,8 +93,9 @@ void recipe_browser_geometry(int height,unsigned family,unsigned count,
  unsigned variant,unsigned variants,struct recipe_browser_geometry* out);
 /* ui-build-1026/T13: the personal (2x2) guide is the Crafting PAGE of the
  * inventory, so it makes room for the "Inventory | Crafting" page header
- * (design-round-1026e v1-2 / v1-6): full panel 32..384 with the header above
- * it at y 10, footer 344; split panel 8..224 with the header inside at 44,20
+ * (design-round-1026e v1-2 / v1-6): full panel 46..362 with the header above
+ * it at y 24 (TV-safe, ci-1101/07), footer the bottom hint row; split panel
+ * 8..192 with the header inside at 44,20
  * (to y 40), tabs 42..74, up chevron 76..84, strip 86..122, down chevron
  * 124..132, name 134..150, Have/Need 152, footer 184. grid 3 =
  * recipe_browser_geometry. */

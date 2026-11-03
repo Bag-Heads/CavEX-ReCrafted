@@ -109,7 +109,9 @@ int main(void) {
 #define CW_HAVE_ACTOR_IDENT
 #include "block/blocks.h"
 #include "game/achievements/achievements_api.h"
+#include "game/client_session.h"
 #include "game/gui/achievement_notice.h"
+#include "game/gui/local_menu_host.h"
 #include "graphics/render_item.h"
 #include "item/items.h"
 #include "light_brightness.h"
@@ -405,6 +407,95 @@ static void timing(void) {
 		 "replay, glyphs, identity reset");
 }
 
+/* ci-1101/14: the openInventory hint shows only where it can be earned.
+ * local_menu_host never sends GE_INVENTORY_OPENED in creative or online (Beta
+ * has no creative picker; ACH-1 MP choice (b)), so the module's hint flag
+ * stays armed there forever. The presenter must hide the hint in those modes
+ * while queued award toasts still show. */
+static void tick(uint64_t generation) {
+	struct game_event ev = {.kind = GE_TICK,
+							.authority = GE_AUTH_CLIENT,
+							.who = {.slot = 1, .generation = generation}};
+	game_event_emit(&ev);
+	achievements_tick();
+}
+static void capture_award(unsigned owner, uint64_t generation, int id);
+static void mode_gate(void) {
+	char dir[128];
+	test_fixture_dir("test_notice_mode_gate", dir, sizeof dir);
+	assert(make_dir(dir) == 0);
+	assert(achievements_init(dir));
+	struct client_session* s = calloc(1, sizeof *s);
+	assert(s);
+	struct achievement_notice_frame f;
+	struct ach_status st;
+	struct ach_notice n;
+	struct ach_desc row;
+	bells = 0;
+	for(int mode = 0; mode < 3; mode++) {
+		/* 0 = survival local, 1 = creative local, 2 = online. */
+		gstate.config_creative = mode == 1;
+		gstate.remote_session = mode == 2;
+		uint64_t gen = (uint64_t)mode + 1;
+		char profile[17];
+		snprintf(profile, sizeof profile, "gate%d", mode);
+		assert(achievements_bind(1, gen, profile,
+								 mode == 2 ? ACH_MODE_REMOTE_SERVER :
+											 ACH_MODE_LOCAL_WORLD)
+			   == ACH_BIND_OK);
+		achievement_notice_init();
+		s->achievement_epoch = gen;
+		s->menu_host.inventory_open = false;
+		tick(gen);
+		assert(achievements_status(1, &st) && st.notices_queued == 0);
+		assert(!achievements_notice_peek(1, &n) && n.hint_active);
+		/* Fresh profile: the hint renders in survival only. */
+		bool shown = draw(1, 0, false, NULL, &f);
+		assert(shown == (mode == 0));
+		assert(f.hint == (mode == 0) && f.ach_id == (mode == 0 ? 0 : -1));
+		/* Opening the inventory: survival awards and clears the hint; creative
+		 * and online award nothing, queue nothing, and keep hiding the hint. */
+		local_menu_host_inventory_opened(s, 1);
+		achievements_tick();
+		tick(gen);
+		assert(achievements_status(1, &st)
+			   && st.notices_queued == (mode == 0 ? 1 : 0));
+		assert(achievements_get(1, 0, &row) && row.unlocked == (mode == 0));
+		if(mode == 0) {
+			assert(!achievements_notice_peek(1, &n) || !n.hint_active);
+			assert(draw(1, 1, false, NULL, &f) && !f.hint && f.ach_id == 0);
+			achievements_notice_ack(1);
+			assert(!draw(1, 2, false, NULL, &f) && !f.hint);
+		} else {
+			assert(!achievements_notice_peek(1, &n) && n.hint_active);
+			assert(!draw(1, 1, false, NULL, &f) && !f.hint && f.ach_id == -1);
+		}
+		if(mode == 2) {
+			/* Queued award toasts are never suppressed online: the presenter
+			 * gate is for the hint only. Raw module events, as fifo_capacity
+			 * uses (the host never sends openInventory online, by design). */
+			capture_award(1, gen, 0);
+			capture_award(1, gen, 1);
+			assert(achievements_status(1, &st) && st.notices_queued == 2);
+			assert(draw(1, 3, false, NULL, &f) && !f.hint && f.ach_id == 0);
+			assert(draw(1, 40, false, NULL, &f) && bells == 1);
+			achievements_notice_ack(1);
+			assert(draw(1, 41, false, NULL, &f) && !f.hint && f.ach_id == 1);
+			achievements_notice_ack(1);
+			assert(!draw(1, 42, false, NULL, &f) && !f.hint);
+		}
+		achievements_unbind(1, gen);
+	}
+	gstate.config_creative = false;
+	gstate.remote_session = false;
+	free(s);
+	achievement_notice_shutdown();
+	achievements_shutdown();
+	test_fixture_dir_cleanup(dir);
+	puts("PASS openInventory hint hidden in creative and online, shown in "
+		 "survival until the inventory opens; server toasts still show");
+}
+
 static void capture_award(unsigned owner, uint64_t generation, int id) {
 	struct game_event ev = {.kind = GE_REMOTE_STAT,
 							.authority = GE_AUTH_PACKET200,
@@ -642,6 +733,7 @@ int main(int argc, char** argv) {
 	fifo_capacity();
 	geometry();
 	timing();
+	mode_gate();
 	bell_registry();
 	return 0;
 }

@@ -8184,6 +8184,37 @@ def g9_drain_records(event):
     return out
 
 
+# ci-1101/37: the longest >= 10 ms server-drain mutex wait of one heartbeat
+# window, emitted only when one happened (hw1101c: 71,206 us inside the server
+# tick's light drain, previously with no way to name the lock). Absent on every
+# quiet heartbeat and on every older tape, so the key is optional: a missing or
+# malformed value is simply "no attribution", never a gate failure. The array
+# is [wait_us, mutex, holder_id, holder_tag, stripe, name]; mutex is the
+# contended mutex's address low 32 bits, holder_id/holder_tag identify the
+# thread that held it (0 = free/unknown), stripe is the thread_stripe_register
+# index (0 = unregistered, name then ""). Evidence only -- no verdict reads it.
+LQD_WAIT_FIELDS = ("wait_us", "mutex", "holder_id", "holder_tag", "stripe", "name")
+
+def parse_lqd_wait(event: dict) -> dict | None:
+    """The drain long-wait attribution, or None when this heartbeat carries
+    none (the common case) or a malformed value. Never raises."""
+    a = event.get("lqd_w")
+    if (type(a) is not list or len(a) != len(LQD_WAIT_FIELDS)
+            or any(type(v) is not int or not 0 <= v <= 0xffffffff for v in a[:5])
+            or type(a[5]) is not str):
+        return None
+    d = dict(zip(LQD_WAIT_FIELDS, a))
+    return d if d["wait_us"] > 0 else None
+
+def format_lqd_wait(event: dict) -> str:
+    d = parse_lqd_wait(event)
+    if d is None:
+        return ""
+    return (f" lqd_w=us:{d['wait_us']} mutex:0x{d['mutex']:08x}"
+            f" holder:{d['holder_id']}/tag{d['holder_tag']}"
+            f" stripe:{d['stripe']} name:{d['name']!r}")
+
+
 # R24: allow a full join/drain after the device's gameplay duration. 180 s
 # exceeds the recorded 35.646 s IO completion latency by five times, while
 # bounding the disclosed permanent-IO-error join risk. Not a timing exclusion.
@@ -8330,6 +8361,9 @@ class Collector:
         }
         self.max_rt_us = 0
         self.max_wt_us = 0
+        # ci-1101/37: the largest drain long-wait attribution seen this run
+        # (see parse_lqd_wait), or None. Evidence only.
+        self.lqd_wait = None
         self.max_oom = 0
         self.max_trunc = 0
         self.world_loaded_seen = False
@@ -9676,6 +9710,13 @@ class Collector:
                     self.max_rt_us = max(self.max_rt_us, lqd[14])
                 if type(lqd[15]) is int:
                     self.max_wt_us = max(self.max_wt_us, lqd[15])
+            # ci-1101/37: keep the worst drain long-wait attribution seen when
+            # a heartbeat carries it, so a FAIL names the contended lock and its
+            # holder instead of only the 71 ms figure. Evidence only.
+            wait = parse_lqd_wait(event)
+            if wait is not None and (self.lqd_wait is None
+                                     or wait["wait_us"] > self.lqd_wait["wait_us"]):
+                self.lqd_wait = wait
             self.max_oom = max(self.max_oom, int(event.get("oom", 0) or 0))
             self.max_trunc = max(self.max_trunc, int(event.get("mesh_trunc", 0) or 0))
             self.max_ndisp = max(self.max_ndisp, int(event.get("ndisp", 0) or 0))
@@ -9891,6 +9932,7 @@ class Collector:
                 f"mem1={event.get('mem1_free_kb')}K mem2={event.get('mem2_free_kb')}K "
                 f"cflood={event.get('cflood')} ndisp={event.get('ndisp')}"
                 f"{format_blc(event)}"
+                f"{format_lqd_wait(event)}"
                 f"{' ssw=' + str(event['ssw']) if 'ssw' in event else ''}",
                 flush=True,
             )
@@ -11245,6 +11287,8 @@ class Collector:
             "mem2_free_kb": hb.get("mem2_free_kb", None),
             "srv_rt_us": hb.get("srv_rt_us", None),
             "srv_wt_us": hb.get("srv_wt_us", None),
+            # ci-1101/37: which lock stalled the drain and who held it.
+            "lqd_wait": self.lqd_wait,
             "cflood": hb.get("cflood", None),
             "ndisp": hb.get("ndisp", None),
             "max_ndisp": self.max_ndisp,

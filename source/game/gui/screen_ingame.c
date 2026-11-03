@@ -255,24 +255,37 @@ void screen_ingame_render3D_owned(struct client_session* owner, mat4 view) {
 	if(inventory_get_slot(windowc_get_latest(owner->windows[WINDOWC_INVENTORY]),
 						  slot + INVENTORY_SLOT_HOTBAR, &item)
 	   && item_get(&item)) {
-		glm_translate_make(model,
-						   (vec3) {0.56F - sinf(sqrtLerpPI) * 0.4F,
-								   -0.52F + sinf(sqrtLerpPI * 2.0F) * 0.2F
-									   - 0.6F * place_lerp
-									   - 0.4F * sinf(swing_lerp * GLM_PI),
-								   -0.72F - sinHalfCircle * 0.2F});
-		glm_rotate_y(model, glm_rad(45.0F), model);
-		glm_rotate_y(model, glm_rad(-sinHalfCircleWeird * 20.0F), model);
-		#ifdef GFX_3D_ELEMENTS
-		glm_rotate_z(model, glm_rad(-sinf(sqrtLerpPI) * 20.0F), model);
-		#endif
-		glm_rotate_x(model, glm_rad(-sinf(sqrtLerpPI) * 80.0F), model);
+		if(item.id == ITEM_MAP) {
+			/* ItemRenderer.java:154-220 replaces the generic held-item pose.
+			 * Camera pitch is polar radians here; Beta uses degrees down from
+			 * horizontal. Resolve swing/equip from THIS owner's timing layer. */
+			glm_mat4_identity(model);
+			render_item_update_light(light);
+			float equip = glm_clamp(1.0F - place_lerp
+				- (2.0F / 3.0F) * sinf(swing_lerp * GLM_PI), 0, 1);
+			render_item_map(item_get(&item), &item, model, false,
+				R_ITEM_ENV_FIRSTPERSON, owner, glm_deg(owner->camera.ry) - 90.0F,
+				dig_lerp, equip);
+		} else {
+			glm_translate_make(model,
+							   (vec3) {0.56F - sinf(sqrtLerpPI) * 0.4F,
+									   -0.52F + sinf(sqrtLerpPI * 2.0F) * 0.2F
+										   - 0.6F * place_lerp
+										   - 0.4F * sinf(swing_lerp * GLM_PI),
+									   -0.72F - sinHalfCircle * 0.2F});
+			glm_rotate_y(model, glm_rad(45.0F), model);
+			glm_rotate_y(model, glm_rad(-sinHalfCircleWeird * 20.0F), model);
+			#ifdef GFX_3D_ELEMENTS
+			glm_rotate_z(model, glm_rad(-sinf(sqrtLerpPI) * 20.0F), model);
+			#endif
+			glm_rotate_x(model, glm_rad(-sinf(sqrtLerpPI) * 80.0F), model);
 
-		glm_scale_uni(model, 0.4F);
-		glm_translate(model, (vec3) {-0.5F, -0.5F, -0.5F});
-		render_item_update_light(light);
-		items[item.id]->renderItem(item_get(&item), &item, model, false,
-								   R_ITEM_ENV_FIRSTPERSON);
+			glm_scale_uni(model, 0.4F);
+			glm_translate(model, (vec3) {-0.5F, -0.5F, -0.5F});
+			render_item_update_light(light);
+			items[item.id]->renderItem(item_get(&item), &item, model, false,
+									   R_ITEM_ENV_FIRSTPERSON);
+		}
 	} else {
 		glm_translate_make(model,
 						   (vec3) {0.64F - sinf(sqrtLerpPI) * 0.3F,

@@ -35,12 +35,34 @@ static bool onItemPlace(struct server_local* s, struct server_player* actor, str
 	if(on_side != SIDE_TOP)
 		return false;
 
+	// [decompile 740c583] ItemDoor.onItemUse -> BlockDoor.canPlaceBlockAt
+	// (BlockDoor.java:185): `var3 >= 127 ? false : isBlockNormalCube(x, y-1, z)
+	// && super.canPlaceBlockAt(x, y, z) && super.canPlaceBlockAt(x, y+1, z)`.
+	// The pre-fix code checked only the two cells exist and the UPPER one is
+	// air; it never refused the roof, never rejected a non-replaceable upper
+	// cell, and never required the support below to be a normal cube.
+	if(where->y >= 127)
+		return false;
 	struct block_data blk;
+	// isBlockNormalCube(x, y-1, z): the support must be a full opaque solid.
 	if(!server_world_get_block(block_world(s), where->x, where->y - 1, where->z, &blk))
+		return false;
+	if(!block_is_normal_cube(blk.type))
+		return false;
+	// super.canPlaceBlockAt(y) and (y+1): BOTH door cells must be air or a
+	// replaceable-material block (Block.canPlaceBlockAt:444-447,
+	// `id == 0 || blocksList[id].blockMaterial.func_27090_g()`), which this
+	// engine spells `place_ignore` (the same predicate the generic place
+	// dispatch applies, and the idiom item_sign_post.c already re-applies so
+	// the function stays correct when called directly). A missing block entry
+	// (id 0) is air.
+	if(where->block && where->block->type != 0 && blocks[where->block->type]
+	   && !blocks[where->block->type]->place_ignore)
 		return false;
 	if(!server_world_get_block(block_world(s), where->x, where->y + 1, where->z, &blk))
 		return false;
-	if(blk.type != 0) return false;
+	if(blk.type != 0 && blocks[blk.type] && !blocks[blk.type]->place_ignore)
+		return false;
 	if(!blocks[on->block->type]) return false;
 
 	// [decompile 740c583] ItemDoor.onItemUse: `var9 = floor((rotationYaw +

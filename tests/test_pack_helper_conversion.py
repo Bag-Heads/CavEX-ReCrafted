@@ -46,7 +46,7 @@ class PackHelperConversionTests(unittest.TestCase):
     def test_map_is_versioned_and_explicit(self):
         conversion_map = load_map()
         self.assertEqual(conversion_map["schema_version"], 1)
-        self.assertEqual(conversion_map["release_version"], "0.1.0")
+        self.assertEqual(conversion_map["release_version"], "0.1.1")
         self.assertEqual(conversion_map["release_version"],
                          (Path(__file__).resolve().parents[1] / "VERSION")
                          .read_text(encoding="utf-8").strip())

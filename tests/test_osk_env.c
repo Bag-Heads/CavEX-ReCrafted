@@ -58,6 +58,8 @@
 #include "../source/game/gui/screen.h"
 #include "../source/game/gui/sign_osk_model.h"
 #include "../source/game/gui/widget_osk.h"
+#include "../source/game/game_state.h"
+#include "../source/platform/input_owner.h"
 #include "../source/network/level_archive.h"
 
 /* ---- S1: osk_feed_char edit semantics ---------------------------------- */
@@ -417,6 +419,60 @@ static void test_game_mode_roundtrip(void) {
 	fprintf(stderr, "S7 game-mode round-trip OK\n");
 }
 
+extern void screen_chat_test_row(const struct input_player_frame*, int, int,
+	struct gutil_hint_row*, int[5], struct gutil_button_bounds[5]);
+static void test_chat_bottom_row(void) {
+	const int glyphs[][5] = {{8, 2, 1, 0, 9}, {13, 12, 22, 23, 14}, {34, 35, 38, 39, 33}};
+	const enum input_button roles[] = {IB_GUI_QUICK_MOVE, IB_INVENTORY,
+		IB_GUI_PREVIOUS, IB_GUI_PAGE, IB_GUI_CLICK_ALT};
+	struct chat_composer saved = gstate.players[0].chat;
+	struct chat_composer* chat = &gstate.players[0].chat;
+	for(int family = 0; family < 3; family++) for(int wide = 0; wide < 2; wide++)
+	for(int split = 0; split < 2; split++) for(int tab = 0; tab < 3; tab++) {
+		struct input_player_frame f = {.connected = true};
+		for(int b = 0; b < IB_COUNT; b++) f.glyphs[b] = -1;
+		for(int k = 0; k < 5; k++) f.glyphs[roles[k]] = glyphs[family][k];
+		memset(chat, 0, sizeof *chat);
+		strcpy(chat->buf, "abc");
+		osk_sign_reset(&chat->osk, chat->buf, sizeof chat->buf, CHAT_COMPOSER_CAP);
+		chat->osk.page = osk_chat_page_of_tab(tab, false);
+		struct gutil_hint_row row;
+		int targets[5]; struct gutil_button_bounds keys[5];
+		int width = wide ? 802 : 640, height = split ? 240 : 480;
+		screen_chat_test_row(&f, width, height, &row, targets, keys);
+		assert(row.fits && row.strip.y == (split ? 196 : 428));
+		assert(row.strip.x >= 0 && row.strip.x + row.strip.width <= width);
+		bool send = false, cancel = false, prev = false, next = false, back = false;
+		for(int k = 0; k < row.count; k++) {
+			struct gutil_button_bounds r = row.cells[k].rect;
+			assert(gutil_hint_row_hit(&row, r.x + r.width / 2, r.y + r.height / 2)
+				== row.cells[k].item);
+			send |= targets[k] == 0; cancel |= targets[k] == 1;
+			prev |= targets[k] == 3; next |= targets[k] == 4; back |= targets[k] == 5;
+			if(split || targets[k] < 3) continue;
+			/* A row click reaches the same real key mutator as a keyboard click. */
+			chat->osk.page = osk_chat_page_of_tab(tab, false);
+			strcpy(chat->buf, "abc");
+			struct osk_chat_view view = {.ox = wide ? 81 : 0};
+			osk_chat_input_reset(&view); osk_chat_input_tick(&view, &f);
+			struct input_player_frame click = f;
+			click.pressed[IB_GUI_CLICK] = click.down[IB_GUI_CLICK] = true;
+			struct osk_chat_result result;
+			osk_chat_update_owned(&chat->osk, &view, .016F, true,
+				keys[k].x + keys[k].width / 2, keys[k].y + keys[k].height / 2,
+				true, &click, false, &result);
+			assert(result.activated);
+			if(targets[k] == 5) assert(!strcmp(chat->buf, "ab"));
+			else assert(osk_chat_tab_of_page(chat->osk.page) == tab + (targets[k] == 3 ? -1 : 1));
+		}
+		assert(send && cancel && back);
+		assert(prev == (!split && tab > 0));
+		assert(next == (!split && tab < 2));
+	}
+	gstate.players[0].chat = saved;
+	fprintf(stderr, "S8 chat bottom row: three glyph families, 640/802, full/split, page endpoints and key clicks OK\n");
+}
+
 int main(void) {
 	test_feed_semantics();
 	test_sign_line_gate();
@@ -426,6 +482,7 @@ int main(void) {
 	test_beta_reservation();
 	test_levelname_roundtrip();
 	test_game_mode_roundtrip();
+	test_chat_bottom_row();
 	fprintf(stderr, "test_osk_env: all OK\n");
 	return 0;
 }

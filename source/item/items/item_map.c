@@ -456,6 +456,7 @@ static bool item_map_scan(struct server_world* w, struct map_data* md,
 
 			uint16_t histogram[256];
 			memset(histogram, 0, sizeof(histogram));
+			bool column_unloaded = false; /* any sampled column not resident */
 			int32_t water_depth = 0; // var30
 			double avg_height = 0.0; // var31
 
@@ -475,8 +476,9 @@ static bool item_map_scan(struct server_world* w, struct map_data* md,
 						// Unloaded column: treat as height 0 (see
 						// item_map_read_block_id's identical fallback
 						// posture -- self-corrects on a later revisit).
-						server_world_get_height(w, world_x + sx,
-												world_z + sz, &ground_height);
+						if(!server_world_get_height(w, world_x + sx,
+													 world_z + sz, &ground_height))
+							column_unloaded = true;
 						// [740c583] `var35 = getHeightValue(...) + 1;` --
 						// server_world_get_height ALREADY equals Beta's
 						// getHeightValue (top opaque block + 1, per its own
@@ -593,11 +595,17 @@ static bool item_map_scan(struct server_world* w, struct map_data* md,
 				color_index = mc;
 			}
 
-			prev_avg_height = avg_height; // var15 = var31 (BEFORE the gate,
-										  // matching the decompile's line
-										  // order exactly)
+			// RetroMCP b1.7.3 ItemMap.func_28011_a:73-182 reads terrain
+			// before var15 = var31, still BEFORE the circular write gate.
+			// A missing sample must not invent the next pixel's predecessor.
+			if(!column_unloaded)
+				prev_avg_height = avg_height;
 
-			if(pz >= 0 && dx * dx + dz * dz < radius * radius
+			/* hw1102c: the Wii keeps fewer chunks loaded than Beta's client, so
+			 * a sampled column can be unloaded. Never overwrite an explored pixel
+			 * with that blank read (Beta's server would have loaded the chunk);
+			 * the pixel is re-sampled on a later pass once it is resident. */
+			if(!column_unloaded && pz >= 0 && dx * dx + dz * dz < radius * radius
 			   && (!edge_band || ((px + pz) & 1) != 0)) {
 				uint8_t* slot = &md->colors[px + pz * MAP_DATA_DIM];
 				uint8_t new_color = (uint8_t)(color_index * 4 + shade_band);
@@ -1036,8 +1044,14 @@ static void item_map_on_update_in(struct server_local* s,
 		}
 		h++;
 	}
-	if(is_held)
-		(void)server_local_try_send_w(w, call);
+	if(is_held) {
+		/* MapData.func_28169_a (RetroMCP b1.7.3 src_original:71-104)
+		 * replaces the visible-player list every update. Retain it through
+		 * inbox pressure like the map's colors: a best-effort send can lose
+		 * every icon when earlier world updates consume the Wii's tokens. */
+		clin_rpc_stamp(&call, w->world_index, w->generation);
+		clin_rpc_send(&call);
+	}
 
 	// [740c583] `if (var5) { this.updateMapData(...); }` -- var5 is Beta's
 	// isCurrentItem/is_held.
@@ -1072,11 +1086,9 @@ struct item item_map = {
 	.has_damage = false,
 	.max_stack = 1,		// [740c583: ItemMap ctor] setMaxStackSize(1)
 	.fuel = 0,
-	.renderItem = render_item_map, // 2b in-hand render LANDED 2026-08-26:
-								   // live 128x128 first-person draw
-								   // (render_item.c); every other env keeps
-								   // the static sprite, exactly as Beta
-								   // [740c583 ItemRenderer]
+	// ItemRenderer.java:154-220 replaces the generic first-person dispatch
+	// in screen_ingame; every other environment keeps Beta's static sprite.
+	.renderItem = render_item_flat,
 	.onCreated = item_map_on_created,
 	.onUpdate = item_map_on_update,
 	.onUpdateFor = item_map_on_update_for,

@@ -367,7 +367,7 @@ static void test_codec_goldens(void) {
 				: MP_DECODE_MORE));
 	memcpy(bad_header, map_golden, sizeof(bad_header));
 	bad_header[5] = 0;
-	bad_header[6] = 127;
+	bad_header[6] = 129;
 	mp_decoder_init(&decoder);
 	for(size_t i = 0; i < sizeof(bad_header); i++)
 		assert(mp_decoder_feed(&decoder, bad_header[i], &event)
@@ -902,6 +902,46 @@ static void test_p2_codec_goldens(void) {
 	assert(mp_fixed32_to_double(event.payload.named_entity_spawn.x) == 1.0);
 	assert(mp_byte_angle_to_degrees(event.payload.named_entity_spawn.rotation)
 		== 90.0f);
+
+	/* ci-1101/30: a coloured name is still capped at 16 UTF-16 units,
+	 * codes INCLUDED -- Packet20 readString(var1, 16)
+	 * [mcb173-retromcp Packet20NamedEntitySpawn.java:34] throws above it
+	 * (Packet.java:110-113), so "§4Admin§f" + a long name never
+	 * reaches a Beta client. 16 units decode and fit the 16-byte display
+	 * username (1 byte per unit); 17 are a decode error, as in Beta. */
+	{
+		static const char name16[] = "\247" "4Admin" "\247" "fNotch12";
+		assert(sizeof name16 - 1 == 16);
+		uint8_t pkt[1 + 4 + 2 + 2 * 17 + 12 + 2 + 2];
+		for(int len = 16; len <= 17; len++) {
+			size_t n = 0;
+			pkt[n++] = 0x14;
+			pkt[n++] = 0; pkt[n++] = 0; pkt[n++] = 0; pkt[n++] = 9;
+			pkt[n++] = 0; pkt[n++] = (uint8_t)len;
+			for(int c = 0; c < len; c++) {
+				pkt[n++] = 0;
+				pkt[n++] = c < 16 ? (uint8_t)name16[c] : 'x';
+			}
+			memset(pkt + n, 0, 16); n += 16;
+			struct mp_decoder d;
+			mp_decoder_init(&d);
+			struct mp_event p;
+			enum mp_decode_result r = MP_DECODE_MORE;
+			size_t used = 0;
+			while(used < n && r == MP_DECODE_MORE)
+				r = mp_decoder_feed(&d, pkt[used++], &p);
+			if(len == 16) {
+				assert(r == MP_DECODE_EVENT && used == n);
+				char shown[17];
+				assert(mp_utf16_to_display(&p.payload.named_entity_spawn.name,
+										   shown, sizeof shown));
+				assert(!strcmp(shown, name16));
+			} else {
+				assert(r == MP_DECODE_ERROR);
+			}
+			mp_decoder_destroy(&d);
+		}
+	}
 
 	/* 0x15 Packet21PickupSpawn: i32 entityId; i16 itemID; i8 count; i16
 	 * itemDamage; i32 x/y/z; i8 rotation/pitch/roll -- these three are
@@ -1799,7 +1839,7 @@ static void* fault_peer_entry(void* user) {
 			goto done;
 	} else if(fixture->mode == FAULT_ENTRY_CAP) {
 		uint8_t announce[10] = {0x32}; announce[9]=1;
-		for(int i=0;i<577;i++) {
+		for(int i=0;i<2049;i++) {
 			put_i32(announce+1,i); put_i32(announce+5,0);
 			if(!socket_write_fragmented(peer,announce,sizeof(announce))) goto done;
 		}
@@ -4218,7 +4258,7 @@ static void* s3_entity_peer_entry(void* user) {
 	 * change from the first spawn so the driver can prove this is really the
 	 * SECOND spawn's data, not a stale read of the first. */
 	static const uint8_t named_respawn[] = {0x14,
-		0,0,0,100, 0,3, 0,'R',0,'e',0,'x',
+		0,0,0,100, 0,5, 0,0xA7,0,'c',0,'R',0,'e',0,'x',
 		0,0,0,96, 0,0,1,96, 0,0,0,160,
 		0, 0, 0,0};
 	if(!socket_write_fragmented(peer, named_respawn, sizeof(named_respawn)))
@@ -4353,7 +4393,10 @@ static void test_s3_entity_lifecycle(void) {
 		clin_update();
 		e_pp = dict_entity_get(gstate.entities, 100);
 		respawned = e_pp && *e_pp
-			&& strcmp((*e_pp)->data.remote_player.username, "Rex") == 0;
+			/* ci-1101/30: the name is "\u00a7cRex" on the wire; it must
+			 * reach the name tag as the display-charset byte 0xA7 (like
+			 * Packet3 chat / Packet130 signs), not UTF-8 0xC2 0xA7. */
+			&& strcmp((*e_pp)->data.remote_player.username, "\247cRex") == 0;
 		thread_msleep(1);
 	}
 	assert(respawned);

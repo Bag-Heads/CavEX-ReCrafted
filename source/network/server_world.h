@@ -279,12 +279,13 @@ size_t server_world_test_generation_queue_copy(const struct server_world* w,
 // Beta 1.7.3 World.tickUpdates executes at most 1000 due callbacks per game tick.
 // Keep that as the absolute fire ceiling around the Wii's lower fluid cap.
 #define SERVER_WORLD_SCHEDULED_TICK_BETA_CAP 1000u
-// Ring depth at which the (pos,type) dedup still runs its O(count) linear scan (R2-review perf
-// finding). Below it the common case (redstone clocks, small cascades) gets FULL dedup cheaply;
-// above it -- only a thousands-pending fluid cascade, already the distinct-cell overflow regime R2
-// left to the class-split drain -- the scan is skipped (plain append) to avoid a tens-of-ms/tick
-// Broadway stall the FIRE budget does not cover (it caps firing, not inserting). The principled fix
-// is a parallel (x,y,z,id) hash set == Beta's O(1) HashSet (always-dedup), filed in redstone_plan.md.
+// HISTORICAL (HUNT-14 item 10, ci-1101/39): the ring depth above which the old O(count) linear
+// (pos,type) dedup scan was SKIPPED (plain append) to dodge a Broadway stall. Beta
+// World.scheduleBlockUpdate [740c583 World.java:1161] gates EVERY insert on
+// scheduledTickSet.contains(), at any depth, so that cutoff was a Bucket A difference (a
+// duplicate (x,y,z,id) could fire twice in a deep fluid cascade). The queue now keeps a parallel
+// open-addressing (x,y,z,id) hash set == Beta's O(1) HashSet and always dedups; the define is
+// kept only so the goldens can name the old cutoff when proving dedup holds past it.
 #define SCHEDULED_TICK_DEDUP_SCAN_MAX 256
 // Shift in UNSIGNED then cast: `(int64_t)(z) << 32` is signed-shift UB for negative z
 // (UBSan halts the CI ASan soak); the key bit-pattern is byte-identical for any 32-bit z.
@@ -316,8 +317,8 @@ struct scheduled_tick {
 	w_coord_t x, y, z;
 	uint32_t fire_at_tick;
 	uint8_t block_type;
-	// Internal drain marker used only while restoring deferred old fluid ticks
-	// ahead of callback-enqueued children. Fresh schedules always clear it.
+	// Internal drain marker (kept-in-place original); cleared before the drain
+	// returns. Fresh schedules always clear it.
 	uint8_t queue_flags;
 };
 
@@ -651,9 +652,25 @@ struct server_world {
 	bool evict_retire_deferred;
 	uint32_t retiring_dropped; /* entries still unpublished at world teardown */
 	struct scheduled_tick* scheduled_ticks;
-	// Stable-reorder permutation scratch (one uint16 per queue slot), owned by
-	// the same allocation as scheduled_ticks. A live queue always has both.
-	uint16_t* scheduled_tick_permutation;
+	// Drain-only (all 0 outside server_world_drain_scheduled): the drain leaves the
+	// originals it does not fire (not yet due, freeze-retained, budget-deferred) IN
+	// PLACE behind the head instead of re-appending them, so Beta's (scheduledTime,
+	// tickEntryID) order needs no permutation. kept_span = slots popped this drain,
+	// i.e. the region [head - kept_span, head); kept = how many of them are still
+	// pending (flagged SCHEDULED_TICK_FLAG_KEPT, still in the containment set).
+	// Occupancy for the capacity check is scheduled_tick_count + scheduled_tick_kept.
+	// drain_mode: 0 idle, 1 in place, 2 the saturated-ring re-append fallback.
+	size_t scheduled_tick_kept;
+	size_t scheduled_tick_kept_span;
+	uint8_t scheduled_tick_drain_mode;
+	// Beta World.scheduledTickSet: an open-addressing hash set over the pending entries, keyed
+	// (x,y,z,block_type) like NextTickListEntry.equals/hashCode. Slot value 0 = empty,
+	// 0xFFFF = tombstone, else the entry's PHYSICAL ring index + 1. Same allocation as
+	// scheduled_ticks; scheduled_tick_hash_cap is a power of two >= 2 * capacity;
+	// scheduled_tick_hash_used counts live + tombstone slots (rebuild trigger).
+	uint16_t* scheduled_tick_hash;
+	size_t scheduled_tick_hash_cap;
+	size_t scheduled_tick_hash_used;
 	size_t scheduled_tick_capacity;
 	size_t scheduled_tick_count;
 	size_t scheduled_tick_head;
@@ -872,6 +889,15 @@ struct server_world_light_drain_rec {
 	 * Excludes undo restoration, checkpoint work and post-flood trimming. */
 	uint64_t kernel_resolve_hits, kernel_resolve_misses;
 	uintptr_t frontier_address, seeds_address;
+	/* ci-1101/37: this drain's longest >= 10 ms mutex wait, when one happened
+	 * (hw1101c: a 71,206 us lock_us inside the server tick's light drain).
+	 * wait_mutex is the contended mutex's address low 32 bits; wait_stripe and
+	 * wait_mutex_name name it once it is stripe-registered (0/"" when not);
+	 * wait_holder_id is the stripe_thread_id() of the holder (0 free/unknown)
+	 * and wait_holder_tag its enum thread_stripe_tag.
+	 * wait_us 0 means every acquisition in this drain waited < 10 ms. */
+	uint32_t wait_us, wait_mutex, wait_holder_id, wait_holder_tag, wait_stripe;
+	char wait_mutex_name[THREAD_DRAIN_WAIT_MUTEX_NAME_MAX];
 };
 /* The heaviest (largest us) drain per world slot since the previous call
  * (a window: the caller is the once-per-heartbeat reader), plus the
@@ -895,6 +921,14 @@ struct server_world_light_drain_hb {
 	struct server_world_light_drain_rec win[2];
 	uint32_t drains[2], pops_total[2];
 	struct server_world_light_ckpt_rec ckpt;
+	/* ci-1101/37: the LONGEST >= 10 ms drain mutex wait anywhere this window,
+	 * with the contended mutex identified and its holder. Unlike win[] this is
+	 * not tied to the heaviest drain, so a stall that lands on a lighter drain
+	 * still names its lock. wait_us 0 = no such wait this window. */
+	struct {
+		uint32_t wait_us, mutex, holder_id, holder_tag, stripe;
+		char name[THREAD_DRAIN_WAIT_MUTEX_NAME_MAX];
+	} wait_attrib;
 };
 void server_world_light_drain_hb_take(struct server_world_light_drain_hb* out);
 /* The most recent completed drain record (tests, benches, F3). */
@@ -1440,6 +1474,10 @@ bool server_world_disk_has_chunk(struct server_world* w, w_coord_t x,
 void server_world_scheduled_ticks_create(struct server_world* w,
 										 size_t capacity);
 void server_world_scheduled_ticks_destroy(struct server_world* w);
+/* Rebuild the (x,y,z,id) containment set from the ring. Required after any
+ * direct write of scheduled_tick_head/count that bypasses the queue API (the
+ * populate-tx rollback), otherwise the set and the ring disagree. */
+void server_world_scheduled_ticks_resync(struct server_world* w);
 
 // Drop the chunk-resolution cache. MUST be called around every mutation of
 // w->chunks (insert/erase/clear): the dict stores values in-table, so a rehash
@@ -1475,9 +1513,8 @@ bool server_world_schedule_tick(struct server_world* w, w_coord_t x,
 bool server_world_schedule_block_tick(struct server_world* w, w_coord_t x,
 									  w_coord_t y, w_coord_t z,
 									  uint8_t block_type);
-/* Checked load-reconstruction insertion. Unlike the normal Wii-hot-path
- * insert, this always applies Beta's (position,id) keep-first dedup, including
- * above SCHEDULED_TICK_DEDUP_SCAN_MAX. */
+/* Checked load-reconstruction insertion (Beta keep-first (position,id) dedup,
+ * like every other insert since ci-1101/39 retired the scan cutoff). */
 bool server_world_schedule_block_tick_rearm(struct server_world* w,
 										w_coord_t x, w_coord_t y,
 										w_coord_t z,

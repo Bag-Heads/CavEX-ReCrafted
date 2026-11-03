@@ -309,6 +309,14 @@ for key in ("autopilot", "auto_screenshot"):
         sys.exit(f"config_wii.json carries capture-rig setting debug.{key}")
 if debug.get("overlay", "off") != "off":
     sys.exit("config_wii.json forces the debug overlay on")
+# The zip ships this file as the ONLY config (12c below), so its paths must
+# name the bundled default pack and saves folder this script packages, never
+# a dev/user pack path that does not exist on a clean release card.
+paths = cfg.get("paths") or {}
+if not isinstance(paths, dict) or paths.get("texturepack") != "assets":
+    sys.exit("config_wii.json paths.texturepack must be the bundled 'assets' pack")
+if paths.get("worlds") != "saves":
+    sys.exit("config_wii.json paths.worlds must be 'saves'")
 PYEOF
 	echo "[make-release] FAIL: config_wii.json at commit $GIT_SHA_SHORT is not a usable shipped default (see above)." >&2
 	exit 3
@@ -679,7 +687,19 @@ git_show_file "icon.png" "$APP_DIR/icon.png" || exit 6
 #      plainly that this CWD "can be either" the SD card root or the app's
 #      own subfolder -- "staging both is harmless" -- exactly what
 #      tools/provision_wii_sd.ps1 already does for a physical card. So this
-#      script stages the same pair at both locations.
+#      script stages the fallback template at both locations.
+#
+#      The zip ships ONLY config_wii.json, never a config.json (ci-1101/05):
+#      config.json is the PLAYER'S file -- the game writes the multiplayer
+#      name, server list and every Options change into it -- and a release
+#      zip unzipped over an installed card used to overwrite it, wiping
+#      those. The game needs no shipped config.json: on the Wii,
+#      source/main.c:4789 sets default_config = "config_wii.json" and
+#      source/config.c:235-247 config_load_user_or_default() loads it when
+#      config.json is missing or corrupt; the first Options save then
+#      creates config.json from it. The gate in 4b above already requires the
+#      template's paths to name the bundled pack and saves folder, so the
+#      template IS the release default with no derived copy.
 #
 #      The CONTENT is config_wii.json, NOT the repo-root config.json:
 #      config.json's "input" block is GLFW PC-keyboard codes (87/83/65/68 =
@@ -694,24 +714,8 @@ if ! git -C "$REPO" cat-file -e "$COMMIT:config_wii.json" 2>/dev/null; then
 	echo "[make-release] FAIL: config_wii.json not found at commit $GIT_SHA_SHORT" >&2
 	exit 6
 fi
-RELEASE_CONFIG="$("$PY" - "$REPO" "$COMMIT" <<'PYEOF'
-import json, subprocess, sys
-repo, commit = sys.argv[1], sys.argv[2]
-raw = subprocess.run(["git", "-C", repo, "show", f"{commit}:config_wii.json"],
-                      capture_output=True, check=True).stdout
-cfg = json.loads(raw)
-cfg.setdefault("paths", {})
-# "assets" is the bundled default pack this script packages (see the asset
-# roster above) -- never the user-supplied Beta pack path, which does not
-# exist on a clean release SD card.
-cfg["paths"]["texturepack"] = "assets"
-cfg["paths"]["worlds"] = "saves"
-print(json.dumps(cfg, indent=4))
-PYEOF
-)" || { echo "[make-release] FAIL: could not derive the release config.json from config_wii.json" >&2; exit 6; }
 
 for ROOT_DIR in "$STAGE_ROOT" "$APP_DIR"; do
-	printf '%s\n' "$RELEASE_CONFIG" > "$ROOT_DIR/config.json" || exit 6
 	git_show_file "config_wii.json" "$ROOT_DIR/config_wii.json" || exit 6
 done
 
@@ -766,7 +770,7 @@ fi
 #       (exit 3). The world is staged as saves/<TUTORIAL_WORLD_DIR>/ at the
 #       SD root AND under apps/CavEX/ -- the game opens "paths.worlds"
 #       = "saves" relative to its CWD, which can resolve to either place (the
-#       same "staging both is harmless" rule as config.json and assets/).
+#       same "staging both is harmless" rule as config_wii.json and assets/).
 TUTORIAL_WORLD_DIR="CaveWii Tutorial" # build_tutorial.py's DEFAULT_OUT dir name
 TUTORIAL_BUILDER="tools/tutorial_world/build_tutorial.py"
 TUTORIAL_TEST="tests/test_tutorial_build.py"
@@ -1031,8 +1035,11 @@ Status: $CERT_LINE
 Installing from this release zip
 ---------------------------------
 1. Unzip this archive directly onto the ROOT of your Wii's SD card (the
-   apps/, assets/, texturepacks/, and config.json entries all land where
-   the Homebrew Channel and the game itself expect them).
+   apps/, assets/, texturepacks/, and config_wii.json entries all land where
+   the Homebrew Channel and the game itself expect them). Updating over an
+   older install keeps your config.json (multiplayer name, server list and
+   settings): the zip carries no config.json, only the config_wii.json
+   defaults the game falls back to when yours is missing.
 2. Launch "CaveWii_v2" from the Homebrew Channel.
 3. New to the game? Choose "Play game", stay on the Load tab, pick the
    world "Tutorial Island" (folder saves/$TUTORIAL_WORLD_DIR/) and press
@@ -1051,12 +1058,13 @@ What's in this zip
   apps/CavEX/boot.dol       the game (Homebrew Channel entry point)
   apps/CavEX/meta.xml       Homebrew Channel metadata
   apps/CavEX/icon.png       Homebrew Channel icon
-  apps/CavEX/config.json    default settings (Wii controller mapping)
-  apps/CavEX/config_wii.json  the same, kept as a clean reference/reset copy
+  apps/CavEX/config_wii.json  default settings (Wii controller mapping); the
+                              game reads it when there is no config.json and
+                              writes your own settings to config.json
   apps/CavEX/assets/        bundled default art+sound (duplicate of below)
   apps/CavEX/saves/$TUTORIAL_WORLD_DIR/  the tutorial world (duplicate of below)
   saves/$TUTORIAL_WORLD_DIR/        the tutorial world "Tutorial Island"
-  config.json, config_wii.json, assets/    same content at the SD card root
+  config_wii.json, assets/        same content at the SD card root
                                   (the game's CWD on boot can resolve to
                                   either location; both are staged so it
                                   works either way -- see

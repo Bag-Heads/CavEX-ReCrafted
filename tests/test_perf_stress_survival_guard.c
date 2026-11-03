@@ -229,7 +229,13 @@ static void stress_off_ticks(void) {
 	/* FAST re-pin (maintainer 2026-10-11): pre-V6 pin 0xa306aade20818bf9
 	 * (P=c5cc9d5ee); first divergence tick2/entity7 entity_monster.c swim roll (F4). */
 	/* G9X-6 re-record (REGRESS-1015, maintainer re-record ruling 2026-10-14): old pin 0xe1ce5576ddadb9a6. With the G9X-6 post-drain refresh disabled the old pin reproduces exactly; with it the fold stream differs ONLY by 11 inserted CRPC_CHUNK republishes of already-sent columns, each carrying a stored Sky/Block light change (Beta publishes every light store, CFR World.java:512-517). tmp/jobs/loop/REGRESS-1015/RERECORD.md. */
-	assert(digest == UINT64_C(0x04c925c187fcfb46));
+	/* ci-1101/47 FAST re-pin: c16ebd6bd corrects Beta's skeleton arrow lift
+	 * (EntitySkeleton.attackEntity:40, +1.4F; launch DY2.43->2.83). Reverting
+	 * ONLY that launch height at HEAD dee9d3edf reproduces old04c925c187fcfb46.
+	 * First difference: tick1/arrow11 position, fold byte285; post-flight Y
+	 * 6.290963173->6.547310829. HEAD and combined-tree fold streams are exact.
+	 * C:/tmp/cavex-jobs/ci-1101/47/PROOF.md and stress-first.txt. */
+	assert(digest == UINT64_C(0xba1ba693ff721f0e));
 	printf("OFF actual32 stress ticks/ring%d/bursts%u/ALL-column arrays/entities/RPC/RNG digest=%016" PRIx64 "\n", cap, explosions, digest);
 	if(mode) printf("PC matched surviving actual32 stress: observer=%s active_wall_us=%" PRIu64 " thread_cpu_us=%" PRIu64 " thread_cpu_cycles=%" PRIu64 " (unsubtracted; fold/IO outside timing; CPU-us quantized)\n", mode, wall_us, cpu_us, cpu_cycles);
 	clin_test_set_rpc_observer(NULL, NULL);

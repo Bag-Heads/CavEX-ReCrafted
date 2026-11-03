@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "recipe": {
+    "seed": 42,
+    "x": -60,
+    "y": 36,
+    "z": 100,
+    "yaw": 90,
+    "pitch": 78
+  },
+  "generator": "CaveWii worldgen_hell/native engine",
+  "sha256": "af81bc9a158bd405410abaf9f2da74cdfb382c77833c16735496f5c815958927",
+  "renderer_sha256": "5ed49cbaa0ac99b37ce641a6b16b230b152c495b19d1f9d5e24f0d195ad63d0c",
+  "textures": {
+    "terrain.png": "1ba8c48e10a37fd2ba072291b13cd40db1061592d1f0b768b3d79d8a377bc033",
+    "anim.png": "e275eed97dc121fcf05bf6061ab2c8c9ec6db4c6547480329dc1f05a92861e75"
+  },
+  "dimensions": [
+    1024,
+    576
+  ],
+  "mode": "RGB",
+  "method": "Native engine capture; crop/nearest scaling; no retouching",
+  "limitations": "Fixed row-major population; no fluid ticks or lavafalls; not a live-world parity capture",
+  "license": "CC-BY-3.0",
+  "source_capture": "C:\\tmp\\cavex-jobs\\ci-1101\\57d\\native-isabella-ii.png"
+}

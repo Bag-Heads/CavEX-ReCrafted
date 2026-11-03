@@ -25,6 +25,21 @@ bool tex_atlas_grid_init(struct tex_atlas_grid* grid, size_t width,
 		   && grid->origin_y < height;
 }
 
+unsigned tex_atlas_mip_levels(const struct tex_atlas_grid* grid) {
+	/* Terrain vertices use (18 * tile + 3) / 256 UVs. Only exact
+	 * multiples of the native grid agree with both terrain and particles.
+	 * libogc gx.h GX_InitTexObj: mipmapped dimensions must be powers of two.
+	 * For this grid width == 256 * border_pixels; enforce it on PC too. */
+	return grid && grid->border_pixels
+			&& !(grid->border_pixels & (grid->border_pixels - 1))
+			&& grid->content_pixels == 16 * grid->border_pixels
+			&& grid->cell_pitch == 18 * grid->border_pixels
+			&& grid->origin_x == 2 * grid->border_pixels
+			&& grid->origin_y == 2 * grid->border_pixels ?
+		TEX_ATLAS_MIP_LEVELS :
+		1;
+}
+
 static bool axis_cell_bounds(size_t coord, size_t extent, size_t origin,
 							 size_t pitch, size_t* first, size_t* end) {
 	if(!extent || !pitch || origin >= extent || coord >= extent || !first || !end)

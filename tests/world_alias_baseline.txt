@@ -8,9 +8,10 @@
 # R-B07 (2026-10-09): 48 growth rows audited: 28 fixed slot-zero fixtures, 20 typed false positives.
 # Tightened only: 1248 uses in 146 rows; no allowance increased.
 # Tightened at integ-1011 (2026-10-11: G9 x V6 x R-B07 merge): 144 rows; rows only shrank, no row grew.
+# Tightened at ci-1101/46 (2026-11-02): server_local.c s 130->128, test_fluid_lifecycle_env.c throttled 6->5; no row grew.
 source/carve_observer.c	s	3
 source/network/portal_teleporter.c	s	1
-source/network/server_local.c	s	130
+source/network/server_local.c	s	128
 source/network/server_world.c	sl	1
 source/worldgen/tree_runtime.c	s	1
 tests/oracle/dump_redstone.c	s	4
@@ -67,7 +68,7 @@ tests/test_flint_steel.c	s	5
 tests/test_fluid_lifecycle_env.c	baseline	6
 tests/test_fluid_lifecycle_env.c	frontier	44
 tests/test_fluid_lifecycle_env.c	server	10
-tests/test_fluid_lifecycle_env.c	throttled	6
+tests/test_fluid_lifecycle_env.c	throttled	5
 tests/test_ghast_spawn_env.c	s	7
 tests/test_giant_box_golden.c	s	4
 tests/test_hoe.c	s	5

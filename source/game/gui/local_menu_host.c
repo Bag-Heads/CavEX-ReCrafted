@@ -86,6 +86,16 @@ bool local_menu_host_open(struct client_session* s,unsigned player,uint8_t windo
   local_menu_host_inventory_opened(s,player);
  return true;
 }
+bool local_menu_host_open_creative(struct client_session* s,unsigned player,int width,int height) {
+ if(!s||player>=CLIENT_LOCAL_PLAYERS||width<640||height<240||height>=480
+  ||!gstate.config_creative)return false;
+ local_menu_host_reset(s);
+ creative_picker_open(&s->menu_host.picker);
+ s->container.width=width;s->container.height=height;
+ s->menu_host.mode=LOCAL_MENU_CREATIVE;s->menu_host.player=(uint8_t)player;
+ s->menu_host.split_owned=true;
+ return true;
+}
 static void poll_craft(struct client_session* s) {
  struct recipe_browser* b=&s->recipes;
  if(!b->pending||(s->craft_pending&&s->craft_reply_serial==b->pending_serial))return;
@@ -152,7 +162,7 @@ static bool update_recipes(struct client_session* s,struct window_container* wc,
 }
 bool local_menu_host_update(struct client_session* s,const struct container_input* in,
  const struct container_glyphs* glyphs,float dt,container_send_fn send,void* user) {
- if(!s||!in||!glyphs||!send||!local_menu_host_active(s)||s->menu_host.mode==LOCAL_MENU_SIGN)return false;
+ if(!s||!in||!glyphs||!send||!local_menu_host_active(s)||s->menu_host.mode==LOCAL_MENU_SIGN||s->menu_host.mode==LOCAL_MENU_CREATIVE)return false;
  struct window_container* wc=s->windows[s->menu_host.window];
  if(!wc||wc!=s->menu_host.window_identity||wc->type!=s->container.type||wc->slot_count!=s->container.main_base+36){local_menu_host_inventory_closed(s);local_menu_host_reset(s);return false;}
  s->container.menu.sort_owner=s;
@@ -176,7 +186,7 @@ bool local_menu_host_update(struct client_session* s,const struct container_inpu
    audio_menu_event(MENU_SOUND_BACK,time_get());
   }
   break;
- case LOCAL_MENU_SIGN:case LOCAL_MENU_NONE:break;
+ case LOCAL_MENU_CREATIVE:case LOCAL_MENU_SIGN:case LOCAL_MENU_NONE:break;
  }
  return false;
 }
@@ -286,7 +296,7 @@ bool local_menu_host_frame(struct client_session* s,unsigned player,
  retire_hidden_inventory(s);
  bool consumed=local_menu_host_active(s);
  if(!frame)return consumed;
- if(consumed) {
+ if(consumed&&s->menu_host.mode!=LOCAL_MENU_CREATIVE) {
   uint8_t w=s->menu_host.window;
   bool visible=s->visible_window==w||(w==WINDOWC_INVENTORY&&s->visible_window<0);
   if(!visible||s->windows[w]!=s->menu_host.window_identity){local_menu_host_inventory_closed(s);local_menu_host_reset(s);}
@@ -297,9 +307,22 @@ bool local_menu_host_frame(struct client_session* s,unsigned player,
  if(!local_menu_host_active(s)) {
   int desired=s->visible_window;
   /* brief 07 C: the guest's GAMEPLAY OPEN, same role split as the host's. */
-  if(desired<0&&frame->connected&&!s->local_reply_failed&&frame->pressed[screen_ingame_action_role[SCREEN_INGAME_ACT_OPEN_INVENTORY]])desired=WINDOWC_INVENTORY;
+  if(desired<0&&frame->connected&&!s->local_reply_failed&&frame->pressed[screen_ingame_action_role[SCREEN_INGAME_ACT_OPEN_INVENTORY]]) {
+   if(gstate.config_creative)return local_menu_host_open_creative(s,player,width,height);
+   desired=WINDOWC_INVENTORY;
+  }
   if(desired>=0&&desired<=UINT8_MAX&&local_menu_host_open(s,player,(uint8_t)desired,width,height)){s->menu_host.split_owned=true;return true;}
   return consumed;
+ }
+ if(s->menu_host.mode==LOCAL_MENU_CREATIVE) {
+  if(!s->local_reply_failed) {
+   enum creative_picker_action action=creative_picker_update(&s->menu_host.picker,
+    frame,x,y,width,height,send,user);
+   if(action==CREATIVE_PICKER_CLOSE)local_menu_host_reset(s);
+   else if(action==CREATIVE_PICKER_INVENTORY&&local_menu_host_open(s,player,WINDOWC_INVENTORY,width,height))
+    s->menu_host.split_owned=true;
+  }
+  return true;
  }
  if(s->menu_host.mode==LOCAL_MENU_SIGN) {
   uint8_t closing=s->menu_host.window;
@@ -328,6 +351,10 @@ static void render_notices(struct client_session* s,struct window_container* wc)
 }
 void local_menu_host_render(struct client_session* s,const struct container_glyphs* glyphs) {
  if(!s||!glyphs||!local_menu_host_active(s))return;
+ if(s->menu_host.mode==LOCAL_MENU_CREATIVE) {
+  creative_picker_render(&s->menu_host.picker,s->menu_host.player,s->container.width,s->container.height);
+  return;
+ }
  struct window_container* wc=s->windows[s->menu_host.window];if(!wc||wc!=s->menu_host.window_identity)return;
  if(s->menu_host.mode==LOCAL_MENU_SIGN) {
   struct input_player_frame frame;input_prompt_frame(s->menu_host.player,&frame);
@@ -342,7 +369,7 @@ void local_menu_host_render(struct client_session* s,const struct container_glyp
   recipe_browser_render(&s->recipes,windowc_get_latest(wc),wc->type==WINDOW_TYPE_INVENTORY?INVENTORY_SLOT_MAIN:CRAFTING_SLOT_MAIN,
    0,0,s->container.width,s->container.height,glyphs);break;
  case LOCAL_MENU_MANUAL:manual_grid_render(&s->manual_grid,wc,0,0,glyphs);break;
- case LOCAL_MENU_SIGN:case LOCAL_MENU_NONE:break;
+ case LOCAL_MENU_CREATIVE:case LOCAL_MENU_SIGN:case LOCAL_MENU_NONE:break;
  }
  render_notices(s,wc);
 }

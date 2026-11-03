@@ -87,6 +87,7 @@ static const struct tex_slot s_slots[] = {
 	S(texture_ghast, "mob/ghast.png", TEX_FMT_RGBA16),
 	S(texture_ghast_fire, "mob/ghast_fire.png", TEX_FMT_RGBA16),
 	S(texture_controls, "controls.png", TEX_FMT_RGBA16),
+	S(texture_nether_background, "gui/nether-background.png", TEX_FMT_RGBA16),
 	S(texture_menu_background, "gui/menu-background.png", TEX_FMT_RGBA16),
 	S(texture_title_logo, "gui/title-logo.png", TEX_FMT_RGBA32),
 	S(texture_menu_reception, "gui/reception.png", TEX_FMT_RGBA16),
@@ -164,6 +165,10 @@ static bool cache_wanted(void) {
 	return v && (strcmp(v, "true") == 0 || strcmp(v, "on") == 0);
 }
 
+static bool atlas_mipmaps(void) {
+	return config_read_flag(&gstate.config_user, "render.mipmaps", false);
+}
+
 static bool is_default(void) {
 	return strcmp(s_pack, DEFAULT_PACK) == 0;
 }
@@ -191,6 +196,7 @@ static uint64_t key_for(uint32_t target) {
 	h = pack_cache_fnv_u32(h, target);
 	h = pack_cache_fnv_u32(h, TEXAT_MAX);
 	h = pack_cache_fnv_u32(h, TEX_GX_ATLAS_LODS);
+	h = pack_cache_fnv_u32(h, atlas_mipmaps() ? 1u : 0u);
 	h = pack_cache_fnv_u32(h, (uint32_t)SLOT_COUNT);
 	for(size_t k = 0; k < SLOT_COUNT; k++) {
 		h = fnv_str(h, s_slots[k].file);
@@ -328,13 +334,13 @@ static bool slot_shape_ok(uint32_t target, size_t k, const struct slot_rec* r) {
 	if(target == TEX_CACHE_TARGET_PC)
 		return r->lods == 1 && r->bytes == r->width * r->height * 4u;
 	if(r->lods == 1)
-		/* Fable M1: an atlas is single-LOD on the Wii only where no chain
-		   can exist (non-power-of-two sizes); a single-LOD atlas that COULD
-		   have had its chain is a memory-pressure fallback -- never frozen. */
+		/* Single-level is the Beta default. With mips requested, only a
+		   grid that cannot isolate a chain may cache a single level; never
+		   freeze a memory-pressure fallback. */
 		return r->bytes == tex_gx_bytes(s_slots[k].fmt, r->width, r->height)
-			&& (!s_slots[k].atlas
+			&& (!s_slots[k].atlas || !atlas_mipmaps()
 				|| tex_gx_atlas_bytes(r->width, r->height) == 0);
-	return r->lods == TEX_GX_ATLAS_LODS && s_slots[k].atlas
+	return r->bytes != 0 && atlas_mipmaps() && r->lods == TEX_GX_ATLAS_LODS && s_slots[k].atlas
 		&& r->bytes == tex_gx_atlas_bytes(r->width, r->height);
 }
 
@@ -584,7 +590,7 @@ static const uint8_t* slot_bytes(uint32_t target, size_t k,
 	if(target == TEX_CACHE_HOST_TARGET) {
 		/* Fable M1: never publish a Wii atlas that fell back to a single
 		   LOD under memory pressure (NULL here refuses the generation). */
-		if(target == TEX_CACHE_TARGET_WII && s_slots[k].atlas
+		if(target == TEX_CACHE_TARGET_WII && atlas_mipmaps() && s_slots[k].atlas
 		   && t->lods != TEX_GX_ATLAS_LODS
 		   && tex_gx_atlas_bytes(t->width, t->height) != 0)
 			return NULL;
@@ -597,12 +603,13 @@ static const uint8_t* slot_bytes(uint32_t target, size_t k,
 	return NULL; /* the console only produces its own target */
 #else
 	/* PC live state = the RGBA images the Wii converts: encode exactly as
-	   wii/texture.c would (atlas: 4-LOD chain, else single-LOD linear). */
+	   wii/texture.c would (atlas: isolated opt-in chain, else nearest level
+	   zero). */
 	if(target != TEX_CACHE_TARGET_WII || t->fmt != s_slots[k].fmt)
 		return NULL;
 	size_t w = t->width, h = t->height;
 	uint8_t* out = NULL;
-	if(s_slots[k].atlas) {
+	if(s_slots[k].atlas && atlas_mipmaps()) {
 		size_t total = tex_gx_atlas_bytes(w, h);
 		struct tex_atlas_grid grid;
 		if(total && tex_atlas_grid_init(&grid, w, h)
@@ -626,7 +633,7 @@ static const uint8_t* slot_bytes(uint32_t target, size_t k,
 		return NULL;
 	}
 	r->lods = 1;
-	r->flags = (s_slots[k].atlas || t->linear) ? 1u : 0u;
+	r->flags = !s_slots[k].atlas && t->linear ? 1u : 0u;
 	r->bytes = (uint32_t)bytes;
 	*owned = true;
 	return out;

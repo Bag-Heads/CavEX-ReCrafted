@@ -36,7 +36,9 @@
 #define MP_TEXT_CAPACITY 120
 #define MP_S0_TEXT_CAPACITY MP_TEXT_CAPACITY
 #define MP_CHUNK_COMPRESSED_CAP (1024u * 1024u)
-#define MP_CHUNK_INFLATED_CAP (16u * 128u * 16u * 5u / 2u)
+/* PlayerInstance.java:145-153 rounds a top-edge partial to y+sy=130;
+ * World.getChunkData clamps the copied data to 128, padding this buffer. */
+#define MP_CHUNK_INFLATED_CAP (16u * 130u * 16u * 5u / 2u)
 /* Packet52's size field is `readShort() & 0xFFFF`: the wire's own faithful
  * range is 0..65535, not an invented cap. [740c583
  * Packet52MultiBlockChange.readPacketData] */

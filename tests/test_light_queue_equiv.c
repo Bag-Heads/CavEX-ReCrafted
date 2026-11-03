@@ -6017,6 +6017,7 @@ static struct server_world* so_fixture(unsigned ow_slot, unsigned test_slot,
 	 * java.lang.Math stream starts from a fixed seed on both sides. */
 	w->scheduled_tick_count = 0;
 	w->scheduled_tick_head = 0;
+	server_world_scheduled_ticks_resync(w); /* the containment set forgets them too */
 	server_local_test_seed_math_random(SO_MATH_SEED);
 	if(so_tape_request) so_tape_start(w, so_tape_request);
 	const struct server_world_test_setter_op pend = {
@@ -9691,6 +9692,7 @@ static void hs_fluid(const char* name, bool healthy, int kind, int slot) {
 	jrand_set_seed(&w->rand,4242); server_local_test_seed_math_random(424242);
 	/* Remove load-rearm ticks; this fixture invokes the REGISTERED tick. */
 	w->scheduled_tick_count=w->scheduled_tick_head=0;
+	server_world_scheduled_ticks_resync(w); /* the containment set forgets them too */
 	struct block copies[5];
 	const int ids[]={BLOCK_STONE,BLOCK_WATER_FLOW,BLOCK_WATER_STILL,BLOCK_LAVA_FLOW,BLOCK_LAVA_STILL};
 	for(int i=0;i<5;i++) {
@@ -10082,7 +10084,9 @@ static void hs_publication_inherit(void) {
 	unsigned admitted=0;
 	while(clin_try_rpc_send(&rpc)) admitted++;
 	assert(admitted);
+	clin_test_set_rpc_exhaustion_timeout_ms(1000); /* shipping: 120 s (ci-1101/61) */
 	clin_rpc_send(&rpc); /* actual retained overflow + one-second deadline */
+	clin_test_set_rpc_exhaustion_timeout_ms(0);
 	clin_test_fail_pending_alloc(false);
 	check(clin_rpc_publication_faulted(),"real publication deadline reached before constructor");
 	hs_observers=0; server_world_test_light_fault_hook=hs_ordered_fault;

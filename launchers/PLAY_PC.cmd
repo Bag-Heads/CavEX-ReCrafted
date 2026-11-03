@@ -2,7 +2,7 @@
 rem -- CaveWii_v2 PC build launcher.
 rem
 rem    Use this for iterating on gameplay (TNT damage, fire spread,
-rem    inventory, controls). The PC build (cavewii_v2.exe) uses GLFW
+rem    inventory, controls). The PC build (CavEX-ReCrafted.exe) uses GLFW
 rem    natively, so keyboard + mouse work the way Java Minecraft
 rem    players expect:
 rem        WASD   = movement
@@ -33,10 +33,10 @@ for %%I in ("%SCRIPT_DIR%..") do set "PROJECT_ROOT=%%~fI"
 rem Locate the built exe (cmake writes it to build-verify or build-pc).
 set "CAVEX_EXE="
 for %%D in (build-verify build-pc .) do (
-    if not defined CAVEX_EXE if exist "%PROJECT_ROOT%\%%D\cavewii_v2.exe" set "CAVEX_EXE=%PROJECT_ROOT%\%%D\cavewii_v2.exe"
+    if not defined CAVEX_EXE if exist "%PROJECT_ROOT%\%%D\CavEX-ReCrafted.exe" set "CAVEX_EXE=%PROJECT_ROOT%\%%D\CavEX-ReCrafted.exe"
 )
 if not defined CAVEX_EXE (
-    echo cavewii_v2.exe not found. Build the PC target first:
+    echo CavEX-ReCrafted.exe not found. Build the PC target first:
     echo     cmake -B build-verify -S . -G Ninja -DCAVEX_IPO=OFF
     echo     cmake --build build-verify --target cavex
     echo.
@@ -56,7 +56,7 @@ if not exist "%PROJECT_ROOT%\assets" (
     exit /b 1
 )
 
-rem cavewii_v2.exe resolves "config.json", "assets/", and "saves/" relative
+rem CavEX-ReCrafted.exe resolves "config.json", "assets/", and "saves/" relative
 rem to its working directory, so cd into the project root before launch.
 cd /d "%PROJECT_ROOT%"
 

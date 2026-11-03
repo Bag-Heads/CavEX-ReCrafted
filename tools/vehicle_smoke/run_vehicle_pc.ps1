@@ -21,7 +21,7 @@ param(
 $ErrorActionPreference = 'Stop'
 # O16: frozen in-tree copy (tools/vehicle_smoke/); the repo is two levels up.
 $repo = (Resolve-Path (Join-Path $PSScriptRoot '../..')).Path
-$exe = Join-Path $repo 'build-verify/cavewii_v2.exe'
+$exe = Join-Path $repo 'build-verify/CavEX-ReCrafted.exe'
 $stamp = Get-Date -Format 'yyyyMMdd_HHmmss'
 $runId = "vs_pc_${Kind}_$stamp$Tag"
 $out = Join-Path $repo "tmp/vehicle_pc/$runId"

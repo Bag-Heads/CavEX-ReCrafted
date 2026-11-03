@@ -50,6 +50,7 @@ tps_callback client_tps_observe;
 #include "../game/client_world_context.h"
 #include "../game/game_state.h"
 #include "../game/gui/chat_hud.h"
+#include "../game/gui/loading_tips.h"
 #include "../game/sign_text_store.h"
 #include "../particle.h"
 #include "../graphics/texture_atlas.h"
@@ -299,6 +300,36 @@ static bool clin_transfer_id_newer(uint32_t a, uint32_t b) {
 	return a != b && (uint32_t)(a - b) < UINT32_C(0x80000000);
 }
 
+/* ci-1101/56: Beta Minecraft.usePortal (1200-1235) names the target
+ * dimension before loading. Presentation only: the existing host/guest
+ * readiness and rollback barriers still decide when gameplay resumes. */
+static void clin_portal_loading_begin(unsigned owner, int dimension) {
+	enum loading_reason reason = dimension == WORLD_DIM_NETHER
+		? PORTAL_IN : PORTAL_OUT;
+	if(loading_reason_get(owner) != reason)
+		loading_reason_begin(owner, reason);
+}
+
+static void clin_portal_loading_end(unsigned owner) {
+	enum loading_reason reason = loading_reason_get(owner);
+	if(reason == PORTAL_IN || reason == PORTAL_OUT)
+		loading_reason_end(owner);
+}
+
+static void clin_portal_loading_update(void) {
+	/* Guest panes have no screen_set exit. Retire only their portal reason
+	 * at the same existing ready/cancel boundary as the pane policy. */
+	const struct client_session* portal_guest = &gstate.players[1];
+	if(!portal_guest->local_bound || portal_guest->local_reply_failed
+	   || portal_guest->local_phase != CLIENT_GUEST_ATTACHED
+	   || (!clin_transfer_actor_held(1) && portal_guest->local_gameplay_ready
+		   && !portal_guest->local_respawn_loading && portal_guest->local_player))
+		clin_portal_loading_end(1);
+	if(!clin_transfer_actor_held(0) && !s_host_transfer_pane
+	   && gstate.players[0].current_screen != &screen_load_world)
+		clin_portal_loading_end(0);
+}
+
 static void clin_transfer_hold_apply(const struct client_rpc* call) {
 	const uint8_t slot = call->payload.transfer_hold.actor_slot;
 	const uint32_t id = call->payload.transfer_hold.request_id;
@@ -317,6 +348,11 @@ static void clin_transfer_hold_apply(const struct client_rpc* call) {
 			return;
 		if(hold->active && !clin_transfer_id_newer(id, hold->active_id))
 			return;
+		struct clin_world_payload viewed;
+		int dimension = clin_world_payload_of_view(slot, &viewed)
+			? viewed.terrain->dimension : gstate.world.dimension;
+		clin_portal_loading_begin(slot, dimension == WORLD_DIM_NETHER
+			? WORLD_DIM_OVERWORLD : WORLD_DIM_NETHER);
 		hold->active_id = id;
 		hold->active = true;
 		hold->restore_end_pending = false;
@@ -4299,6 +4335,12 @@ static void clin_process_observed(struct client_rpc* call) {
 				// server transition barrier rejects any stale toggle, so normalize
 				// this half before the input-less loading screen takes ownership.
 				gstate.paused = false;
+				/* Death respawns also use BEGIN; they are not portal travel. */
+				if(!gstate.players[0].death.active
+				   && gstate.players[0].current_screen != &screen_death)
+					clin_portal_loading_begin(0,
+						CW_WORLD->dimension == WORLD_DIM_NETHER
+							? WORLD_DIM_OVERWORLD : WORLD_DIM_NETHER);
 				gstate.world_switch_pending = true;
 				screen_set(&screen_load_world);
 			}
@@ -4358,6 +4400,13 @@ static void clin_process_observed(struct client_rpc* call) {
 						(unsigned)call->payload.world_reset.world_generation);
 				break;
 			}
+			/* NetClientHandler.handleRespawn (func_9448_a, 467-477): only
+			 * a changed dimension opens the terrain screen. Remote packets
+			 * already arrive here; no provider or keep-alive changes needed. */
+			if(gstate.remote_session && gstate.players[0].local_player
+			   && call->payload.world_reset.local_entity != 0
+			   && CW_WORLD->dimension != call->payload.world_reset.dimension)
+				clin_portal_loading_begin(0, call->payload.world_reset.dimension);
 			/* Only an accepted reset ends the host credit lifetime. A
 			 * superseded reset above leaves every live credit owned. */
 			svin_credit_host_lifetime_bump();
@@ -6492,6 +6541,7 @@ static bool clin_update_drain_bounded(uint32_t budget_us) {
 	g9_probe_inbox_stats(&g9_backlog, &g9_oldest);
 	g9_probe_main_mark(2, false, g9_work, g9_backlog, g9_oldest);
 	clin_transfer_hold_release_restored();
+	clin_portal_loading_update();
 	return empty;
 }
 void clin_update_drain(void) { (void)clin_update_drain_bounded(0); }
@@ -6998,6 +7048,8 @@ void clin_update() {
 	g9_probe_main_mark(2, false, g9_work, g9_backlog, g9_oldest);
 	clin_transfer_hold_release_restored();
 	clin_host_transfer_pane_update();
+	clin_portal_loading_update();
+
 	if(s_clin_profile) {
 		float drain = time_diff_s(drain_start, time_get()) * 1000.0f;
 		s_clin_work_ms[3] = fmaxf(0.0f, drain - s_clin_work_ms[0] - s_clin_work_ms[1] - s_clin_work_ms[2]);
@@ -7216,10 +7268,11 @@ void clin_rpc_wait_take(uint32_t* sum_us, uint32_t* max_us, uint32_t* n) {
  *     token (the old blocking receive: timed, WDS_RPC_SEND, phase restored,
  *     counted in clin_rpc_pending_stats), delivers the pending head into it
  *     and appends the new envelope -- order kept, work retained, the delay
- *     measured. A failed allocation is retried on later sends. Exhaustion has a one-
- *     second deadline (not a performance exemption): timeout retains the
- *     triggering envelope and aborts the session through its mutation/save
- *     barrier. Shutdown interrupts the wait. Ordinary output is released only
+ *     measured. A failed allocation is retried on later sends. Exhaustion has a
+ *     dead-consumer deadline (RPC_EXHAUSTION_TIMEOUT_MS; was one second until
+ *     ci-1101/61, which closed live worlds on recoverable MAIN stalls): timeout
+ *     retains the triggering envelope and aborts the session through its
+ *     mutation/save barrier. Shutdown interrupts the wait. Ordinary output is released only
  *     by explicit stopped-session cleanup, with drops counted.
  *   - Server-thread only (like the old send). Publication stop drops the
  *     ring's entries the way it drops a new send (released, counted).
@@ -7273,7 +7326,19 @@ static size_t clin_rpc_pack_other_size(enum client_rpc_type type) {
  * No subsequent ordinary publication is admitted after that stop. */
 static struct clin_rpc_pending_entry s_rpc_overflow;
 static bool s_rpc_overflow_owned;
-#define RPC_EXHAUSTION_TIMEOUT_MS 1000u
+/* ci-1101/61: the exhaustion deadline is the DEAD-consumer backstop, never a
+ * slow-consumer limit. Two PC runs (2026-11-02, loaded host) lost a live world
+ * to the former 1000 ms value when MAIN stalled 2.7 s / 5.2 s and recovered:
+ * the server waited 1.08 s, faulted, and "World publication stopped (client
+ * not consuming)" closed it. A recoverable MAIN stall is ordinary back-pressure
+ * (the server thread simply stays parked here, its tick incomplete, exactly as
+ * the pre-deadline blocking receive did). It must exceed every legitimate
+ * synchronous MAIN operation the Wii watchdog itself tolerates (3 s + the
+ * declared 60 s TEXPACKS_RELOAD_GRACE_MS), so a wedged MAIN is named by the
+ * watchdog's hang report first. Shutdown still interrupts at once (cancel). */
+#define RPC_EXHAUSTION_TIMEOUT_MS 120000u
+#define RPC_EXHAUSTION_NOTICE_MS 1000u /* log a long (recovering) wait */
+static uint32_t s_rpc_exhaustion_timeout_ms = RPC_EXHAUSTION_TIMEOUT_MS;
 static bool s_rpc_pending_alloc_logged;
 static uint32_t s_rpc_pending_peak, s_rpc_deferred, s_rpc_exhausted,
 	s_rpc_cancelled;
@@ -7308,6 +7373,9 @@ void clin_test_fail_pending_alloc(bool fail) {
 void clin_test_set_pending_capacity(unsigned cap) {
 	assert(s_rpc_pending_n == 0 && cap <= RPC_PENDING_SIZE);
 	s_rpc_pending_cap = cap ? cap : RPC_PENDING_SIZE;
+}
+void clin_test_set_rpc_exhaustion_timeout_ms(uint32_t ms) {
+	s_rpc_exhaustion_timeout_ms = ms ? ms : RPC_EXHAUSTION_TIMEOUT_MS;
 }
 void clin_test_set_block_pack(bool enabled) {
 	assert(s_rpc_pending_n == 0);
@@ -7443,8 +7511,18 @@ static struct client_rpc* clin_rpc_token_wait(void) {
 	for(;;) {
 		if(tchannel_receive(&clin_empty_msg, (void**)&empty, false))
 			break;
-		if(clin_rpc_cancelled()
-		   || time_diff_ms(wait_t0, time_get()) >= RPC_EXHAUSTION_TIMEOUT_MS) {
+		if(clin_rpc_cancelled()) {
+			empty = NULL;
+			g9_probe_rpc(4, NULL);
+			break;
+		}
+		if((int64_t)time_diff_ms(wait_t0, time_get())
+		   >= (int64_t)s_rpc_exhaustion_timeout_ms) {
+			fprintf(stderr, "[client_interface] rpc publication: client drained "
+							"nothing for %u ms (ring %u + inbox full); "
+							"consumer presumed dead, session stops\n",
+					(unsigned)s_rpc_exhaustion_timeout_ms,
+					(unsigned)s_rpc_pending_n);
 			empty = NULL;
 			g9_probe_rpc(4, NULL);
 			break;
@@ -7454,6 +7532,10 @@ static struct client_rpc* clin_rpc_token_wait(void) {
 	{
 		const uint32_t us
 			= (uint32_t)(time_diff_s(wait_t0, time_get()) * 1.0e6f);
+		if(empty && us >= RPC_EXHAUSTION_NOTICE_MS * 1000u)
+			fprintf(stderr, "[client_interface] rpc publication waited %u ms "
+							"for the client to drain (back-pressure; world "
+							"kept)\n", (unsigned)(us / 1000u));
 		__atomic_fetch_add(&s_rpc_wait_us, us, __ATOMIC_RELAXED);
 		__atomic_fetch_add(&s_rpc_waits, 1u, __ATOMIC_RELAXED);
 		g9_worst_tick_wait_us(G9WT_W_SEND, us); /* nested in RPC_SEND */

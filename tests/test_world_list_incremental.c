@@ -577,6 +577,56 @@ static void check_tutorial_hidden(void) {
 		   "folder still resolves it\n");
 }
 
+// --- (9) a MISSING saves folder is created, not a permanent read error ----------------
+// ci-1101/27: a fresh card (or a paths.worlds pointing at a folder nothing has made yet)
+// opened the Load tab on "Couldn't read the saves folder - press Retry", and Retry only
+// re-ran the same failing opendir. ENOENT is created in place; a path that exists but is
+// not a directory is a REAL error and keeps Retry.
+static char s_fixture_MISSING_ROOT[128];
+/* Exported by screen_select_world.c for tests; declared ad hoc as in
+ * test_frontend_no_pointer.c. */
+bool screen_sworld_test_hint(char* text, size_t cap, int* y, int* h,
+							 int* list_bottom, int* strip_top);
+static void check_missing_saves_folder(void) {
+	test_fixture_dir("test_world_missing_tmp", s_fixture_MISSING_ROOT,
+					 sizeof s_fixture_MISSING_ROOT);
+	char saves[256];
+	snprintf(saves, sizeof(saves), "%s/nested/saves", s_fixture_MISSING_ROOT);
+	struct stat st;
+	assert(stat(saves, &st) != 0 && "fixture must start absent");
+
+	config_set_string(&gstate.config_user, "paths.worlds", saves);
+	screen_sworld_test_reset(640, 480);
+	char hint[128] = "x";
+	bool drawn = screen_sworld_test_hint(hint, sizeof(hint), NULL, NULL, NULL, NULL);
+	assert(!drawn && hint[0] == '\0' && "a missing saves folder is not a read error");
+	assert(screen_sworld_test_row_count() == 0);
+	assert(stat(saves, &st) == 0 && (st.st_mode & S_IFDIR)
+		   && "reset() creates the missing saves tree");
+
+	/* Counter-case: the path exists but is a regular FILE. That is not ENOENT and
+	 * nothing may be created over it -- the error with Retry stays. */
+	char file_path[256];
+	snprintf(file_path, sizeof(file_path), "%s/not_a_dir", s_fixture_MISSING_ROOT);
+	FILE* f = fopen(file_path, "wb");
+	assert(f);
+	fputs("x", f);
+	fclose(f);
+	config_set_string(&gstate.config_user, "paths.worlds", file_path);
+	screen_sworld_test_reset(640, 480);
+	drawn = screen_sworld_test_hint(hint, sizeof(hint), NULL, NULL, NULL, NULL);
+	assert(drawn && strstr(hint, "Retry") && "a non-directory path keeps the Retry error");
+	assert(screen_sworld_test_row_count() == 0);
+	assert(stat(file_path, &st) == 0 && !(st.st_mode & S_IFDIR)
+		   && "the file is left untouched");
+
+	config_set_string(&gstate.config_user, "paths.worlds", SAVES);
+	screen_sworld_test_delete_tree(s_fixture_MISSING_ROOT);
+	test_fixture_dir_cleanup(s_fixture_MISSING_ROOT);
+	printf("  [9] a missing saves folder is created on reset; a file in its place keeps "
+		   "Retry\n");
+}
+
 int main(void) {
 	test_fixture_dir("test_world_list_tmp", s_fixture_SAVES, sizeof s_fixture_SAVES);
 	test_fixture_dir("test_world_create_tmp", s_fixture_CREATE_ROOT, sizeof s_fixture_CREATE_ROOT);
@@ -596,6 +646,7 @@ int main(void) {
 	check_new_world_creation_safety();
 	check_creative_suffix();
 	check_tutorial_hidden();
+	check_missing_saves_folder();
 
 	printf("test_world_list_incremental: PASS\n");
 	test_fixture_dir_cleanup(SAVES);

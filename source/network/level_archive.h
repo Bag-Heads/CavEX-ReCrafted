@@ -343,6 +343,29 @@ bool level_archive_write(struct level_archive* la, struct level_archive_tag tag,
  * present wrong-type tag is rejected as corruption. */
 bool level_archive_write_player_fall_distance(struct level_archive* la,
 										 float fall_distance);
+/* ci-1101/41 item 11: the rest of Beta's player Entity/EntityPlayer record.
+ * Entity.writeToNBT (RetroMCP Entity.java:752-757) writes Motion (3 doubles),
+ * Fire (short), Air (short) and OnGround (byte); EntityPlayer.writeEntityToNBT
+ * (EntityPlayer.java:330-331) writes Sleeping (byte) and SleepTimer (short).
+ * A same-type tag is updated in place (child order kept); an absent or
+ * wrong-type tag is (re)created. Every node is allocated before the tree is
+ * touched, so failure leaves it byte-for-byte unchanged. */
+struct level_player_entity_state {
+	double motion[3]; /* non-finite components are written as 0 */
+	int16_t fire;
+	int16_t air;
+	bool on_ground;
+	bool sleeping;
+	int16_t sleep_timer;
+};
+bool level_archive_write_player_entity_state(
+	struct level_archive* la, const struct level_player_entity_state* state);
+/* Entity.readFromNBT (Entity.java:786-787): fire = getShort("Fire"),
+ * air = getShort("Air"). Each output is written ONLY when its Data.Player tag
+ * is present as a TAG_SHORT; otherwise the caller's preset value stays, so a
+ * save without the tags loads exactly as before. */
+void level_archive_read_player_fire_air(struct level_archive* la, int* fire,
+										int* air);
 /* Per-world game mode (LEVEL_GAME_MODE). The reader is TOTAL: an absent tag,
  * a wrong-type node, or an out-of-range payload all read as SURVIVAL (false)
  * -- the documented "missing tag = survival" rule, which also fails closed

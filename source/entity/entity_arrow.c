@@ -908,9 +908,26 @@ static bool entity_server_tick(struct entity* e, struct server_local* s) {
 	// (motionY - 0.03)*0.99 = motionY*0.99 - 0.0297 (1% under-gravity that compounds over
 	// the flight). This is the same drag/gravity-order mistake the mob water step already
 	// corrects (test_mob_water.c).
-	e->vel[0] *= ARROW_AIR_DRAG;
-	e->vel[1] *= ARROW_AIR_DRAG;
-	e->vel[2] *= ARROW_AIR_DRAG;
+	/* [740c583 EntityArrow.onUpdate:200-218]: the drag factor starts at 0.99 and the
+	 * gravity at 0.03; while in water the drag factor becomes 0.8; all three velocity
+	 * components are scaled by the drag factor, then gravity is subtracted from the
+	 * vertical one -- the 0.03 gravity is UNCHANGED in water; only the
+	 * drag swaps to 0.8. Beta's isInWater is the bbox handleWaterMovement
+	 * verdict; the arrow's own foot-cell probe is this engine's standard body_in_water
+	 * approximation (the egg precedent, EntityEgg.onUpdate tail). */
+	float drag = ARROW_AIR_DRAG;
+	{
+		struct block_data foot;
+		if(server_world_get_block(block_world(s), (w_coord_t)floorf(e->pos[0]),
+								  (w_coord_t)floorf(e->pos[1]),
+								  (w_coord_t)floorf(e->pos[2]), &foot)
+		   && (foot.type == BLOCK_WATER_FLOW
+			   || foot.type == BLOCK_WATER_STILL))
+			drag = ARROW_WATER_DRAG;
+	}
+	e->vel[0] *= drag;
+	e->vel[1] *= drag;
+	e->vel[2] *= drag;
 	e->vel[1] -= ARROW_GRAVITY;
 
 	server_local_send_entity(s, e, (struct client_rpc) {

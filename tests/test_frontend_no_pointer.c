@@ -1771,13 +1771,9 @@ static void case_load_geometry_pointer(void) {
 	fe_pointer_off();
 }
 
-/* A MISSING SAVES DIRECTORY IS AN ERROR, NOT "NO WORLDS": with paths.worlds
- * pointing at a directory that does not exist, the Load tab must expose a
- * Retry (the enumeration failed) rather than an empty list -- Play stays
- * disabled, the header still works, and Retry after the directory appears
- * lists the worlds. Pinned through the public row count + the list-error
- * observation the screen exports for the walker. */
-static void case_load_missing_dir_shows_retry(enum fe_family fam) {
+/* First launch creates a missing saves directory and offers Create a world.
+ * A real enumeration error (a file in the way) must still expose Retry. */
+static void case_load_missing_dir_and_file_retry(enum fe_family fam) {
 	struct fe_roles r = fe_roles_for(fam);
 
 	char hint[128];
@@ -1787,20 +1783,42 @@ static void case_load_missing_dir_shows_retry(enum fe_family fam) {
 	fe_attach(fam);
 	fe_open(&screen_select_world);
 	assert(screen_sworld_test_row_count() == 0);
+	struct stat st;
+	assert(stat(FE_SAVES_DIR, &st) == 0 && S_ISDIR(st.st_mode)
+		   && "Load did not create the missing saves directory");
+	if(screen_sworld_test_hint(hint, sizeof(hint), &hy, &hh, &lb, &st_))
+		assert(!strstr(hint, "Retry")
+			   && "a newly created empty saves directory was presented as an error");
+	assert(screen_sworld_test_focus() == FE_LW_TAB_LOAD);
+	fe_tap(r.down);
+	assert(screen_sworld_test_focus() == FE_LW_PLAY);
+	fe_tap(r.click);
+	assert(fe_screen_last == &screen_create_world
+		   && play_session_tab() == PLAY_TAB_CREATE
+		   && "first-launch empty list did not offer Create a world");
+	fe_saves(0);
+	FILE* blocked = fopen(FE_SAVES_DIR, "wb");
+	assert(blocked && fclose(blocked) == 0);
+	fe_attach(fam);
+	fe_open(&screen_select_world);
+	assert(screen_sworld_test_row_count() == 0);
 	/* The failed enumeration is DISCLOSED in the screen's own status text (the
 	 * existing exported hint line) and names the Retry action. */
 	assert(screen_sworld_test_hint(hint, sizeof(hint), &hy, &hh, &lb, &st_)
 		   && strstr(hint, "Retry")
-		   && "a MISSING saves directory was presented as an empty world list");
+		   && "a file blocking the saves directory was presented as an empty list");
 	assert(screen_sworld_test_focus() == FE_LW_TAB_LOAD);
 	/* DOWN from the header lands on Retry (in Play's place). Retry with the
-	 * directory still missing keeps the error and opens nothing. */
+	 * path still blocked keeps the error and opens nothing. */
 	fe_tap(r.down);
 	assert(screen_sworld_test_focus() == FE_LW_PLAY);
 	fe_tap(r.click);
 	assert(fe_screen_sets == 0 && screen_sworld_test_row_count() == 0);
+	assert(screen_sworld_test_hint(hint, sizeof(hint), &hy, &hh, &lb, &st_)
+		   && strstr(hint, "Retry"));
 	/* Create the directory with two worlds; Retry -- WITHOUT re-opening the
 	 * screen -- lists them. A disabled Play could never do that. */
+	assert(remove(FE_SAVES_DIR) == 0);
 	fe_saves(2);
 	if(fe_live_pointer)
 		fe_tap(r.left);
@@ -5295,7 +5313,17 @@ static void case_walker_observers(enum fe_family fam) {
 	fe_open(&screen_select_world);
 	assert(screen_sworld_focus_target() == SCREEN_SWORLD_FOCUS_TAB_LOAD);
 	fe_tap(r.down);
+	assert(screen_sworld_focus_target() == SCREEN_SWORLD_FOCUS_CREATE);
+	/* Retry is an error action; a missing folder is now created successfully. */
+	fe_saves(0);
+	FILE* blocked_focus = fopen(FE_SAVES_DIR, "wb");
+	assert(blocked_focus && fclose(blocked_focus) == 0);
+	fe_attach(fam);
+	fe_open(&screen_select_world);
+	assert(screen_sworld_focus_target() == SCREEN_SWORLD_FOCUS_TAB_LOAD);
+	fe_tap(r.down);
 	assert(screen_sworld_focus_target() == SCREEN_SWORLD_FOCUS_RETRY);
+	assert(remove(FE_SAVES_DIR) == 0);
 
 	/* Multiplayer: the ring above the list, the list, and the strip. */
 	fe_servers(3);
@@ -5384,7 +5412,7 @@ static void run_family(enum fe_family fam, bool remapped) {
 	case_load_row_press_requires_play(fam);
 	case_load_retains_selected_world(fam);
 	case_load_world_options_modal(fam);
-	case_load_missing_dir_shows_retry(fam);
+	case_load_missing_dir_and_file_retry(fam);
 	case_join_geometry(fam);
 	case_reach_multiplayer(fam);
 	case_strip_from_selected_row_sworld(fam);
@@ -5980,6 +6008,8 @@ int main(void) {
 			fe_rmdir(path);
 		}
 		fe_rmdir(FE_RUN_DIR "/" FE_SAVES_DIR);
+		/* The Retry case can leave a regular file here after an assertion. */
+		remove(FE_RUN_DIR "/" FE_SAVES_DIR);
 		/* The A15 long-list fixture, same reasoning: rmdir removes only an
 		 * EMPTY directory, so an aborted run must not leave 650 rows for the
 		 * next one to inherit silently. */

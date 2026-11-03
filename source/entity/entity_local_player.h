@@ -38,8 +38,20 @@
 #include <stdbool.h>
 
 #include "../block/blocks_data.h" /* w_coord_t */
+#include "../platform/time.h"
 
 struct world;
+struct input_player_frame;
+
+/* Local creative only (ruling 912c987). Called once per rendered frame,
+ * before tick catch-up, so short jump presses are not lost or repeated.
+ * Slot 0/1 retain independent, non-persisted flight state. Uses the existing
+ * JUMP/SNEAK bindings; SNEAK's configured toggle/hold level means descend. */
+void entity_local_player_flight_input(unsigned slot,
+	const struct input_player_frame* frame, ptime_t now);
+/* Synchronizes lifecycle first: clears stale flight and, on creative exit,
+ * removes a formerly flying local body's residual upward velocity. */
+bool entity_local_player_flying(unsigned slot);
 
 /* THE Beta blockExists gate. True when at least one section of the column
  * (x >> 4, z >> 4) is present in `w` -- i.e. when Beta's chunkExists would be

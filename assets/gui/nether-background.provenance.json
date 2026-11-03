@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "recipe": {
+    "seed": 42,
+    "x": -60,
+    "y": 36,
+    "z": 100,
+    "yaw": 90,
+    "pitch": 78
+  },
+  "generator": "CaveWii worldgen_hell/native engine",
+  "sha256": "8fe6db87d9c963b16552ee61f01d9b8776eadbc4bf7002c4d5763490558ea846",
+  "renderer_sha256": "5ed49cbaa0ac99b37ce641a6b16b230b152c495b19d1f9d5e24f0d195ad63d0c",
+  "textures": {
+    "terrain.png": "585bfb50ecdb121cd3bc11a4eca55c5b1bb956c323acd913f1225d7f82474b71",
+    "anim.png": "967db36afba79b57b455b6b0a4730ef75a5a840d81aa1639168ebce6eacb8d9e"
+  },
+  "dimensions": [
+    1024,
+    576
+  ],
+  "mode": "RGB",
+  "method": "Native engine capture; crop/nearest scaling; no retouching",
+  "limitations": "Fixed row-major population; no fluid ticks or lavafalls; not a live-world parity capture",
+  "license": "CC0-1.0",
+  "source_capture": "C:\\tmp\\cavex-jobs\\ci-1101\\57d\\native-earth-ash.png"
+}

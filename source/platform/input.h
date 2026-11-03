@@ -299,6 +299,9 @@ void input_sneak_vehicle_mark(unsigned player, bool riding);
  * change), so `engaged` can only be true while the toggle itself owns the
  * level. PC keeps Beta's held Shift and always answers false. */
 bool input_sneak_toggle_latched(unsigned player);
+/* Release this player's toggle and require a neutral frame before rearming.
+ * PC's held Shift is unaffected. */
+void input_sneak_toggle_release(unsigned player);
 bool input_joystick(float dt, float* x, float* y);
 /* Per-player LOOK delta for THIS frame. Player 0 is exactly input_joystick
  * (byte-identical legacy path); any other player resolves its look from its

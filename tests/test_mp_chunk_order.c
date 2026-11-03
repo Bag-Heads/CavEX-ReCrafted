@@ -380,16 +380,27 @@ static void test_saturated_log_inside_vs_outside(void) {
 		   && s_r->deferred_edits < REMOTE_DEFERRED_EDIT_CAPACITY
 		   && "bodyless columns are rescued, nothing dropped");
 	/* A saturation that truly cannot compact: every column in the table
-	 * (40..47 and earlier cases' leftovers) unloaded and reloaded before the
-	 * pump (Packet50 0 then 1). Their edits park for the reload, but the
-	 * unload is still pending, so no compaction may fold them into a
-	 * residency that is about to be torn down. */
+	 * (40..47 and earlier cases' leftovers) INSTALLED, then unloaded and
+	 * reloaded before the pump (Packet50 0 then 1). Never-installed unloads
+	 * now retire immediately; their reload is a fresh, compactable residency.
+	 * Installed columns still owe a world unload, so no compaction may fold
+	 * their edits into a residency that is about to be torn down. */
 	for(size_t c = 0; c < REMOTE_CHUNK_ENTRY_CAPACITY; c++) {
 		if(s_r->chunks[c].state == REMOTE_CHUNK_UNUSED)
 			continue;
 		int32_t cx = s_r->chunks[c].chunk_x, cz = s_r->chunks[c].chunk_z;
+		if(!s_r->chunks[c].installed) {
+			assert(cz == 0); /* retain() supplies this fixture's z=0 column */
+			retain(cx * 16, 128, BLOCK_STONE);
+			thread_mutex_lock(&s_r->lock); /* pressure compaction unlocks */
+			promote();
+			thread_mutex_unlock(&s_r->lock);
+			assert(s_r->chunks[c].installed);
+		}
 		assert(remote_pre_chunk_locked(s_r, cx, cz, false));
 		assert(remote_pre_chunk_locked(s_r, cx, cz, true));
+		assert(s_r->chunks[c].unload_pending
+			   && s_r->chunks[c].reload_after_unload);
 	}
 	parked0 = s_r->deferred_edits;
 	for(int i = 0; i < REMOTE_DEFERRED_EDIT_CAPACITY - (int)parked0 && !s_r->stop_now;
@@ -593,9 +604,10 @@ static bool wire_wait_locked(struct server_remote_impl* r,
 	return false;
 }
 static bool burst1_received(struct server_remote_impl* r) {
-	/* the LAST packet of burst 1 is the unload of column 2 */
+	/* The LAST packet unloads never-installed column 2: it must be gone,
+	 * with its preceding edit still queued behind the held pump. */
 	size_t i2 = wire_entry_locked(r, 2, 0);
-	return i2 != REMOTE_CHUNK_ENTRY_CAPACITY && r->chunks[i2].unload_pending
+	return i2 == REMOTE_CHUNK_ENTRY_CAPACITY
 		&& wire_queued_edit_seq_locked(r, 37) != 0;
 }
 static bool burst2_received(struct server_remote_impl* r) {

@@ -40,6 +40,121 @@
 
 #define EYE_HEIGHT 1.62F
 
+/* Net-new local creative flight: docs/design_creative_flight_2026-09-03.md
+ * section 1, ruling 912c987. Horizontal walk acceleration/friction stays
+ * unchanged; these are playability values, not Beta constants. */
+#define FLY_TOGGLE_WINDOW_MS 250
+#define FLY_SPEED_BASE 0.05F
+#define FLY_ASCEND_SPEED FLY_SPEED_BASE
+#define FLY_DESCEND_SPEED FLY_SPEED_BASE
+
+/* Main-thread state for the two local owners. A constructor reset also
+ * handles allocator reuse; body/session/input/world changes fence old taps.
+ * Kept out of the shared entity/save/network representation. */
+static struct creative_flight {
+	struct entity* body;
+	struct world* bound_world;
+	uint64_t generation;
+	uint32_t input_epoch;
+	int dimension;
+	ptime_t last_jump;
+	bool tap_pending, flying;
+	bool sneak_was_latched, sneak_latched_in_flight;
+} s_flight[2];
+
+static void local_flight_end(unsigned slot, struct creative_flight* f) {
+	/* A direct clear (including body reuse) may precede the next sync. Only
+	 * a latch switched on in flight belongs to descent; keep ground latches. */
+	if(f->sneak_latched_in_flight
+	   || (f->flying && !f->sneak_was_latched
+		   && input_sneak_toggle_latched(slot)))
+		input_sneak_toggle_release(slot);
+	f->flying = f->tap_pending = f->sneak_latched_in_flight = false;
+	f->sneak_was_latched = input_sneak_toggle_latched(slot);
+}
+
+static struct creative_flight* local_flight_sync(
+	struct entity* e, struct client_session* session) {
+	unsigned slot;
+	if(session == &gstate.players[0]) slot = 0;
+	else if(session == &gstate.players[1]) slot = 1;
+	else return NULL;
+	struct creative_flight* f = &s_flight[slot];
+	const bool sneak_latched = input_sneak_toggle_latched(slot);
+	if(f->flying && !f->sneak_was_latched && sneak_latched)
+		f->sneak_latched_in_flight = true;
+	f->sneak_was_latched = sneak_latched;
+	const uint32_t input_epoch = slot ? 0 : clin_input_epoch();
+	/* A future live creative->survival switch must not retain upward motion.
+ * Never write motion in a remote session, including a stale creative bit. */
+	if(f->flying && f->body == e && e && !gstate.config_creative
+	   && !gstate.remote_session && e->vel[1] > 0.0F)
+		e->vel[1] = 0.0F;
+	if(!e || e != session->local_player || !gstate.config_creative
+	   || gstate.remote_session || clin_transfer_actor_held(slot)
+	   || (!slot && (!gstate.world_loaded || gstate.world_switch_pending))
+	   || (slot && !client_session_local_gameplay_active(session))
+	   || e->health <= 0 || session->death.active || session->sleeping
+	   || session->host_respawn_loading || session->local_respawn_loading) {
+		local_flight_end(slot, f);
+		*f = (struct creative_flight){0};
+		return NULL;
+	}
+	struct world* world = e->world;
+	if(f->body != e || f->bound_world != world
+	   || f->generation != session->local_generation
+	   || f->input_epoch != input_epoch
+	   || f->dimension != world->dimension) {
+		local_flight_end(slot, f);
+		*f = (struct creative_flight){.body = e, .bound_world = world,
+			.generation = session->local_generation,
+			.input_epoch = input_epoch, .dimension = world->dimension,
+			.sneak_was_latched = input_sneak_toggle_latched(slot)};
+	}
+	if(f->flying && e->on_ground)
+		local_flight_end(slot, f);
+	return f;
+}
+
+bool entity_local_player_flying(unsigned slot) {
+	if(slot >= 2)
+		return false;
+	struct client_session* s = &gstate.players[slot];
+	struct creative_flight* f = local_flight_sync(s->local_player, s);
+	return f && f->flying;
+}
+
+void entity_local_player_flight_input(unsigned slot,
+	const struct input_player_frame* frame, ptime_t now) {
+	if(slot >= 2)
+		return;
+	struct client_session* s = &gstate.players[slot];
+	struct entity* e = s->local_player;
+	struct creative_flight* f = local_flight_sync(e, s);
+	if(!f)
+		return;
+	if(gstate.paused || !e->data.local_player.capture_input
+	   || !frame || !frame->connected) {
+		f->tap_pending = false;
+		return;
+	}
+	if(!frame->pressed[IB_JUMP])
+		return;
+	if(f->tap_pending && !e->on_ground
+	   && time_reached(now, f->last_jump)
+	   && time_reached(time_add_ms(f->last_jump, FLY_TOGGLE_WINDOW_MS), now)) {
+		if(f->flying)
+			local_flight_end(slot, f);
+		else
+			f->flying = true;
+		f->tap_pending = false;
+		e->vel[1] = 0.0F;
+	} else {
+		f->last_jump = now;
+		f->tap_pending = true;
+	}
+}
+
 bool local_player_online_dismount(struct entity* cart) {
 	/* Beta's dismount is the same interact that mounted us: Packet7
 	 * use-entity on the ridden vehicle [740c583 EntityMinecart.interact ->
@@ -764,6 +879,7 @@ void entity_local_player_ride_action_frame_end(void) {
 
 static bool entity_tick(struct entity* e) {
 	assert(e);
+	(void)local_flight_sync(e, &gstate.players[0]);
 
 	/* BETA blockExists GATE -- literally the first thing onUpdate does
 	 * [740c583 EntityClientPlayerMP.onUpdate]:
@@ -904,6 +1020,8 @@ static float local_eye_on_feet(float feet, float box_lo) {
 bool entity_local_player_walk_owned(struct entity* e,
 	struct client_session* session, const struct input_player_frame* frame) {
 	assert(e && session);
+	struct creative_flight* flight = local_flight_sync(e, session);
+	const bool flying = flight && flight->flying;
 	/* EntityClientPlayerMP.onUpdate:31-35 sends after every eligible update,
 	 * including sleep (func_4056_N:80-81, stationary Packet10). Main's guest
 	 * dispatch / the host entity tick already checked the terrain boundary. */
@@ -931,8 +1049,11 @@ bool entity_local_player_walk_owned(struct entity* e,
 		return false;
 	}
 
-	if(local_player_follow_mounted(e, session, frame))
+	if(local_player_follow_mounted(e, session, frame)) {
+		if(flight)
+			local_flight_end(session == &gstate.players[1] ? 1 : 0, flight);
 		return false;
+	}
 
 	// Audit 2026-09-01 #1 (REGRESSION-TODAY, CONFIRMED): reaching this point
 	// means the boat search above did NOT find an occupied boat for this
@@ -1024,6 +1145,11 @@ bool entity_local_player_walk_owned(struct entity* e,
 		jumping  = (frame && frame->connected && frame->down[IB_JUMP]);
 		sneaking = (frame && frame->connected && frame->down[IB_SNEAK]);
 	}
+	if(flying) {
+		e->vel[1] = (jumping ? FLY_ASCEND_SPEED : 0.0F)
+			- (sneaking ? FLY_DESCEND_SPEED : 0.0F);
+		sneaking = false; /* Descend replaces crouch while airborne. */
+	}
 
 	/* Beta SNEAK CAMERA DIP, step 1 of 2 [740c583 EntityPlayerSP.onLivingUpdate:79-80
 	 * -- a sneaking player's ySize is raised to at least 0.2], fused with the
@@ -1090,7 +1216,7 @@ bool entity_local_player_walk_owned(struct entity* e,
 	 * water, else +0.04 in lava, else jump() (vertical motion 0.42, :659-661) on
 	 * EVERY tick onGround -- Beta 1.7.3 has no jump cooldown (jumpTicks is a
 	 * later version's). data.local_player.jump_ticks is no longer read. */
-	if(jumping) {
+	if(jumping && !flying) {
 		if(in_water || in_lava)
 			e->vel[1] += 0.04F;
 		else if(e->on_ground)
@@ -1120,7 +1246,7 @@ bool entity_local_player_walk_owned(struct entity* e,
 	 * isSneaking is the input sneak flag while not sleeping (EntityPlayerSP:144-146);
 	 * this function returned above while sleeping. fallDistance is server
 	 * state here (server_local resets it on a ladder). */
-	if(!in_water && !in_lava) {
+	if(!flying && !in_water && !in_lava) {
 		struct block_data rung;
 		if(entity_get_block(e, (w_coord_t)floorf(e->pos[0]),
 							(w_coord_t)floorf(e->pos[1] - EYE_HEIGHT),
@@ -1339,7 +1465,20 @@ bool entity_local_player_walk_owned(struct entity* e,
 
 	/* Post-move drag [EntityLiving.moveEntityWithHeading]. Beta tests
 	 * isInWater() FIRST (:455), then handleLavaMovement() (:466). */
-	if(in_water) {
+	if(flying) {
+		/* Preserve horizontal drag and collision; vertical motion has no
+		 * gravity, swim/sink impulse, ladder boost or release inertia. */
+		if(in_water || in_lava) {
+			float drag = in_water ? 0.8F : 0.5F;
+			e->vel[0] *= drag;
+			e->vel[2] *= drag;
+		} else {
+			e->vel[0] = (float)((double)e->vel[0] * (double)ground_friction);
+			e->vel[2] = (float)((double)e->vel[2] * (double)ground_friction);
+		}
+		if(e->on_ground)
+			local_flight_end(session == &gstate.players[1] ? 1 : 0, flight);
+	} else if(in_water) {
 		e->vel[0] *= 0.8F;
 		e->vel[2] *= 0.8F;
 		e->vel[1]  = e->vel[1] * 0.8F - 0.02F;
@@ -1365,7 +1504,7 @@ bool entity_local_player_walk_owned(struct entity* e,
 		e->vel[2] = (float)((double)e->vel[2] * (double)ground_friction);
 	}
 
-	if(collision_xz && (in_lava || in_water)) {
+	if(!flying && collision_xz && (in_lava || in_water)) {
 		struct AABB tmp;
 		aabb_setsize_centered(&tmp, 0.6F, 1.8F, 0.6F);
 		aabb_translate(&tmp, e->pos[0] + e->vel[0],
@@ -1474,6 +1613,11 @@ static size_t getBoundingBox_local_player(
 
 void entity_local_player(uint32_t id, struct entity* e, struct world* w) {
 	assert(e && w);
+	for(unsigned slot = 0; slot < 2; slot++)
+		if(s_flight[slot].body == e) {
+			local_flight_end(slot, &s_flight[slot]);
+			s_flight[slot] = (struct creative_flight){0};
+		}
 
 	e->name = "Local Player";
 	e->id = id;

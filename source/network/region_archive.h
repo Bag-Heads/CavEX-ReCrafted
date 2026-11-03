@@ -478,6 +478,12 @@ bool region_archive_set_chunk_retain(struct region_archive* ra, w_coord_t x,
 									 const struct chunk_tile_entities* te,
 									 const struct chunk_entities* entities,
 									 struct buffer* out_record);
+/* Copy the exact compressed payload of this chunk's expected pending job.
+ * Does not append, publish or restamp. Failure leaves the caller owning the
+ * resident chunk; in particular a rolled-back OLD index cannot be copied as
+ * the retry source for the failed NEW job. Caller frees *out_record. */
+bool region_archive_copy_pending_record(struct region_archive* ra, w_coord_t x,
+    w_coord_t z, uint64_t job, struct buffer* out_record);
 /* Re-append a record previously handed out by _set_chunk_retain after its
  * publication FAILED (the archive rolled the index back to the old record).
  * Joins the open batch like any write; the caller re-samples the epoch. */
